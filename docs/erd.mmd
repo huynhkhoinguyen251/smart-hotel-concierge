@@ -1,0 +1,235 @@
+erDiagram
+    users ||--o{ bookings : makes
+    users ||--o{ tour_bookings : makes
+    users ||--o{ transport_bookings : makes
+    users ||--o{ support_tickets : opens
+    users ||--o{ ticket_messages : sends
+    users ||--o{ reviews : writes
+    users ||--o{ payments : makes
+    users ||--o{ notifications : receives
+
+    room_types ||--o{ rooms : classifies
+    room_types ||--o{ room_type_amenities : has
+    amenities ||--o{ room_type_amenities : included_in
+    rooms ||--o{ room_images : has
+    rooms ||--o{ bookings : reserved_by
+
+    bookings ||--o{ service_bookings : includes
+    services ||--o{ service_bookings : requested_in
+    services ||--o{ transport_bookings : requested_in
+    bookings ||--o{ food_orders : includes
+    food_orders ||--|{ food_order_items : contains
+    menu_items ||--o{ food_order_items : listed_in
+    tours ||--o{ tour_bookings : booked_in
+    support_tickets ||--o{ ticket_messages : contains
+
+    vouchers |o--o{ bookings : discounts
+    vouchers |o--o{ food_orders : discounts
+
+    bookings |o--o| reviews : reviewed_by
+    service_bookings |o--o| reviews : reviewed_by
+    food_orders |o--o| reviews : reviewed_by
+    tour_bookings |o--o| reviews : reviewed_by
+    transport_bookings |o--o| reviews : reviewed_by
+
+    bookings |o--o{ payments : paid_by
+    service_bookings |o--o{ payments : paid_by
+    food_orders |o--o{ payments : paid_by
+    tour_bookings |o--o{ payments : paid_by
+    transport_bookings |o--o{ payments : paid_by
+    payments ||--o| invoices : generates
+
+    users {
+        int id PK
+        varchar full_name
+        varchar email UK
+        varchar password_hash
+        varchar phone
+        enum role
+        boolean is_active
+    }
+    room_types {
+        int id PK
+        varchar name UK
+        text description
+        decimal price_per_night
+        int capacity
+    }
+    amenities {
+        int id PK
+        varchar name UK
+    }
+    room_type_amenities {
+        int id PK
+        int room_type_id FK
+        int amenity_id FK
+    }
+    rooms {
+        int id PK
+        int room_type_id FK
+        varchar room_number UK
+        int floor
+        enum status
+    }
+    room_images {
+        int id PK
+        int room_id FK
+        varchar image_url
+        boolean is_primary
+    }
+    bookings {
+        int id PK
+        int user_id FK
+        int room_id FK
+        int voucher_id FK
+        date check_in
+        date check_out
+        int guests
+        decimal price_per_night
+        decimal discount_amount
+        decimal total_price
+        enum status
+    }
+    services {
+        int id PK
+        varchar name
+        enum category
+        text description
+        decimal price
+        varchar image_url
+        boolean is_active
+    }
+    service_bookings {
+        int id PK
+        int booking_id FK
+        int service_id FK
+        datetime scheduled_at
+        int quantity
+        decimal unit_price
+        decimal total_price
+        text note
+        enum status
+    }
+    menu_items {
+        int id PK
+        varchar name
+        enum category
+        decimal price
+        varchar image_url
+        boolean is_available
+    }
+    food_orders {
+        int id PK
+        int booking_id FK
+        int voucher_id FK
+        decimal discount_amount
+        decimal total_price
+        text note
+        enum status
+    }
+    food_order_items {
+        int id PK
+        int food_order_id FK
+        int menu_item_id FK
+        int quantity
+        decimal unit_price
+    }
+    tours {
+        int id PK
+        varchar name
+        text description
+        varchar location
+        varchar duration
+        decimal price
+        varchar image_url
+        boolean is_active
+    }
+    tour_bookings {
+        int id PK
+        int user_id FK
+        int tour_id FK
+        date tour_date
+        int participants
+        decimal unit_price
+        decimal total_price
+        text note
+        enum status
+    }
+    transport_bookings {
+        int id PK
+        int user_id FK
+        int service_id FK
+        datetime start_at
+        datetime end_at
+        varchar pickup_location
+        varchar dropoff_location
+        varchar flight_number
+        varchar vehicle_plate
+        int quantity
+        decimal unit_price
+        decimal total_price
+        text note
+        enum status
+    }
+    support_tickets {
+        int id PK
+        int user_id FK
+        varchar subject
+        enum status
+    }
+    ticket_messages {
+        int id PK
+        int ticket_id FK
+        int sender_id FK
+        text message
+    }
+    reviews {
+        int id PK
+        int user_id FK
+        int booking_id FK
+        int service_booking_id FK
+        int food_order_id FK
+        int tour_booking_id FK
+        int transport_booking_id FK
+        tinyint rating
+        text comment
+    }
+    vouchers {
+        int id PK
+        varchar code UK
+        enum discount_type
+        decimal discount_value
+        decimal min_amount
+        int max_uses
+        int used_count
+        datetime starts_at
+        datetime ends_at
+        boolean is_active
+    }
+    payments {
+        int id PK
+        int user_id FK
+        int booking_id FK
+        int service_booking_id FK
+        int food_order_id FK
+        int tour_booking_id FK
+        int transport_booking_id FK
+        decimal amount
+        enum method
+        enum status
+        datetime paid_at
+    }
+    invoices {
+        int id PK
+        int payment_id FK
+        varchar invoice_number UK
+        datetime issued_at
+    }
+    notifications {
+        int id PK
+        int user_id FK
+        varchar title
+        text message
+        varchar type
+        boolean is_read
+    }
