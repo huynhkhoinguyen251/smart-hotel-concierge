@@ -48,7 +48,7 @@ Tài liệu chuẩn về phạm vi và nghiệp vụ: [proposal.md](proposal.md)
 | Idea & Proposal | Hoàn thành |
 | Environment Setup | Hoàn thành |
 | Giai đoạn 1: Database Design | Hoàn thành |
-| Giai đoạn 2: Backend | Chưa bắt đầu |
+| Giai đoạn 2: Backend | Đang làm |
 | Giai đoạn 3: Frontend | Chưa bắt đầu |
 | Giai đoạn 4: Integration | Chưa bắt đầu |
 | Giai đoạn 5: Advanced Features | Chưa bắt đầu |
@@ -85,18 +85,18 @@ Thiết kế cho cả tính năng Core và Extended, kể cả những phần s�
 
 Test từng API bằng Postman ngay sau khi viết xong.
 
-- [ ] Tạo thư mục `server`
-- [ ] Khởi tạo Node.js project
-- [ ] Cài đặt Express.js
-- [ ] Cài đặt thư viện kết nối MySQL (`mysql2`)
-- [ ] Cấu hình Environment Variables (`.env`)
-- [ ] Kết nối Backend với MySQL
-- [ ] Xây dựng cấu trúc thư mục Backend
-- [ ] Lập danh sách API trong `docs/api.md`
-- [ ] Xây dựng Authentication API
-- [ ] Xây dựng Authorization (User/Admin)
+- [x] Tạo thư mục `server`
+- [x] Khởi tạo Node.js project
+- [x] Cài đặt Express.js
+- [x] Cài đặt thư viện kết nối MySQL (`mysql2`)
+- [x] Cấu hình Environment Variables (`.env`)
+- [x] Kết nối Backend với MySQL
+- [x] Xây dựng cấu trúc thư mục Backend
+- [x] Lập danh sách API trong `docs/api.md`
+- [x] Xây dựng Authentication API (đã test bằng Postman)
+- [x] Xây dựng Authorization (User/Admin): đã test cùng API admin quản lý phòng
 - [ ] Deploy thử sau khi xong Authentication
-- [ ] Xây dựng Room Management API
+- [x] Xây dựng Room Management API (công khai và admin, đã test bằng Postman)
 - [ ] Xây dựng Room Booking API, có chống đặt trùng phòng
 - [ ] Xây dựng Hotel Service API
 - [ ] Xây dựng Food Ordering API
@@ -104,7 +104,7 @@ Test từng API bằng Postman ngay sau khi viết xong.
 - [ ] Xây dựng Support Ticket API
 - [ ] Xây dựng Review API
 - [ ] Xây dựng Admin API
-- [ ] Xây dựng chức năng upload ảnh
+- [x] Xây dựng chức năng upload ảnh
 
 ## Giai đoạn 3: Frontend Development
 
@@ -152,6 +152,7 @@ Chỉ bắt đầu khi toàn bộ tính năng Core đã chạy ổn.
 **Optional (chỉ làm khi còn thời gian; phải hỏi bạn trước khi bắt đầu):**
 
 - [ ] Voice Search
+- [ ] Đăng nhập bằng Google
 - [ ] Online check-in và check-out
 - [ ] Chat real-time với lễ tân
 - [ ] Đa ngôn ngữ (Anh, Việt)
@@ -185,7 +186,10 @@ Chỉ bắt đầu khi toàn bộ tính năng Core đã chạy ổn.
 | Local Tour Booking | Nằm ở Giai đoạn 5 của planning | Core, vì là một phần của tên đề tài |
 | Tiến trình | 12 tuần; làm giao diện trước, backend sau | Lịch đến 04/12/2026; làm trọn từng chức năng; deploy thử trong đợt 10–12/11 |
 | Voice Search | Làm nếu có thể | Optional |
-| Đánh giá | Phòng và dịch vụ | Phòng, dịch vụ và đơn đồ ăn |
+| Đánh giá | Phòng và dịch vụ | Phòng, dịch vụ và đơn đồ ăn; đánh giá đồ ăn hiện ở mục chung trên trang thực đơn |
+| Đăng nhập Google | Chưa có | Optional |
+| Kiến trúc backend | Chưa quy định | MVC kèm tầng Service |
+| Ngôn ngữ source code | Chưa quy định | Tiếng Anh, kể cả giao diện và dữ liệu mẫu; comment và `docs/` được dùng tiếng Việt |
 | Thuê xe máy | Chưa có quy tắc duyệt | Admin duyệt hoặc từ chối, và nhập biển số khi duyệt |
 | Upload ảnh | Cloudinary hoặc local | Multer, lưu local; chuyển Cloudinary nếu hosting cần |
 | Nội dung mới | Chưa có | Mức ưu tiên, quy tắc nghiệp vụ, bảo mật, danh sách API, Support Ticket API |

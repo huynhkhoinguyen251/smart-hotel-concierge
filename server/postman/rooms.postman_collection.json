@@ -1,0 +1,299 @@
+{
+  "info": {
+    "name": "Smart Hotel - Rooms",
+    "description": "Tests the 5 public Room APIs. No login is needed. Expected results are based on the data in database/seed.sql. Each request has checks in the Tests tab (called Scripts > Post-response in newer Postman versions).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "1. All rooms",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('10 available rooms', () => pm.expect(json.pagination.total).to.eql(10));",
+              "pm.test('Rooms 104 and 303 are excluded', () => {",
+              "  const numbers = json.data.map((room) => room.room_number);",
+              "  pm.expect(numbers).to.not.include('104');",
+              "  pm.expect(numbers).to.not.include('303');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200 with pagination page 1, limit 10, total 10. The 10 rooms are sorted by room_number from 101 to 402, without 104 (under maintenance) and 303 (inactive). Room 101 has avg_rating 5 and review_count 1; rooms without reviews have avg_rating null.",
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/rooms"
+      }
+    },
+    {
+      "name": "2. Two guests, price ascending",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Prices are ascending', () => {",
+              "  const prices = json.data.map((room) => room.room_type.price_per_night);",
+              "  pm.expect(prices).to.eql([...prices].sort((a, b) => a - b));",
+              "});",
+              "pm.test('Every room fits 2 guests', () => {",
+              "  json.data.forEach((room) => pm.expect(room.room_type.capacity).to.be.at.least(2));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, total 10, because every room type fits at least 2 guests. The list starts with 101, 102, 103 (Standard Room, 800000) and ends with 401, 402 (Family Room, 2500000). Prices are numbers, not strings.",
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/rooms?guests=2&sort=price_asc"
+      }
+    },
+    {
+      "name": "3. Available rooms, 24 Dec - 27 Dec",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('9 rooms left', () => pm.expect(json.pagination.total).to.eql(9));",
+              "pm.test('Room 302 is excluded', () => {",
+              "  pm.expect(json.data.map((room) => room.room_number)).to.not.include('302');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, total 9. Room 302 is excluded because it has a pending booking from 24 Dec to 27 Dec. The cancelled booking for room 302 (25 Dec - 28 Dec) is not counted.",
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/rooms?check_in=2026-12-24&check_out=2026-12-27"
+      }
+    },
+    {
+      "name": "4. Amenities 5,6",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Only rooms 401 and 402', () => {",
+              "  pm.expect(json.data.map((room) => room.room_number)).to.eql(['401', '402']);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, total 2: rooms 401 and 402 (Family Room). Only this room type has both Bathtub (id 5) and Balcony (id 6). Deluxe Room has a Bathtub but no Balcony, so it is excluded.",
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/rooms?amenity_ids=5,6"
+      }
+    },
+    {
+      "name": "5. Room details, id 1",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Room 101 with a room type description', () => {",
+              "  pm.expect(json.data.room_number).to.eql('101');",
+              "  pm.expect(json.data.room_type.description).to.be.a('string');",
+              "});",
+              "pm.test('2 images, primary image first', () => {",
+              "  pm.expect(json.data.images).to.have.lengthOf(2);",
+              "  pm.expect(json.data.images[0].is_primary).to.eql(true);",
+              "});",
+              "pm.test('4 amenities', () => pm.expect(json.data.amenities).to.have.lengthOf(4));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'Room retrieved successfully'. Room 101, Standard Room, 800000 per night, with room_type.description. It has 2 images (primary image first), 4 amenities (Air conditioning, Flat-screen TV, Free Wi-Fi, Hair dryer), avg_rating 5 and review_count 1.",
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/rooms/1"
+      }
+    },
+    {
+      "name": "6. Room details, id 10 (inactive)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "pm.test('Returns 404', () => pm.response.to.have.status(404));",
+              "pm.test('Error format and message', () => {",
+              "  pm.expect(json.success).to.eql(false);",
+              "  pm.expect(json.message).to.eql('Room not found');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 404 with message 'Room not found', because room 303 (id 10) is inactive.",
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/rooms/10"
+      }
+    },
+    {
+      "name": "7. Room id 9, 24 Dec - 27 Dec (booked)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Not available', () => {",
+              "  pm.expect(json.data.available).to.eql(false);",
+              "  pm.expect(json.data.reason).to.eql('Room is already booked for these dates');",
+              "});",
+              "pm.test('3 nights, 5400000', () => {",
+              "  pm.expect(json.data.nights).to.eql(3);",
+              "  pm.expect(json.data.estimated_total).to.eql(5400000);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, available false, reason 'Room is already booked for these dates', nights 3, price_per_night 1800000, estimated_total 5400000.",
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/rooms/9/availability?check_in=2026-12-24&check_out=2026-12-27"
+      }
+    },
+    {
+      "name": "8. Room id 9, 28 Dec - 30 Dec (available)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Available', () => {",
+              "  pm.expect(json.data.available).to.eql(true);",
+              "  pm.expect(json.data.reason).to.eql(null);",
+              "});",
+              "pm.test('2 nights, 3600000', () => {",
+              "  pm.expect(json.data.nights).to.eql(2);",
+              "  pm.expect(json.data.estimated_total).to.eql(3600000);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, available true, reason null, nights 2, estimated_total 3600000. The cancelled booking (25 Dec - 28 Dec) does not block the room, and the pending booking that checks out on 27 Dec does not overlap with a check-in on 28 Dec.",
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/rooms/9/availability?check_in=2026-12-28&check_out=2026-12-30"
+      }
+    },
+    {
+      "name": "9. Error: check-out before check-in",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Correct message', () => pm.expect(json.message).to.eql('Check-out date must be after check-in date'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Check-out date must be after check-in date'.",
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/rooms?check_in=2026-12-27&check_out=2026-12-24"
+      }
+    },
+    {
+      "name": "10. Room types",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('4 room types with amenities', () => {",
+              "  pm.expect(json.data).to.have.lengthOf(4);",
+              "  pm.expect(json.data.map((type) => type.amenities.length)).to.eql([4, 5, 7, 8]);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'Room types retrieved successfully', with 4 room types. Standard Room, Superior Room, Deluxe Room and Family Room have 4, 5, 7 and 8 amenities. Prices are numbers.",
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/room-types"
+      }
+    },
+    {
+      "name": "11. Amenities",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('8 amenities', () => pm.expect(json.data).to.have.lengthOf(8));",
+              "pm.test('Sorted by name', () => pm.expect(json.data[0].name).to.eql('Air conditioning'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'Amenities retrieved successfully', with 8 amenities. Each has id and name, sorted by name: Air conditioning comes first and Minibar comes last.",
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/amenities"
+      }
+    }
+  ]
+}

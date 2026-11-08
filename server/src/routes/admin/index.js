@@ -1,0 +1,21 @@
+import { Router } from 'express';
+import authenticate from '../../middlewares/authenticate.js';
+import requireAdmin from '../../middlewares/requireAdmin.js';
+import amenitiesRoutes from './amenities.routes.js';
+import roomImagesRoutes from './roomImages.routes.js';
+import roomsRoutes from './rooms.routes.js';
+import roomTypesRoutes from './roomTypes.routes.js';
+import uploadsRoutes from './uploads.routes.js';
+
+const router = Router();
+
+// Áp dụng một lần cho toàn bộ /api/admin, nên route admin nào thêm vào sau cũng được bảo vệ.
+router.use(authenticate, requireAdmin);
+
+router.use('/uploads', uploadsRoutes);
+router.use('/rooms', roomsRoutes);
+router.use('/room-images', roomImagesRoutes);
+router.use('/room-types', roomTypesRoutes);
+router.use('/amenities', amenitiesRoutes);
+
+export default router;

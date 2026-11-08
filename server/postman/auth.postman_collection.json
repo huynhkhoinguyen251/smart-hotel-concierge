@@ -1,0 +1,114 @@
+{
+  "info": {
+    "name": "Smart Hotel - Auth",
+    "description": "Tests the 5 authentication and profile APIs. Run the requests from top to bottom. Login and Register save the token to the token variable automatically. All passwords here are test passwords only.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api", "type": "string" },
+    { "key": "token", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "1. Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.success && json.data && json.data.token) {",
+              "  pm.collectionVariables.set('token', json.data.token);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Logs in with a test account from database/README.md. Expected: 200, message 'Login successful', and data with token and user. The user object never contains password_hash. A wrong email or password returns 401 with 'Invalid email or password'.",
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"an.tran@example.com\",\n  \"password\": \"User@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "2. Get Profile",
+      "request": {
+        "description": "Expected: 200, message 'Profile retrieved successfully', with the profile of Tran Thi An. Without a valid token: 401 'Authentication required' or 'Invalid or expired token'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+        },
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/users/me", "host": ["{{baseUrl}}"], "path": ["users", "me"] }
+      }
+    },
+    {
+      "name": "3. Update Profile",
+      "request": {
+        "description": "Uses the same full name and phone number as the an.tran account in the seed data, so the sample data does not change. Edit the body values to see a change. Expected: 200, message 'Profile updated successfully'. Email and role cannot be changed.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+        },
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/users/me", "host": ["{{baseUrl}}"], "path": ["users", "me"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"full_name\": \"Tran Thi An\",\n  \"phone\": \"0905000002\"\n}"
+        }
+      }
+    },
+    {
+      "name": "4. Register",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.success && json.data && json.data.token) {",
+              "  pm.collectionVariables.set('token', json.data.token);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Each request creates a new account in the database, with an email based on the current time. The body includes role admin as a check: the response must still show role user. Expected: 201, message 'Registration successful'. Reusing an email returns 409 'Email is already in use'.",
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"full_name\": \"Test Guest\",\n  \"email\": \"test.{{$timestamp}}@example.com\",\n  \"password\": \"Test@1234\",\n  \"phone\": \"0905000099\",\n  \"role\": \"admin\"\n}"
+        }
+      }
+    },
+    {
+      "name": "5. Change Password",
+      "request": {
+        "description": "Run this right after Register, so it changes the password of the new account and leaves the test accounts untouched. Expected: 200, message 'Password changed successfully'. If the token belongs to another account, or the password was already changed once, the result is 400 'Current password is incorrect'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+        },
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/users/me/password", "host": ["{{baseUrl}}"], "path": ["users", "me", "password"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"current_password\": \"Test@1234\",\n  \"new_password\": \"Test@5678\"\n}"
+        }
+      }
+    }
+  ]
+}

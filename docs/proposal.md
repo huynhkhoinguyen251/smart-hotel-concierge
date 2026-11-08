@@ -72,6 +72,7 @@ The database is designed for Core and Extended features from the start, so that 
 - Book local tours or nearby tourism services.
 - Contact reception through a support ticket.
 - Review and rate rooms, services, or food orders.
+- Read food reviews in a shared section of the menu page.
 
 ### 4.2 Core Features — Admin
 
@@ -109,6 +110,7 @@ The database is designed for Core and Extended features from the start, so that 
 ### 4.4 Optional Features
 
 - Voice search using the browser's speech recognition, on supported browsers.
+- Sign-in with a Google account.
 - Online check-in and check-out.
 - Real-time chat with reception.
 - Multi-language support (English and Vietnamese).
@@ -127,7 +129,11 @@ The database is designed for Core and Extended features from the start, so that 
 ### Bookings
 
 - A user can update the dates of a booking only while it is `pending`, and availability is checked again.
+- Check-in time is 14:00 on the check-in date.
 - A user can cancel a booking while it is `pending` or `confirmed`, up to 24 hours before check-in. After that, only an admin can cancel it.
+- When a booking is cancelled, its hotel service requests that are still `pending` or `confirmed` are cancelled automatically.
+- An admin can mark a booking as `checked_in` only from the check-in date onwards.
+- A stay can be at most 30 nights, and the check-in date can be at most one year ahead.
 - A booking stores the price at the time of booking, so later price changes do not affect it.
 - Each booking is for one room. A user can have many bookings, including several rooms for the same dates.
 
@@ -140,6 +146,7 @@ The database is designed for Core and Extended features from the start, so that 
 - When approving a motorbike rental, the admin must enter the licence plate, and the user can then see it. The plate is optional for airport pickup and shuttle.
 - Each motorbike rental request is for one motorbike (`quantity` = 1). A user who needs more motorbikes creates more requests.
 - Service and order items store the price at the time of the request.
+- A user can cancel a service, food, or tourism request only while it is `pending`. An admin can cancel it while it is `pending` or `confirmed`.
 
 ### Reviews
 
@@ -179,6 +186,15 @@ The database is designed for Core and Extended features from the start, so that 
 MySQL was chosen because the system's data is strongly relational: users, bookings, rooms, services, and payments are connected, and booking requires transactions to prevent double booking.
 
 Image storage may move to Cloudinary if the chosen hosting service does not keep uploaded files.
+
+The system follows the **MVC (Model-View-Controller)** architecture, with a service layer for business rules:
+
+| Layer | Implementation | Responsibility |
+|---|---|---|
+| Model | Model files in the backend | SQL queries and database access |
+| View | ReactJS interface using JSON responses | Displaying data to users |
+| Controller | Controller files in the backend | Receiving requests and sending responses |
+| Service | Service files in the backend | Business rules and transactions |
 
 ## 7. Main System Modules
 

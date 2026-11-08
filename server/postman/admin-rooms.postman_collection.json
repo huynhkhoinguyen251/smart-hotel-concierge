@@ -1,0 +1,528 @@
+{
+  "info": {
+    "name": "Smart Hotel - Admin Rooms",
+    "description": "Tests the admin Room APIs and image upload. Run the requests in order with the Collection Runner or one by one. Requests 1 and 2 log in and save adminToken and userToken. Requests 6-16 create test data and save the new IDs in collection variables. Requests 19-21 delete that test data, so the whole collection can be run again. Before request 12, select an image file on your computer (see that request's description). If a previous run stopped half-way and room 501 still exists, request 8 returns 409; delete room 501 first, then run again.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api", "type": "string" },
+    { "key": "adminToken", "value": "", "type": "string" },
+    { "key": "userToken", "value": "", "type": "string" },
+    { "key": "amenityId", "value": "", "type": "string" },
+    { "key": "roomTypeId", "value": "", "type": "string" },
+    { "key": "roomId", "value": "", "type": "string" },
+    { "key": "uploadedImageUrl", "value": "", "type": "string" },
+    { "key": "firstImageId", "value": "", "type": "string" },
+    { "key": "secondImageId", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "1. Login as admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.test('Role is admin', () => pm.expect(json.data.user.role).to.eql('admin'));",
+              "pm.collectionVariables.set('adminToken', json.data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'Login successful', role admin. The token is saved to adminToken. Test account from database/README.md.",
+        "auth": { "type": "noauth" },
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@smarthotel.test\",\n  \"password\": \"Admin@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "2. Login as user",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.test('Role is user', () => pm.expect(json.data.user.role).to.eql('user'));",
+              "pm.collectionVariables.set('userToken', json.data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, role user. The token is saved to userToken.",
+        "auth": { "type": "noauth" },
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"an.tran@example.com\",\n  \"password\": \"User@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "3. User calls an admin API (403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 403', () => pm.response.to.have.status(403));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql('You do not have permission to perform this action'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 403 with message 'You do not have permission to perform this action', because the token belongs to a normal user.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{userToken}}", "type": "string" }]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/rooms"
+      }
+    },
+    {
+      "name": "4. No token calls an admin API (401)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 401', () => pm.response.to.have.status(401));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql('Authentication required'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 401 with message 'Authentication required', because no token is sent.",
+        "auth": { "type": "noauth" },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/rooms"
+      }
+    },
+    {
+      "name": "5. List all rooms as admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.test('12 rooms in total', () => pm.expect(json.pagination.total).to.eql(12));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200 with pagination total 12. Unlike GET /rooms, this includes room 104 (maintenance) and room 303 (inactive). Filters: status, room_type_id, search (room number), page, limit.",
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/rooms"
+      }
+    },
+    {
+      "name": "6. Create amenity \"Coffee machine\"",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "const json = pm.response.json();",
+              "pm.test('Name saved', () => pm.expect(json.data.name).to.eql('Coffee machine'));",
+              "pm.collectionVariables.set('amenityId', json.data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 201, message 'Amenity created successfully', data { id, name }. The id is saved to amenityId. A duplicate name returns 409 'Amenity name already exists'.",
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/admin/amenities",
+        "body": { "mode": "raw", "raw": "{\n  \"name\": \"Coffee machine\"\n}" }
+      }
+    },
+    {
+      "name": "7. Create room type \"Suite\"",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "const json = pm.response.json();",
+              "pm.test('Price is a number', () => pm.expect(json.data.price_per_night).to.eql(3500000));",
+              "pm.test('3 amenities', () => pm.expect(json.data.amenities).to.have.lengthOf(3));",
+              "pm.collectionVariables.set('roomTypeId', json.data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 201, message 'Room type created successfully'. data has price_per_night 3500000 as a number, capacity 4, and 3 amenities: Coffee machine, Free Wi-Fi (id 1) and Bathtub (id 5). The id is saved to roomTypeId. An amenity id that does not exist returns 400 'One or more amenities do not exist'.",
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/admin/room-types",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Suite\",\n  \"description\": \"A 60 m² suite with a living room and a sea view.\",\n  \"price_per_night\": 3500000,\n  \"capacity\": 4,\n  \"amenity_ids\": [{{amenityId}}, 1, 5]\n}"
+        }
+      }
+    },
+    {
+      "name": "8. Create room 501",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "const json = pm.response.json();",
+              "pm.test('Room 501, available', () => {",
+              "  pm.expect(json.data.room_number).to.eql('501');",
+              "  pm.expect(json.data.status).to.eql('available');",
+              "});",
+              "pm.collectionVariables.set('roomId', json.data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 201, message 'Room created successfully'. Room 501 on floor 5, room type Suite, status available (the default). The id is saved to roomId.",
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/admin/rooms",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"room_type_id\": {{roomTypeId}},\n  \"room_number\": \"501\",\n  \"floor\": 5\n}"
+        }
+      }
+    },
+    {
+      "name": "9. Create duplicate room 501 (409)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 409', () => pm.response.to.have.status(409));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql('Room number already exists'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 409 with message 'Room number already exists'.",
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/admin/rooms",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"room_type_id\": {{roomTypeId}},\n  \"room_number\": \"501\",\n  \"floor\": 5\n}"
+        }
+      }
+    },
+    {
+      "name": "10. Update room 501 (floor)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Floor is 6', () => pm.expect(pm.response.json().data.floor).to.eql(6));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'Room updated successfully', floor 6. Only the fields sent are changed; the room number and room type stay the same.",
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/admin/rooms/{{roomId}}",
+        "body": { "mode": "raw", "raw": "{\n  \"floor\": 6\n}" }
+      }
+    },
+    {
+      "name": "11. Change room 501 status to maintenance",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Status is maintenance', () => pm.expect(pm.response.json().data.status).to.eql('maintenance'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'Room status updated successfully', status maintenance.",
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/admin/rooms/{{roomId}}/status",
+        "body": { "mode": "raw", "raw": "{\n  \"status\": \"maintenance\"\n}" }
+      }
+    },
+    {
+      "name": "12. Upload an image",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "const json = pm.response.json();",
+              "pm.test('image_url starts with /uploads/', () => pm.expect(json.data.image_url).to.match(/^\\/uploads\\//));",
+              "pm.collectionVariables.set('uploadedImageUrl', json.data.image_url);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "BEFORE SENDING: open the Body tab, find the row with key 'image', click 'Select Files' and choose a JPEG, PNG or WebP image from your computer, at most 5 MB. Postman cannot include a file in this collection, so you must choose it yourself. Expected: 201, message 'Image uploaded successfully', data { image_url: '/uploads/<random name>' }. The URL is saved to uploadedImageUrl. You can open http://localhost:5000{image_url} in a browser to see the image. Errors return 400: no file ('Please choose an image file in the \"image\" field'), a file over 5 MB ('Image must be at most 5 MB'), or another file type ('Only JPEG, PNG and WebP images are allowed').",
+        "method": "POST",
+        "header": [],
+        "url": "{{baseUrl}}/admin/uploads",
+        "body": {
+          "mode": "formdata",
+          "formdata": [{ "key": "image", "type": "file", "src": [] }]
+        }
+      }
+    },
+    {
+      "name": "13. Add image to room 501 (becomes primary)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "const json = pm.response.json();",
+              "pm.test('First image is primary', () => pm.expect(json.data.is_primary).to.eql(true));",
+              "pm.collectionVariables.set('firstImageId', json.data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Uses the image_url from request 12. Expected: 201, message 'Image added successfully', is_primary true, because it is the first image of the room even though is_primary is not sent. The id is saved to firstImageId.",
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/admin/rooms/{{roomId}}/images",
+        "body": { "mode": "raw", "raw": "{\n  \"image_url\": \"{{uploadedImageUrl}}\"\n}" }
+      }
+    },
+    {
+      "name": "14. Add a second image",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "const json = pm.response.json();",
+              "pm.test('Not primary', () => pm.expect(json.data.is_primary).to.eql(false));",
+              "pm.collectionVariables.set('secondImageId', json.data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 201, is_primary false, because the room already has a primary image. The id is saved to secondImageId.",
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/admin/rooms/{{roomId}}/images",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"image_url\": \"https://placehold.co/800x600?text=Room+501+View\"\n}"
+        }
+      }
+    },
+    {
+      "name": "15. Set second image as primary",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Now primary', () => pm.expect(pm.response.json().data.is_primary).to.eql(true));",
+              "pm.sendRequest(pm.collectionVariables.get('baseUrl') + '/rooms/' + pm.collectionVariables.get('roomId'), (err, res) => {",
+              "  const images = res.json().data.images;",
+              "  pm.test('Only one primary image', () => pm.expect(images.filter((image) => image.is_primary)).to.have.lengthOf(1));",
+              "  pm.test('Second image is first in the list', () => pm.expect(String(images[0].id)).to.eql(String(pm.collectionVariables.get('secondImageId'))));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'Primary image updated successfully', is_primary true. The old primary image is no longer primary. The test script also calls GET /rooms/{{roomId}} to check that the room has exactly one primary image.",
+        "method": "PATCH",
+        "header": [],
+        "url": "{{baseUrl}}/admin/room-images/{{secondImageId}}/primary"
+      }
+    },
+    {
+      "name": "16. Delete the primary image",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.sendRequest(pm.collectionVariables.get('baseUrl') + '/rooms/' + pm.collectionVariables.get('roomId'), (err, res) => {",
+              "  const images = res.json().data.images;",
+              "  pm.test('One image left', () => pm.expect(images).to.have.lengthOf(1));",
+              "  pm.test('Remaining image became primary', () => {",
+              "    pm.expect(String(images[0].id)).to.eql(String(pm.collectionVariables.get('firstImageId')));",
+              "    pm.expect(images[0].is_primary).to.eql(true);",
+              "  });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Deletes the second image, which is now primary. Expected: 200, message 'Image deleted successfully'. The remaining image (firstImageId) becomes primary; the test script checks this with GET /rooms/{{roomId}}.",
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/admin/room-images/{{secondImageId}}"
+      }
+    },
+    {
+      "name": "17. Delete room 1 (409, has bookings)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 409', () => pm.response.to.have.status(409));",
+              "pm.test('Message suggests inactive', () => pm.expect(pm.response.json().message).to.include('inactive'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 409 with message 'This room has bookings and cannot be deleted. Change its status to inactive instead.' Room 101 (id 1) has bookings in the sample data.",
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/admin/rooms/1"
+      }
+    },
+    {
+      "name": "18. Delete room type Standard Room (409, has rooms)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 409', () => pm.response.to.have.status(409));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql('This room type still has rooms and cannot be deleted'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 409 with message 'This room type still has rooms and cannot be deleted'. Standard Room (id 1) has rooms 101-104.",
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/admin/room-types/1"
+      }
+    },
+    {
+      "name": "19. Delete room 501 (cleanup)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test('Returns 200', () => pm.response.to.have.status(200));"]
+          }
+        }
+      ],
+      "request": {
+        "description": "Cleanup. Expected: 200, message 'Room deleted successfully'. Room 501 has no bookings, so it can be deleted, and its image is deleted with it.",
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/admin/rooms/{{roomId}}"
+      }
+    },
+    {
+      "name": "20. Delete room type Suite (cleanup)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test('Returns 200', () => pm.response.to.have.status(200));"]
+          }
+        }
+      ],
+      "request": {
+        "description": "Cleanup. Expected: 200, message 'Room type deleted successfully'. Suite has no rooms after request 19.",
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/admin/room-types/{{roomTypeId}}"
+      }
+    },
+    {
+      "name": "21. Delete amenity \"Coffee machine\" (cleanup)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test('Returns 200', () => pm.response.to.have.status(200));"]
+          }
+        }
+      ],
+      "request": {
+        "description": "Cleanup. Expected: 200, message 'Amenity deleted successfully'. After this request the data is back to the seed state, so the collection can be run again.",
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/admin/amenities/{{amenityId}}"
+      }
+    }
+  ]
+}
