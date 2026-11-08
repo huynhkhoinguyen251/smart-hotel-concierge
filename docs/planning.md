@@ -95,7 +95,7 @@ Test từng API bằng Postman ngay sau khi viết xong.
 - [x] Lập danh sách API trong `docs/api.md`
 - [x] Xây dựng Authentication API (đã test bằng Postman)
 - [x] Xây dựng Authorization (User/Admin): đã test cùng API admin quản lý phòng
-- [ ] Deploy thử sau khi xong Authentication
+- [x] Deploy thử sau khi xong Authentication: backend chạy ở `https://smart-hotel-concierge-4yc0.onrender.com` (nhánh `database-design`) ngày 08/11/2026; đã test health, danh sách phòng và đăng nhập
 - [x] Xây dựng Room Management API (công khai và admin, đã test bằng Postman)
 - [x] Xây dựng Room Booking API, có chống đặt trùng phòng (user và admin, đã test bằng Postman)
 - [ ] Xây dựng Hotel Service API
@@ -190,7 +190,7 @@ Chỉ bắt đầu khi toàn bộ tính năng Core đã chạy ổn.
 | Đăng nhập Google | Chưa có | Optional |
 | Kiến trúc backend | Chưa quy định | MVC kèm tầng Service |
 | Ngôn ngữ source code | Chưa quy định | Tiếng Anh, kể cả giao diện và dữ liệu mẫu; comment và `docs/` được dùng tiếng Việt |
-| Hosting (deploy thử) | Chưa chọn | Backend trên Render (gói Free), database trên TiDB Cloud Starter (miễn phí, tương thích MySQL). Aiven đã ngừng gói MySQL miễn phí từ 11/2026 |
+| Hosting (deploy thử) | Chưa chọn | Backend trên Render (gói Free), database trên TiDB Cloud Starter (miễn phí, tương thích MySQL). Aiven đã ngừng gói MySQL miễn phí từ 11/2026. Đã nạp `schema.sql` và `seed.sql` lên TiDB `8.0.11-TiDB-v8.5.3-serverless` ngày 08/11/2026; khóa ngoại được kiểm tra và hoạt động, còn `CHECK` không được TiDB kiểm tra nên do backend đảm nhiệm |
 | Thuê xe máy | Chưa có quy tắc duyệt | Admin duyệt hoặc từ chối, và nhập biển số khi duyệt |
 | Upload ảnh | Cloudinary hoặc local | Multer, lưu local; chuyển Cloudinary nếu hosting cần |
 | Nội dung mới | Chưa có | Mức ưu tiên, quy tắc nghiệp vụ, bảo mật, danh sách API, Support Ticket API |
