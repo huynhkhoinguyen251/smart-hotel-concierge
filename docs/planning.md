@@ -190,6 +190,7 @@ Chỉ bắt đầu khi toàn bộ tính năng Core đã chạy ổn.
 | Đăng nhập Google | Chưa có | Optional |
 | Kiến trúc backend | Chưa quy định | MVC kèm tầng Service |
 | Ngôn ngữ source code | Chưa quy định | Tiếng Anh, kể cả giao diện và dữ liệu mẫu; comment và `docs/` được dùng tiếng Việt |
+| Hosting (deploy thử) | Chưa chọn | Backend trên Render (gói Free), database trên TiDB Cloud Starter (miễn phí, tương thích MySQL). Aiven đã ngừng gói MySQL miễn phí từ 11/2026 |
 | Thuê xe máy | Chưa có quy tắc duyệt | Admin duyệt hoặc từ chối, và nhập biển số khi duyệt |
 | Upload ảnh | Cloudinary hoặc local | Multer, lưu local; chuyển Cloudinary nếu hosting cần |
 | Nội dung mới | Chưa có | Mức ưu tiên, quy tắc nghiệp vụ, bảo mật, danh sách API, Support Ticket API |

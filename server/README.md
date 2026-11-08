@@ -59,3 +59,42 @@ The backend follows the MVC pattern with a Service layer. A request flows throug
 | `utils/` | Shared helpers: responses, errors, tokens, passwords, dates |
 
 The `postman/` folder, outside `src/`, contains Postman collections for testing the API.
+
+## Deployment
+
+This setup is for a trial deployment: the backend on Render (Free plan) and the database on TiDB Cloud Starter.
+
+### Render (Web Service)
+
+| Setting | Value |
+|---|---|
+| Root Directory | `server` |
+| Build Command | `npm install` |
+| Start Command | `npm start` |
+
+Add these environment variables in the Render dashboard. Do not set `PORT`: Render sets it automatically.
+
+| Variable | Value |
+|---|---|
+| `DB_HOST` | TiDB Cloud host |
+| `DB_PORT` | `4000` |
+| `DB_USER` | TiDB Cloud user, including the instance prefix (for example `xxxxxxxx.root`) |
+| `DB_PASSWORD` | TiDB Cloud password |
+| `DB_NAME` | `smart_hotel_concierge` |
+| `DB_SSL` | `true` |
+| `CLIENT_URL` | URL of the deployed frontend |
+| `JWT_SECRET` | A new random string, different from your local one |
+| `JWT_EXPIRES_IN` | `7d` |
+
+`package.json` requires Node.js 24 or newer through the `engines` field, so Render uses a matching version.
+
+### TiDB Cloud Starter
+
+- Port: `4000`.
+- TiDB Cloud only accepts TLS connections, so set `DB_SSL=true`. The server uses the certificates built into Node.js, so you do not need a CA file.
+- The user name has the instance prefix, for example `xxxxxxxx.root`. Copy it exactly from the TiDB Cloud **Connect** dialog.
+- Create the tables and sample data with the scripts in `database/` before starting the backend.
+
+### Note about uploaded images
+
+The Render Free plan deletes everything in `server/uploads/` whenever the server restarts or is redeployed. Uploaded images are therefore for testing only.
