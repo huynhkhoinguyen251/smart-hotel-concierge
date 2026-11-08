@@ -2,6 +2,15 @@ import pool from '../config/db.js';
 
 const toImage = (row) => ({ ...row, is_primary: Boolean(row.is_primary) });
 
+// Truy vấn con lấy ảnh chính của một phòng, nếu không có thì ảnh đầu tiên.
+// roomIdColumn là tên cột cố định trong code, ví dụ 'r.id'; không lấy từ dữ liệu gửi lên.
+export const primaryImageSubquery = (roomIdColumn) => `(
+  SELECT ri.image_url FROM room_images ri
+  WHERE ri.room_id = ${roomIdColumn}
+  ORDER BY ri.is_primary DESC, ri.id ASC
+  LIMIT 1
+)`;
+
 // Ảnh chính đứng đầu, sau đó theo thứ tự thêm vào.
 export const findImagesByRoomId = async (roomId, conn = pool) => {
   const [rows] = await conn.execute(

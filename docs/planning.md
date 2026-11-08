@@ -97,7 +97,7 @@ Test từng API bằng Postman ngay sau khi viết xong.
 - [x] Xây dựng Authorization (User/Admin): đã test cùng API admin quản lý phòng
 - [ ] Deploy thử sau khi xong Authentication
 - [x] Xây dựng Room Management API (công khai và admin, đã test bằng Postman)
-- [ ] Xây dựng Room Booking API, có chống đặt trùng phòng
+- [x] Xây dựng Room Booking API, có chống đặt trùng phòng (user và admin, đã test bằng Postman)
 - [ ] Xây dựng Hotel Service API
 - [ ] Xây dựng Food Ordering API
 - [ ] Xây dựng Tourism API (motorbike, airport pickup, local tour)

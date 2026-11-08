@@ -1,0 +1,916 @@
+{
+  "info": {
+    "name": "Smart Hotel - Bookings",
+    "description": "Tests the 5 user booking APIs and the 3 admin booking APIs. Run the requests in order (Collection Runner). Every test booking ends as cancelled, and cancelled bookings do not block rooms, so the collection can be run again. The fixed dates in February 2027 only work until then; after that, change them to future dates.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "anToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "binhToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "bookingId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "todayBookingId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "today",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tomorrow",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Login An",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('anToken', pm.response.json().data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Logs in as an.tran@example.com (test account from database/README.md). Expected: 200. The token is saved to anToken.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"an.tran@example.com\",\n  \"password\": \"User@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "2. Login Binh",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('binhToken', pm.response.json().data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Logs in as binh.le@example.com (test account from database/README.md). Expected: 200. The token is saved to binhToken.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"binh.le@example.com\",\n  \"password\": \"User@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "3. Login admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('adminToken', pm.response.json().data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Logs in as admin@smarthotel.test (test account from database/README.md). Expected: 200. The token is saved to adminToken.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@smarthotel.test\",\n  \"password\": \"Admin@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "4. An books room 1 (10 Feb - 13 Feb 2027)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "const data = pm.response.json().data;",
+              "pm.test('Pending, 3 nights, total 2400000', () => {",
+              "  pm.expect(data.status).to.eql('pending');",
+              "  pm.expect(data.nights).to.eql(3);",
+              "  pm.expect(data.total_price).to.eql(2400000);",
+              "  pm.expect(data.can_edit).to.eql(true);",
+              "});",
+              "pm.collectionVariables.set('bookingId', data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 201, message 'Booking created successfully'. status pending, nights 3, price_per_night 800000 (taken from the database), total_price 2400000, discount_amount 0, can_edit true, can_cancel true. The id is saved to bookingId.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"room_id\": 1,\n  \"check_in\": \"2027-02-10\",\n  \"check_out\": \"2027-02-13\",\n  \"guests\": 2\n}"
+        }
+      }
+    },
+    {
+      "name": "5. Binh books overlapping dates (409)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 409', () => pm.response.to.have.status(409));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Room is already booked for these dates\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 409 with message 'Room is already booked for these dates', because An's pending booking (10 Feb - 13 Feb) overlaps 12 Feb - 15 Feb.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{binhToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"room_id\": 1,\n  \"check_in\": \"2027-02-12\",\n  \"check_out\": \"2027-02-15\",\n  \"guests\": 2\n}"
+        }
+      }
+    },
+    {
+      "name": "6. An books room 1 for 3 guests (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"This room allows at most 2 guests\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'This room allows at most 2 guests'. Room 101 is a Standard Room with capacity 2.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"room_id\": 1,\n  \"check_in\": \"2027-03-01\",\n  \"check_out\": \"2027-03-03\",\n  \"guests\": 3\n}"
+        }
+      }
+    },
+    {
+      "name": "7. An books room 4, under maintenance (409)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 409', () => pm.response.to.have.status(409));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Room is under maintenance and cannot be booked\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 409 with message 'Room is under maintenance and cannot be booked'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"room_id\": 4,\n  \"check_in\": \"2027-03-01\",\n  \"check_out\": \"2027-03-03\",\n  \"guests\": 1\n}"
+        }
+      }
+    },
+    {
+      "name": "8. An books room 10, inactive (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 404', () => pm.response.to.have.status(404));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Room not found\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 404 with message 'Room not found'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"room_id\": 10,\n  \"check_in\": \"2027-03-01\",\n  \"check_out\": \"2027-03-03\",\n  \"guests\": 1\n}"
+        }
+      }
+    },
+    {
+      "name": "9. An books 31 nights (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"A booking can be at most 30 nights\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'A booking can be at most 30 nights'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"room_id\": 2,\n  \"check_in\": \"2027-03-01\",\n  \"check_out\": \"2027-04-01\",\n  \"guests\": 1\n}"
+        }
+      }
+    },
+    {
+      "name": "10. An lists her bookings",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const ids = pm.response.json().data.map((booking) => String(booking.id));",
+              "pm.test('Contains bookingId', () => pm.expect(ids).to.include(String(pm.collectionVariables.get('bookingId'))));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200 with pagination, newest first. The list contains the booking from request 4 and only bookings of An.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/bookings?limit=50"
+      }
+    },
+    {
+      "name": "11. Binh gets An's booking (403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 403', () => pm.response.to.have.status(403));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"You do not have permission to access this booking\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 403 with message 'You do not have permission to access this booking'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{binhToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/bookings/{{bookingId}}"
+      }
+    },
+    {
+      "name": "12. An changes dates (11 Feb - 15 Feb)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('4 nights, total 3200000', () => {",
+              "  pm.expect(data.nights).to.eql(4);",
+              "  pm.expect(data.total_price).to.eql(3200000);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'Booking updated successfully'. nights 4, price_per_night stays 800000, total_price 3200000. The overlap check skips this booking itself, so moving to overlapping dates of the same booking is allowed.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/bookings/{{bookingId}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"check_in\": \"2027-02-11\",\n  \"check_out\": \"2027-02-15\"\n}"
+        }
+      }
+    },
+    {
+      "name": "13. Admin confirms the booking",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Confirmed, with user', () => {",
+              "  pm.expect(data.status).to.eql('confirmed');",
+              "  pm.expect(data.user.full_name).to.eql('Tran Thi An');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'Booking status updated successfully', status confirmed. The response includes user (Tran Thi An).",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/bookings/{{bookingId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"confirmed\"\n}"
+        }
+      }
+    },
+    {
+      "name": "14. An changes dates again (400, no longer pending)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Only pending bookings can be changed\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Only pending bookings can be changed'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/bookings/{{bookingId}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"check_in\": \"2027-02-12\",\n  \"check_out\": \"2027-02-15\"\n}"
+        }
+      }
+    },
+    {
+      "name": "15. Admin changes confirmed to checked_out (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Cannot change booking status from confirmed to checked_out\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Cannot change booking status from confirmed to checked_out'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/bookings/{{bookingId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"checked_out\"\n}"
+        }
+      }
+    },
+    {
+      "name": "16. An cancels the booking",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Cancelled', () => pm.expect(pm.response.json().data.status).to.eql('cancelled'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'Booking cancelled successfully', status cancelled, can_cancel false. This is allowed because check-in is more than 24 hours away.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [],
+        "url": "{{baseUrl}}/bookings/{{bookingId}}/cancel"
+      }
+    },
+    {
+      "name": "17. An cancels again (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Only pending or confirmed bookings can be cancelled\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Only pending or confirmed bookings can be cancelled'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [],
+        "url": "{{baseUrl}}/bookings/{{bookingId}}/cancel"
+      }
+    },
+    {
+      "name": "18. An cancels seed booking 3, checked in (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Only pending or confirmed bookings can be cancelled\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Booking 3 belongs to An and is checked_in in the seed data. Expected: 400 with message 'Only pending or confirmed bookings can be cancelled'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [],
+        "url": "{{baseUrl}}/bookings/3/cancel"
+      }
+    },
+    {
+      "name": "19. An books room 3 for today",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const pad = (n) => String(n).padStart(2, \"0\");",
+              "const format = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;",
+              "const now = new Date();",
+              "const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);",
+              "pm.collectionVariables.set('today', format(now));",
+              "pm.collectionVariables.set('tomorrow', format(tomorrow));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "const data = pm.response.json().data;",
+              "pm.test('Today, cannot self-cancel', () => {",
+              "  pm.expect(data.check_in).to.eql(pm.collectionVariables.get('today'));",
+              "  pm.expect(data.can_cancel).to.eql(false);",
+              "});",
+              "pm.collectionVariables.set('todayBookingId', data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "The pre-request script saves today and tomorrow (computer's local time) to the variables today and tomorrow. Expected: 201, status pending, nights 1, can_cancel false (less than 24 hours before 14:00 today). The id is saved to todayBookingId. Earlier test bookings for room 3 are cancelled, so they do not block it.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"room_id\": 3,\n  \"check_in\": \"{{today}}\",\n  \"check_out\": \"{{tomorrow}}\",\n  \"guests\": 1\n}"
+        }
+      }
+    },
+    {
+      "name": "20. An cancels today's booking (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Bookings can only be cancelled online at least 24 hours before check-in (14:00). Please contact the reception desk.\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Bookings can only be cancelled online at least 24 hours before check-in (14:00). Please contact the reception desk.'",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [],
+        "url": "{{baseUrl}}/bookings/{{todayBookingId}}/cancel"
+      }
+    },
+    {
+      "name": "21. Admin cancels today's booking",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Cancelled', () => pm.expect(pm.response.json().data.status).to.eql('cancelled'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, status cancelled. Admins are not limited by the 24-hour rule. Any pending or confirmed service requests of the booking are cancelled too.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/bookings/{{todayBookingId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"cancelled\"\n}"
+        }
+      }
+    },
+    {
+      "name": "22. Admin lists pending bookings",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('All pending', () => data.forEach((booking) => pm.expect(booking.status).to.eql('pending')));",
+              "pm.test('Contains booking 7', () => pm.expect(data.map((booking) => booking.id)).to.include(7));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200. Every booking has status pending and includes user. Seed booking 7 (room 302, 24 Dec - 27 Dec, Tran Thi An) is in the list.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/bookings?status=pending&limit=50"
+      }
+    },
+    {
+      "name": "23. Admin gets booking 6",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('User is Pham Thu Chi', () => pm.expect(data.user.full_name).to.eql('Pham Thu Chi'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200. Booking 6 (room 102, 20 Dec - 22 Dec, confirmed) with user Pham Thu Chi.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/bookings/6"
+      }
+    }
+  ]
+}

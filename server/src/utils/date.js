@@ -29,3 +29,15 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 export const countNights = (checkIn, checkOut) =>
   Math.round((toUtcTime(checkOut) - toUtcTime(checkIn)) / MS_PER_DAY);
+
+// Cộng thêm số ngày vào một ngày 'YYYY-MM-DD', ví dụ addDays('2026-12-31', 1) = '2027-01-01'.
+export const addDays = (value, days) => {
+  const date = new Date(toUtcTime(value) + days * MS_PER_DAY);
+  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`;
+};
+
+// Thời điểm theo giờ địa phương của server, ví dụ 14:00 ngày nhận phòng.
+export const toLocalDateTime = (value, hour) => {
+  const [year, month, day] = value.split('-').map(Number);
+  return new Date(year, month - 1, day, hour, 0, 0, 0);
+};

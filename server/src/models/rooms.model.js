@@ -1,8 +1,7 @@
+import { BLOCKING_BOOKING_STATUSES } from '../config/booking.js';
 import pool from '../config/db.js';
+import { primaryImageSubquery } from './roomImages.model.js';
 import { buildSetClause, escapeLike, LIKE_ESCAPE, placeholders } from './sqlHelpers.js';
-
-// Theo Mục 5 của proposal.md: chỉ các đơn ở trạng thái này mới giữ phòng.
-export const BLOCKING_BOOKING_STATUSES = ['pending', 'confirmed', 'checked_in'];
 
 // Ảnh chính, nếu không có thì ảnh đầu tiên. Điểm đánh giá lấy từ reviews nối với bookings,
 // gom theo phòng trong một truy vấn con, nên không phải truy vấn riêng cho từng phòng.
@@ -11,10 +10,7 @@ const ROOM_SELECT = `
          rt.id AS room_type_id, rt.name AS room_type_name,
          rt.description AS room_type_description,
          rt.price_per_night, rt.capacity,
-         (SELECT ri.image_url FROM room_images ri
-          WHERE ri.room_id = r.id
-          ORDER BY ri.is_primary DESC, ri.id ASC
-          LIMIT 1) AS primary_image,
+         ${primaryImageSubquery('r.id')} AS primary_image,
          ROUND(rs.avg_rating, 1) AS avg_rating,
          COALESCE(rs.review_count, 0) AS review_count
   FROM rooms r
@@ -224,15 +220,29 @@ export const hasRoomsOfType = async (roomTypeId, conn = pool) => {
 };
 
 // Hai khoảng ngày trùng khi existing.check_in < check_out AND existing.check_out > check_in.
-// Nhận conn để phần Đặt phòng dùng lại trong transaction.
-export const hasOverlappingBooking = async (roomId, checkIn, checkOut, conn = pool) => {
+// excludeBookingId: bỏ qua chính đơn đang được đổi ngày. Nhận conn để dùng trong transaction.
+export const hasOverlappingBooking = async (
+  roomId,
+  checkIn,
+  checkOut,
+  excludeBookingId = null,
+  conn = pool,
+) => {
+  const params = [roomId, ...BLOCKING_BOOKING_STATUSES, checkOut, checkIn];
+  let excludeCondition = '';
+  if (excludeBookingId !== null) {
+    excludeCondition = 'AND id <> ?';
+    params.push(excludeBookingId);
+  }
+
   const [rows] = await conn.execute(
     `SELECT 1 FROM bookings
      WHERE room_id = ?
        AND status IN (${placeholders(BLOCKING_BOOKING_STATUSES)})
        AND check_in < ? AND check_out > ?
+       ${excludeCondition}
      LIMIT 1`,
-    [roomId, ...BLOCKING_BOOKING_STATUSES, checkOut, checkIn],
+    params,
   );
   return rows.length > 0;
 };

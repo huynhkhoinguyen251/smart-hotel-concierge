@@ -2,6 +2,7 @@ import { Router } from 'express';
 import authenticate from '../../middlewares/authenticate.js';
 import requireAdmin from '../../middlewares/requireAdmin.js';
 import amenitiesRoutes from './amenities.routes.js';
+import bookingsRoutes from './bookings.routes.js';
 import roomImagesRoutes from './roomImages.routes.js';
 import roomsRoutes from './rooms.routes.js';
 import roomTypesRoutes from './roomTypes.routes.js';
@@ -17,5 +18,6 @@ router.use('/rooms', roomsRoutes);
 router.use('/room-images', roomImagesRoutes);
 router.use('/room-types', roomTypesRoutes);
 router.use('/amenities', amenitiesRoutes);
+router.use('/bookings', bookingsRoutes);
 
 export default router;

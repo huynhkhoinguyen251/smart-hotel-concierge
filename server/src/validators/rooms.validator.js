@@ -1,6 +1,6 @@
 import { query } from 'express-validator';
-import { formatLocalDate, isValidDateString } from '../utils/date.js';
 import { idParamRule, MAX_INT, paginationRules, queryIntRule } from './common.rules.js';
+import { dateRangeRules } from './date.rules.js';
 
 const SORT_VALUES = ['price_asc', 'price_desc', 'rating_desc'];
 
@@ -26,39 +26,10 @@ const priceRule = (field, message) =>
     .custom((value) => Number.isFinite(value))
     .withMessage(message);
 
-const dateField = (field, label, required) => {
-  const chain = query(field);
-  if (!required) {
-    chain.optional();
-  }
-  const message = `${label} (${field}) must be a valid date in YYYY-MM-DD format`;
-  return chain
-    .isString()
-    .withMessage(message)
-    .bail()
-    .custom((value) => isValidDateString(value))
-    .withMessage(message)
-    .bail();
-};
-
-// Kiểm tra check_in và check_out, dùng chung cho tìm phòng và kiểm tra phòng trống.
-const dateRangeRules = ({ required }) => [
-  query('check_out')
-    .custom((_, { req }) => (req.query.check_in === undefined) === (req.query.check_out === undefined))
-    .withMessage('Provide both check_in and check_out, or neither'),
-  dateField('check_in', 'Check-in date', required)
-    .custom((value) => value >= formatLocalDate())
-    .withMessage('Check-in date cannot be in the past'),
-  dateField('check_out', 'Check-out date', required)
-    // Chuỗi YYYY-MM-DD so sánh được trực tiếp theo thứ tự ngày.
-    .custom((value, { req }) => value > req.query.check_in)
-    .withMessage('Check-out date must be after check-in date'),
-];
-
 export const roomIdValidator = [idParamRule('Invalid room ID')];
 
 export const listRoomsValidator = [
-  ...dateRangeRules({ required: false }),
+  ...dateRangeRules({ location: 'query', required: false }),
   queryIntRule('guests', 'Number of guests (guests) must be an integer of at least 1'),
   queryIntRule('room_type_id', 'Room type (room_type_id) must be a positive integer'),
   priceRule('min_price', 'Minimum price (min_price) must be a non-negative number'),
@@ -88,4 +59,7 @@ export const listRoomsValidator = [
   ...paginationRules(),
 ];
 
-export const availabilityValidator = [...roomIdValidator, ...dateRangeRules({ required: true })];
+export const availabilityValidator = [
+  ...roomIdValidator,
+  ...dateRangeRules({ location: 'query', required: true }),
+];
