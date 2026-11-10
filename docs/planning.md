@@ -98,7 +98,7 @@ Test từng API bằng Postman ngay sau khi viết xong.
 - [x] Deploy thử sau khi xong Authentication: backend chạy ở `https://smart-hotel-concierge-4yc0.onrender.com` (nhánh `database-design`) ngày 08/11/2026; đã test health, danh sách phòng và đăng nhập
 - [x] Xây dựng Room Management API (công khai và admin, đã test bằng Postman)
 - [x] Xây dựng Room Booking API, có chống đặt trùng phòng (user và admin, đã test bằng Postman)
-- [ ] Xây dựng Hotel Service API
+- [x] Xây dựng Hotel Service API (user và admin, đã test bằng Postman); seed: đơn 3 kéo dài đến 06/12/2026 để test và demo
 - [ ] Xây dựng Food Ordering API
 - [ ] Xây dựng Tourism API (motorbike, airport pickup, local tour)
 - [ ] Xây dựng Support Ticket API

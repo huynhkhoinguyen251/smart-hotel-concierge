@@ -37,7 +37,23 @@ export const addDays = (value, days) => {
 };
 
 // Thời điểm theo giờ địa phương của server, ví dụ 14:00 ngày nhận phòng.
-export const toLocalDateTime = (value, hour) => {
+export const toLocalDateTime = (value, hour, minute = 0) => {
   const [year, month, day] = value.split('-').map(Number);
-  return new Date(year, month - 1, day, hour, 0, 0, 0);
+  return new Date(year, month - 1, day, hour, minute, 0, 0);
+};
+
+const DATE_TIME_PATTERN = /^(\d{4}-\d{2}-\d{2}) (\d{2}):(\d{2})$/;
+
+// Đúng dạng 'YYYY-MM-DD HH:mm', ngày có thật, giờ 00-23 và phút 00-59.
+export const isValidDateTimeString = (value) => {
+  const match = typeof value === 'string' && value.match(DATE_TIME_PATTERN);
+  return Boolean(
+    match && isValidDateString(match[1]) && Number(match[2]) <= 23 && Number(match[3]) <= 59,
+  );
+};
+
+// Đổi 'YYYY-MM-DD HH:mm' (đã kiểm tra bằng isValidDateTimeString) thành Date theo giờ địa phương.
+export const parseLocalDateTime = (value) => {
+  const [, date, hour, minute] = value.match(DATE_TIME_PATTERN);
+  return toLocalDateTime(date, Number(hour), Number(minute));
 };

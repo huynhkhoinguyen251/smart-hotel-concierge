@@ -132,7 +132,7 @@ INSERT INTO tours (id, name, description, location, duration, price, image_url, 
 INSERT INTO bookings (id, user_id, room_id, voucher_id, check_in, check_out, guests, price_per_night, discount_amount, total_price, status) VALUES
 (1, 2, 1, NULL, '2026-11-01', '2026-11-04', 2, 800000.00, 0.00, 2400000.00, 'checked_out'),
 (2, 3, 5, 1, '2026-11-02', '2026-11-05', 2, 1200000.00, 360000.00, 3240000.00, 'checked_out'),
-(3, 2, 8, NULL, '2026-11-05', '2026-11-10', 2, 1800000.00, 0.00, 9000000.00, 'checked_in'),
+(3, 2, 8, NULL, '2026-11-06', '2026-12-06', 2, 1800000.00, 0.00, 54000000.00, 'checked_in'),
 (4, 4, 11, NULL, '2026-11-06', '2026-11-09', 4, 2500000.00, 0.00, 7500000.00, 'checked_in'),
 (5, 3, 6, NULL, '2026-12-10', '2026-12-13', 2, 1200000.00, 0.00, 3600000.00, 'confirmed'),
 (6, 4, 2, 1, '2026-12-20', '2026-12-22', 2, 800000.00, 160000.00, 1440000.00, 'confirmed'),
@@ -146,8 +146,8 @@ INSERT INTO bookings (id, user_id, room_id, voucher_id, check_in, check_out, gue
 -- ============================================================
 
 INSERT INTO service_bookings (id, booking_id, service_id, scheduled_at, quantity, unit_price, total_price, note, status) VALUES
-(1, 3, 1, '2026-11-06 07:30:00', 2, 150000.00, 300000.00, NULL, 'completed'),
-(2, 3, 4, '2026-11-06 09:00:00', 3, 60000.00, 180000.00, 'Please iron the shirts carefully.', 'completed'),
+(1, 3, 1, '2026-11-07 07:30:00', 2, 150000.00, 300000.00, NULL, 'completed'),
+(2, 3, 4, '2026-11-06 16:00:00', 3, 60000.00, 180000.00, 'Please iron the shirts carefully.', 'completed'),
 (3, 3, 4, '2026-11-07 09:00:00', 2, 60000.00, 120000.00, NULL, 'in_progress'),
 (4, 4, 5, '2026-11-08 10:00:00', 1, 100000.00, 100000.00, 'Please bring extra bath towels.', 'confirmed'),
 (5, 4, 3, '2026-11-08 16:00:00', 2, 500000.00, 1000000.00, NULL, 'confirmed'),
@@ -241,7 +241,7 @@ INSERT INTO reviews (id, user_id, booking_id, service_booking_id, food_order_id,
 INSERT INTO payments (id, user_id, booking_id, service_booking_id, food_order_id, tour_booking_id, transport_booking_id, amount, method, status, paid_at) VALUES
 (1, 2, 1, NULL, NULL, NULL, NULL, 2400000.00, 'card', 'paid', '2026-11-04 10:00:00'),
 (2, 3, 2, NULL, NULL, NULL, NULL, 3240000.00, 'e_wallet', 'paid', '2026-11-05 11:00:00'),
-(3, 2, 3, NULL, NULL, NULL, NULL, 9000000.00, 'card', 'paid', '2026-11-05 14:30:00'),
+(3, 2, 3, NULL, NULL, NULL, NULL, 54000000.00, 'card', 'paid', '2026-11-06 08:00:00'),
 (4, 3, 5, NULL, NULL, NULL, NULL, 3600000.00, 'e_wallet', 'unpaid', NULL),
 (5, 2, NULL, 1, NULL, NULL, NULL, 300000.00, 'cash', 'paid', '2026-11-06 08:30:00'),
 (6, 2, NULL, NULL, 1, NULL, NULL, 170000.00, 'cash', 'paid', '2026-11-06 19:00:00'),
@@ -252,7 +252,7 @@ INSERT INTO payments (id, user_id, booking_id, service_booking_id, food_order_id
 INSERT INTO invoices (id, payment_id, invoice_number, issued_at) VALUES
 (1, 1, 'INV-202611-0001', '2026-11-04 10:00:00'),
 (2, 2, 'INV-202611-0002', '2026-11-05 11:00:00'),
-(3, 3, 'INV-202611-0003', '2026-11-05 14:30:00'),
+(3, 3, 'INV-202611-0003', '2026-11-06 08:00:00'),
 (4, 5, 'INV-202611-0004', '2026-11-06 08:30:00'),
 (5, 6, 'INV-202611-0005', '2026-11-06 19:00:00'),
 (6, 7, 'INV-202611-0006', '2026-11-02 20:00:00'),

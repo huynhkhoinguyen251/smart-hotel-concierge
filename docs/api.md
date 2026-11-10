@@ -109,7 +109,7 @@ Lưu ý: `POST /bookings` và `PUT /bookings/:id` phải kiểm tra phòng trố
 | GET | `/service-bookings/:id` | User | Chi tiết yêu cầu |
 | PATCH | `/service-bookings/:id/cancel` | User | Hủy khi còn `pending` |
 
-Lưu ý: `booking_id` phải thuộc người dùng và đúng trạng thái theo Mục 5 của proposal. API này chỉ nhận `breakfast`, `buffet`, `massage`, `laundry`, `housekeeping`.
+Lưu ý: `booking_id` phải thuộc người dùng và đúng trạng thái theo Mục 5 của proposal. API này chỉ nhận `breakfast`, `buffet`, `massage`, `laundry`, `housekeeping`. `scheduled_at` phải ở tương lai và nằm trong thời gian lưu trú: từ 14:00 ngày nhận phòng đến hết ngày trả phòng.
 
 ### 5. Đồ ăn và đồ uống
 

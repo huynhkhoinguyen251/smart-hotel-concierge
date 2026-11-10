@@ -5,9 +5,35 @@ export const MAX_INT = 2147483647;
 export const MIN_INT = -2147483648;
 export const MAX_PAGE_LIMIT = 50;
 
+// DECIMAL(12,2): tối đa 10 chữ số phần nguyên và 2 chữ số thập phân.
+export const PRICE_PATTERN = /^\d{1,10}(\.\d{1,2})?$/;
+
+// Ảnh đã upload có dạng /uploads/<uuid>.<jpg|png|webp>, đúng như middleware uploadImage tạo ra.
+const UPLOAD_PATH_PATTERN = /^\/uploads\/[A-Za-z0-9-]+\.(jpg|png|webp)$/;
+
+const isHttpUrl = (value) => {
+  if (!value.startsWith('http://') && !value.startsWith('https://')) {
+    return false;
+  }
+  try {
+    new URL(value);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+// Link ảnh hợp lệ: http://, https:// hoặc ảnh đã upload lên /uploads/.
+export const isImageUrl = (value) => isHttpUrl(value) || UPLOAD_PATH_PATTERN.test(value);
+
 // Chỉ nhận số hoặc chuỗi. Các validator có sẵn như isInt chạy trên từng phần tử của mảng,
 // nên phải chặn mảng trước, nếu không [1, 2] sẽ lọt xuống câu SQL.
-const isScalar = (value) => typeof value === 'number' || typeof value === 'string';
+export const isScalar = (value) => typeof value === 'number' || typeof value === 'string';
+
+// true/false trong JSON, hoặc chuỗi 'true', 'false', '1', '0'.
+const BOOLEAN_STRINGS = ['true', 'false', '1', '0'];
+export const isBooleanLike = (value) =>
+  typeof value === 'boolean' || BOOLEAN_STRINGS.includes(value);
 
 // isString đứng đầu để chặn số, mảng và object trước khi kiểm tra tiếp.
 

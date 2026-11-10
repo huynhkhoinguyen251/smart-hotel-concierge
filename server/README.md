@@ -85,6 +85,9 @@ Add these environment variables in the Render dashboard. Do not set `PORT`: Rend
 | `CLIENT_URL` | URL of the deployed frontend |
 | `JWT_SECRET` | A new random string, different from your local one |
 | `JWT_EXPIRES_IN` | `7d` |
+| `TZ` | `Asia/Ho_Chi_Minh` |
+
+Set `TZ` on Render as well. Render servers use UTC by default, and the server compares the current time with local times such as the 14:00 check-in time, the 24-hour cancellation deadline and service schedules.
 
 `package.json` requires Node.js 24 or newer through the `engines` field, so Render uses a matching version.
 

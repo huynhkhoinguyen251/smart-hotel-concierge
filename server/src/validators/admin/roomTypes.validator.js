@@ -1,8 +1,12 @@
 import { body } from 'express-validator';
-import { atLeastOneFieldRule, bodyIntRule, idParamRule, MAX_INT } from '../common.rules.js';
+import {
+  atLeastOneFieldRule,
+  bodyIntRule,
+  idParamRule,
+  MAX_INT,
+  PRICE_PATTERN,
+} from '../common.rules.js';
 
-// DECIMAL(12,2): tối đa 10 chữ số phần nguyên và 2 chữ số thập phân.
-const PRICE_PATTERN = /^\d{1,10}(\.\d{1,2})?$/;
 const AMENITY_IDS_MESSAGE = 'Amenities (amenity_ids) must be an array of amenity IDs';
 
 const nameRule = () =>

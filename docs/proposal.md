@@ -141,6 +141,7 @@ The database is designed for Core and Extended features from the start, so that 
 
 - Food delivery, laundry, and housekeeping require a booking with status `checked_in`.
 - Breakfast, buffet, and massage require a booking with status `confirmed` or `checked_in`.
+- A hotel service request must be scheduled in the future and within the stay: from 14:00 on the check-in date to the end of the check-out date.
 - Tourism services (motorbike rental, airport pickup, local tours) can be booked by any logged-in user.
 - The system does not track individual motorbikes or limit their number. An admin approves a request (`confirmed`) or rejects it (`cancelled`).
 - When approving a motorbike rental, the admin must enter the licence plate, and the user can then see it. The plate is optional for airport pickup and shuttle.

@@ -6,6 +6,8 @@ import bookingsRoutes from './bookings.routes.js';
 import roomImagesRoutes from './roomImages.routes.js';
 import roomsRoutes from './rooms.routes.js';
 import roomTypesRoutes from './roomTypes.routes.js';
+import serviceBookingsRoutes from './serviceBookings.routes.js';
+import servicesRoutes from './services.routes.js';
 import uploadsRoutes from './uploads.routes.js';
 
 const router = Router();
@@ -19,5 +21,7 @@ router.use('/room-images', roomImagesRoutes);
 router.use('/room-types', roomTypesRoutes);
 router.use('/amenities', amenitiesRoutes);
 router.use('/bookings', bookingsRoutes);
+router.use('/services', servicesRoutes);
+router.use('/service-bookings', serviceBookingsRoutes);
 
 export default router;

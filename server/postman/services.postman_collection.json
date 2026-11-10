@@ -1,0 +1,790 @@
+{
+  "info": {
+    "name": "Smart Hotel - Hotel Services",
+    "description": "Tests the 2 public service APIs and the 4 user service request APIs. Run the requests in order (Collection Runner). Each run adds a few new service requests, so the collection can be run again. Request 7 (housekeeping on booking 3) works until 5 Dec 2026 10:00, while seed booking 3 is still checked in.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "anToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "massageRequestId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Login An",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('anToken', pm.response.json().data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Logs in as an.tran@example.com (test account from database/README.md). Expected: 200. The token is saved to anToken.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"an.tran@example.com\",\n  \"password\": \"User@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "2. List active services",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Has pagination', () => pm.expect(body.pagination.page).to.eql(1));",
+              "pm.test('Prices are numbers', () => body.data.forEach((service) => pm.expect(typeof service.price).to.eql('number')));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Public, no login. Expected: 200 with pagination. Only active services are listed, and prices are numbers. The seed data has 8 active services.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/services?limit=50"
+      }
+    },
+    {
+      "name": "3. Filter services by category (massage)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('All massage', () => data.forEach((service) => pm.expect(service.category).to.eql('massage')));",
+              "pm.test('Contains service 3', () => pm.expect(data.map((service) => service.id)).to.include(3));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Public. Expected: 200. Every service has category massage. Seed service 3 (60-minute relaxing massage) is in the list.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/services?category=massage"
+      }
+    },
+    {
+      "name": "4. Filter by an unknown category (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400. The category must be one of the 8 values in the database: breakfast, buffet, massage, laundry, housekeeping, motorbike_rental, airport_pickup, shuttle.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/services?category=spa"
+      }
+    },
+    {
+      "name": "5. Get service 1",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Price 150000', () => pm.expect(pm.response.json().data.price).to.eql(150000));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Public. Expected: 200, message 'Service retrieved successfully'. Restaurant breakfast, price 150000.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/services/1"
+      }
+    },
+    {
+      "name": "6. Get a missing service (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 404', () => pm.response.to.have.status(404));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Service not found\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 404 with message 'Service not found'.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/services/99999"
+      }
+    },
+    {
+      "name": "7. Book housekeeping on booking 3",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "const data = pm.response.json().data;",
+              "pm.test('Pending, total 100000', () => {",
+              "  pm.expect(data.status).to.eql('pending');",
+              "  pm.expect(data.unit_price).to.eql(100000);",
+              "  pm.expect(data.total_price).to.eql(100000);",
+              "  pm.expect(data.service.category).to.eql('housekeeping');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Booking 3 belongs to An and is checked_in (6 Nov - 6 Dec 2026). Housekeeping needs a checked-in booking. Expected: 201, message 'Service request created successfully', status pending, unit_price 100000 (from the database), total_price 100000. This request works until 5 Dec 2026 10:00, because scheduled_at must be in the future and within the stay.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/service-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 3,\n  \"service_id\": 5,\n  \"scheduled_at\": \"2026-12-05 10:00\",\n  \"quantity\": 1,\n  \"note\": \"Please bring extra towels.\"\n}"
+        }
+      }
+    },
+    {
+      "name": "8. Book breakfast on pending booking 7 (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"The breakfast service requires a booking with status confirmed or checked_in; this booking is pending\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Booking 7 belongs to An but is still pending. Breakfast needs a confirmed or checked-in booking. Expected: 400 with message 'The breakfast service requires a booking with status confirmed or checked_in; this booking is pending'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/service-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 7,\n  \"service_id\": 1,\n  \"scheduled_at\": \"2026-12-25 07:30\",\n  \"quantity\": 2\n}"
+        }
+      }
+    },
+    {
+      "name": "9. Book massage on booking 9 (31 Dec 2026 10:00)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "const data = pm.response.json().data;",
+              "pm.test('Total 1000000, can cancel', () => {",
+              "  pm.expect(data.total_price).to.eql(1000000);",
+              "  pm.expect(data.can_cancel).to.eql(true);",
+              "  pm.expect(data.booking.id).to.eql(9);",
+              "});",
+              "pm.collectionVariables.set('massageRequestId', data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Booking 9 belongs to An and is confirmed (30 Dec 2026 - 2 Jan 2027). Expected: 201, status pending, quantity 2, unit_price 500000, total_price 1000000, can_cancel true. The id is saved to massageRequestId.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/service-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 9,\n  \"service_id\": 3,\n  \"scheduled_at\": \"2026-12-31 10:00\",\n  \"quantity\": 2\n}"
+        }
+      }
+    },
+    {
+      "name": "10. Send a price in the body (ignored)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "const data = pm.response.json().data;",
+              "pm.test('Price from the database', () => {",
+              "  pm.expect(data.unit_price).to.eql(150000);",
+              "  pm.expect(data.total_price).to.eql(300000);",
+              "  pm.expect(data.status).to.eql('pending');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "The body contains unit_price 1, total_price 1 and status completed. The server ignores them. Expected: 201 with unit_price 150000 (from the database), total_price 300000 and status pending.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/service-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 9,\n  \"service_id\": 1,\n  \"scheduled_at\": \"2026-12-31 07:30\",\n  \"quantity\": 2,\n  \"unit_price\": 1,\n  \"total_price\": 1,\n  \"status\": \"completed\"\n}"
+        }
+      }
+    },
+    {
+      "name": "11. Book laundry on confirmed booking 9 (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"The laundry service requires a booking with status checked_in; this booking is confirmed\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Laundry needs a checked-in booking, and booking 9 is only confirmed. Expected: 400 with message 'The laundry service requires a booking with status checked_in; this booking is confirmed'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/service-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 9,\n  \"service_id\": 4,\n  \"scheduled_at\": \"2026-12-31 09:00\",\n  \"quantity\": 1\n}"
+        }
+      }
+    },
+    {
+      "name": "12. Book service 6, a tourism service (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"This service is booked through the tourism API\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Service 6 is a motorbike rental. Expected: 400 with message 'This service is booked through the tourism API'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/service-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 9,\n  \"service_id\": 6,\n  \"scheduled_at\": \"2026-12-31 09:00\",\n  \"quantity\": 1\n}"
+        }
+      }
+    },
+    {
+      "name": "13. Book on another guest's booking 4 (403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 403', () => pm.response.to.have.status(403));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"You do not have permission to access this booking\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Booking 4 belongs to Pham Thu Chi. Expected: 403 with message 'You do not have permission to access this booking'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/service-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 4,\n  \"service_id\": 5,\n  \"scheduled_at\": \"2026-12-31 09:00\",\n  \"quantity\": 1\n}"
+        }
+      }
+    },
+    {
+      "name": "14. Schedule outside the stay (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Scheduled time (scheduled_at) must be within your stay, from 2026-12-30 14:00 to 2027-01-02 23:59\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Booking 9 ends on 2 Jan 2027, and 3 Jan 2027 10:00 is after the stay. Expected: 400 with message 'Scheduled time (scheduled_at) must be within your stay, from 2026-12-30 14:00 to 2027-01-02 23:59'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/service-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 9,\n  \"service_id\": 3,\n  \"scheduled_at\": \"2027-01-03 10:00\",\n  \"quantity\": 1\n}"
+        }
+      }
+    },
+    {
+      "name": "15. Schedule before check-in time (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Scheduled time (scheduled_at) must be within your stay, from 2026-12-30 14:00 to 2027-01-02 23:59\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Check-in is at 14:00 on 30 Dec 2026, so 30 Dec 2026 10:00 is too early. Expected: 400 with the same \"within your stay\" message.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/service-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 9,\n  \"service_id\": 3,\n  \"scheduled_at\": \"2026-12-30 10:00\",\n  \"quantity\": 1\n}"
+        }
+      }
+    },
+    {
+      "name": "16. Send an invalid scheduled_at and quantity (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "scheduled_at must use the format YYYY-MM-DD HH:mm, and quantity must be from 1 to 20. Expected: 400.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/service-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 9,\n  \"service_id\": 3,\n  \"scheduled_at\": \"31/12/2026 10:00\",\n  \"quantity\": 21\n}"
+        }
+      }
+    },
+    {
+      "name": "17. List my service requests",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Contains massageRequestId', () => pm.expect(data.map((item) => String(item.id))).to.include(String(pm.collectionVariables.get('massageRequestId'))));",
+              "pm.test('Has room number', () => data.forEach((item) => pm.expect(typeof item.booking.room.room_number).to.eql('string')));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200 with pagination, newest first. Every request belongs to An's bookings and includes service name, category and room number. The massage request from earlier is in the list.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/service-bookings?limit=50"
+      }
+    },
+    {
+      "name": "18. Filter my service requests by status (pending)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('All pending', () => pm.response.json().data.forEach((item) => pm.expect(item.status).to.eql('pending')));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200. Every request has status pending.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/service-bookings?status=pending&limit=50"
+      }
+    },
+    {
+      "name": "19. Get my massage request",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Massage in room 402', () => {",
+              "  pm.expect(data.service.name).to.eql('60-minute relaxing massage');",
+              "  pm.expect(data.booking.room.room_number).to.eql('402');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'Service request retrieved successfully'. Service 60-minute relaxing massage, room 402.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/service-bookings/{{massageRequestId}}"
+      }
+    },
+    {
+      "name": "20. Get another guest's request 4 (403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 403', () => pm.response.to.have.status(403));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"You do not have permission to access this service request\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Seed service request 4 belongs to booking 4 of Pham Thu Chi. Expected: 403 with message 'You do not have permission to access this service request'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/service-bookings/4"
+      }
+    },
+    {
+      "name": "21. Cancel my massage request",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Cancelled', () => pm.expect(pm.response.json().data.status).to.eql('cancelled'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "The request is pending. Expected: 200, message 'Service request cancelled successfully', status cancelled, can_cancel false.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [],
+        "url": "{{baseUrl}}/service-bookings/{{massageRequestId}}/cancel"
+      }
+    },
+    {
+      "name": "22. Cancel the same request again (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Only pending service requests can be cancelled\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Only pending service requests can be cancelled'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [],
+        "url": "{{baseUrl}}/service-bookings/{{massageRequestId}}/cancel"
+      }
+    }
+  ]
+}

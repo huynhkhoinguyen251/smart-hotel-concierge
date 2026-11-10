@@ -1,0 +1,892 @@
+{
+  "info": {
+    "name": "Smart Hotel - Admin Hotel Services",
+    "description": "Tests the 4 admin service APIs and the 3 admin service request APIs. Run the requests in order (Collection Runner). The test service is deleted at the end of the CRUD steps, and each run adds one completed service request, so the collection can be run again.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "anToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "serviceId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "requestId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Login admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('adminToken', pm.response.json().data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Logs in as admin@smarthotel.test (test account from database/README.md). Expected: 200. The token is saved to adminToken.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@smarthotel.test\",\n  \"password\": \"Admin@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "2. Login An",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('anToken', pm.response.json().data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Logs in as an.tran@example.com (test account from database/README.md). Expected: 200. The token is saved to anToken.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"an.tran@example.com\",\n  \"password\": \"User@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "3. List all services",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Has is_active', () => pm.response.json().data.forEach((service) => pm.expect(typeof service.is_active).to.eql('boolean')));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200 with pagination. Includes inactive services, and every service has is_active, created_at and updated_at.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/services?limit=50"
+      }
+    },
+    {
+      "name": "4. Filter services (category=massage, is_active=true)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Active massage only', () => pm.response.json().data.forEach((service) => {",
+              "  pm.expect(service.category).to.eql('massage');",
+              "  pm.expect(service.is_active).to.eql(true);",
+              "}));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200. Every service is an active massage service.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/services?category=massage&is_active=true"
+      }
+    },
+    {
+      "name": "5. Create a service",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "const data = pm.response.json().data;",
+              "pm.test('Active, price 750000', () => {",
+              "  pm.expect(data.is_active).to.eql(true);",
+              "  pm.expect(data.price).to.eql(750000);",
+              "});",
+              "pm.collectionVariables.set('serviceId', data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 201, message 'Service created successfully'. is_active is true by default and price is 750000. The id is saved to serviceId.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/services",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Hot stone massage\",\n  \"category\": \"massage\",\n  \"description\": \"90-minute massage with warm basalt stones.\",\n  \"price\": 750000,\n  \"image_url\": \"https://placehold.co/800x600?text=Hot+Stone\"\n}"
+        }
+      }
+    },
+    {
+      "name": "6. Create with invalid data (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Empty name, unknown category and negative price. Expected: 400.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/services",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"\",\n  \"category\": \"spa\",\n  \"price\": -1\n}"
+        }
+      }
+    },
+    {
+      "name": "7. Update the service (full update)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Updated and inactive', () => {",
+              "  pm.expect(data.price).to.eql(800000);",
+              "  pm.expect(data.is_active).to.eql(false);",
+              "  pm.expect(data.description).to.eql(null);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "PUT replaces all fields. Here is_active is false and description is not sent, so it becomes null. Expected: 200, message 'Service updated successfully'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/services/{{serviceId}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Hot stone massage (90 minutes)\",\n  \"category\": \"massage\",\n  \"price\": 800000,\n  \"is_active\": false\n}"
+        }
+      }
+    },
+    {
+      "name": "8. Public API hides the inactive service (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 404', () => pm.response.to.have.status(404));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Service not found\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "The service from request 5 is now inactive. Expected: 404 with message 'Service not found'.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/services/{{serviceId}}"
+      }
+    },
+    {
+      "name": "9. Update a missing service (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 404', () => pm.response.to.have.status(404));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Service not found\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 404 with message 'Service not found'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/services/99999",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Missing\",\n  \"category\": \"massage\",\n  \"price\": 1\n}"
+        }
+      }
+    },
+    {
+      "name": "10. Delete the service",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Service deleted successfully\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "The new service has no requests. Expected: 200, message 'Service deleted successfully'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/admin/services/{{serviceId}}"
+      }
+    },
+    {
+      "name": "11. Delete it again (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 404', () => pm.response.to.have.status(404));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Service not found\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 404 with message 'Service not found'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/admin/services/{{serviceId}}"
+      }
+    },
+    {
+      "name": "12. Delete service 1, which has requests (409)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 409', () => pm.response.to.have.status(409));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"This service has existing requests. Deactivate it instead.\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Service 1 (Restaurant breakfast) is used by seed service requests. Expected: 409 with message 'This service has existing requests. Deactivate it instead.'",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/admin/services/1"
+      }
+    },
+    {
+      "name": "13. Delete service 6, which has transport bookings (409)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 409', () => pm.response.to.have.status(409));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"This service has existing requests. Deactivate it instead.\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Service 6 (motorbike rental) is used by seed transport bookings. Expected: 409 with the same message.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/admin/services/6"
+      }
+    },
+    {
+      "name": "14. An books a massage on booking 9",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "pm.collectionVariables.set('requestId', pm.response.json().data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Creates a service request to test the status flow. Expected: 201, status pending. The id is saved to requestId.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/service-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 9,\n  \"service_id\": 3,\n  \"scheduled_at\": \"2026-12-31 15:00\",\n  \"quantity\": 1\n}"
+        }
+      }
+    },
+    {
+      "name": "15. List pending service requests",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('All pending with user', () => data.forEach((item) => {",
+              "  pm.expect(item.status).to.eql('pending');",
+              "  pm.expect(typeof item.user.email).to.eql('string');",
+              "}));",
+              "pm.test('Contains requestId', () => pm.expect(data.map((item) => String(item.id))).to.include(String(pm.collectionVariables.get('requestId'))));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200. Every request is pending and includes the guest (user) with full_name and email. The request from the previous step is in the list.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/service-bookings?status=pending&limit=50"
+      }
+    },
+    {
+      "name": "16. Filter by category and user (An's laundry)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Laundry of user 2', () => data.forEach((item) => {",
+              "  pm.expect(item.service.category).to.eql('laundry');",
+              "  pm.expect(item.user.id).to.eql(2);",
+              "}));",
+              "pm.test('Contains requests 2 and 3', () => pm.expect(data.map((item) => item.id)).to.include(3));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200. Every request is laundry and belongs to user 2 (Tran Thi An). Seed requests 2 and 3 are in the list.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/service-bookings?category=laundry&user_id=2"
+      }
+    },
+    {
+      "name": "17. Get the request",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Guest and room', () => {",
+              "  pm.expect(data.user.full_name).to.eql('Tran Thi An');",
+              "  pm.expect(data.booking.room.room_number).to.eql('402');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'Service request retrieved successfully'. Guest Tran Thi An, room 402.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/service-bookings/{{requestId}}"
+      }
+    },
+    {
+      "name": "18. Jump from pending to completed (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Cannot change status from pending to completed\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Not allowed by the status flow. Expected: 400 with message 'Cannot change status from pending to completed'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/service-bookings/{{requestId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"completed\"\n}"
+        }
+      }
+    },
+    {
+      "name": "19. Change status to confirmed",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Status confirmed', () => pm.expect(pm.response.json().data.status).to.eql('confirmed'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'Service request status updated successfully', status confirmed.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/service-bookings/{{requestId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"confirmed\"\n}"
+        }
+      }
+    },
+    {
+      "name": "20. Change status to in_progress",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Status in_progress', () => pm.expect(pm.response.json().data.status).to.eql('in_progress'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'Service request status updated successfully', status in_progress.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/service-bookings/{{requestId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"in_progress\"\n}"
+        }
+      }
+    },
+    {
+      "name": "21. Change status to completed",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Status completed', () => pm.expect(pm.response.json().data.status).to.eql('completed'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'Service request status updated successfully', status completed.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/service-bookings/{{requestId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"completed\"\n}"
+        }
+      }
+    },
+    {
+      "name": "22. Cancel a completed request (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Cannot change status from completed to cancelled\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Cannot change status from completed to cancelled'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/service-bookings/{{requestId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"cancelled\"\n}"
+        }
+      }
+    },
+    {
+      "name": "23. Get a missing request (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 404', () => pm.response.to.have.status(404));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Service request not found\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 404 with message 'Service request not found'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/service-bookings/99999"
+      }
+    },
+    {
+      "name": "24. User calls an admin API (403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 403', () => pm.response.to.have.status(403));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "An is not an admin. Expected: 403.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/services"
+      }
+    }
+  ]
+}

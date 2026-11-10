@@ -3,6 +3,8 @@ import {
   atLeastOneFieldRule,
   bodyIntRule,
   idParamRule,
+  isBooleanLike,
+  isImageUrl,
   MAX_INT,
   MIN_INT,
   paginationRules,
@@ -12,21 +14,6 @@ import { roomIdValidator } from '../rooms.validator.js';
 
 export const ROOM_STATUSES = ['available', 'maintenance', 'inactive'];
 const STATUS_MESSAGE = `Status must be one of: ${ROOM_STATUSES.join(', ')}`;
-
-// Ảnh đã upload có dạng /uploads/<uuid>.<jpg|png|webp>, đúng như middleware uploadImage tạo ra.
-const UPLOAD_PATH_PATTERN = /^\/uploads\/[A-Za-z0-9-]+\.(jpg|png|webp)$/;
-
-const isHttpUrl = (value) => {
-  if (!value.startsWith('http://') && !value.startsWith('https://')) {
-    return false;
-  }
-  try {
-    new URL(value);
-    return true;
-  } catch {
-    return false;
-  }
-};
 
 const statusRule = (location) =>
   location('status')
@@ -101,11 +88,11 @@ export const addRoomImageValidator = [
     .isLength({ max: 500 })
     .withMessage('Image URL must be at most 500 characters')
     .bail()
-    .custom((value) => isHttpUrl(value) || UPLOAD_PATH_PATTERN.test(value))
+    .custom(isImageUrl)
     .withMessage('Image URL must be a valid link starting with http://, https:// or /uploads/'),
   body('is_primary')
     .optional()
-    .custom((value) => typeof value === 'boolean' || ['true', 'false', '1', '0'].includes(value))
+    .custom(isBooleanLike)
     .withMessage('is_primary must be true or false')
     .bail()
     .toBoolean(true),
