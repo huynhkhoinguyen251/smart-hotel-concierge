@@ -161,6 +161,8 @@ Cách tính tiền và giới hạn:
 | GET | `/tickets/:id` | User | Chi tiết và các tin nhắn |
 | POST | `/tickets/:id/messages` | User | Gửi thêm tin nhắn; yêu cầu chưa `resolved` |
 
+Lưu ý: yêu cầu và tin nhắn đầu tiên được lưu trong cùng một transaction. Khi admin trả lời một yêu cầu đang `open`, yêu cầu tự chuyển sang `in_progress`. Yêu cầu đã `resolved` thì cả user lẫn admin đều không gửi thêm tin nhắn được. Admin đổi trạng thái chỉ theo một chiều: `open` → `in_progress` → `resolved`. Mỗi tin nhắn mới cập nhật `updated_at` của yêu cầu, và danh sách sắp xếp theo `updated_at` mới nhất.
+
 ### 8. Đánh giá
 
 | Method | Endpoint | Quyền | Mô tả |

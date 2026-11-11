@@ -1,0 +1,804 @@
+{
+  "info": {
+    "name": "Smart Hotel - Admin Support Tickets",
+    "description": "Tests the 4 admin support ticket APIs. Run the requests in order (Collection Runner). Each run creates two tickets as An and resolves both, so the collection can be run again and seed tickets are not changed.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "anToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ticketId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "openTicketId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Login admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('adminToken', pm.response.json().data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Logs in as admin@smarthotel.test (test account from database/README.md). Expected: 200. The token is saved to adminToken.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@smarthotel.test\",\n  \"password\": \"Admin@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "2. Login An",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('anToken', pm.response.json().data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Logs in as an.tran@example.com (test account from database/README.md). Expected: 200. The token is saved to anToken.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"an.tran@example.com\",\n  \"password\": \"User@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "3. An creates a ticket",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "pm.collectionVariables.set('ticketId', pm.response.json().data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Creates an open ticket for the admin steps. Expected: 201, status open. The id is saved to ticketId.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/tickets",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"subject\": \"Air conditioner is noisy\",\n  \"message\": \"The air conditioner in my room makes a loud noise at night.\"\n}"
+        }
+      }
+    },
+    {
+      "name": "4. An creates a second ticket",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "pm.collectionVariables.set('openTicketId', pm.response.json().data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Used to test that an open ticket cannot jump straight to resolved. Expected: 201. The id is saved to openTicketId.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/tickets",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"subject\": \"Taxi to the airport\",\n  \"message\": \"Can reception book a taxi for 6 AM tomorrow?\"\n}"
+        }
+      }
+    },
+    {
+      "name": "5. List all tickets",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Has guest', () => data.forEach((item) => pm.expect(Object.keys(item.guest).sort()).to.eql(['email', 'full_name', 'id'])));",
+              "pm.test('Contains seed tickets', () => pm.expect(data.map((item) => item.id)).to.include.members([1, 2, 3]));",
+              "pm.test('Newest update first', () => pm.expect(data[0].updated_at >= data[data.length - 1].updated_at).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200 with pagination, most recently updated first. Every ticket has the guest with id, full_name and email. Seed tickets 1, 2 and 3 are in the list.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/tickets?limit=50"
+      }
+    },
+    {
+      "name": "6. Filter tickets by status (open)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('All open', () => data.forEach((item) => pm.expect(item.status).to.eql('open')));",
+              "pm.test('Contains ticket 3', () => pm.expect(data.map((item) => item.id)).to.include(3));",
+              "pm.test('Contains ticketId', () => pm.expect(data.map((item) => String(item.id))).to.include(String(pm.collectionVariables.get('ticketId'))));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200. Every ticket is open. Seed ticket 3 and the new ticket are in the list.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/tickets?status=open&limit=50"
+      }
+    },
+    {
+      "name": "7. Filter tickets by user (Pham Thu Chi's)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Tickets of user 4', () => data.forEach((item) => pm.expect(item.guest.id).to.eql(4)));",
+              "pm.test('Contains ticket 3', () => pm.expect(data.map((item) => item.id)).to.include(3));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200. Every ticket belongs to user 4. Seed ticket 3 is in the list.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/tickets?user_id=4"
+      }
+    },
+    {
+      "name": "8. Get ticket 3",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Guest and message', () => {",
+              "  pm.expect(data.guest.full_name).to.eql('Pham Thu Chi');",
+              "  pm.expect(data.guest.email).to.eql('chi.pham@example.com');",
+              "  pm.expect(data.messages.length).to.eql(1);",
+              "});",
+              "pm.test('No password_hash or email in messages', () => {",
+              "  const text = JSON.stringify(pm.response.json());",
+              "  pm.expect(text.includes('password_hash')).to.eql(false);",
+              "  pm.response.json().data.messages.forEach((m) => pm.expect(Object.keys(m.sender).sort()).to.eql(['full_name', 'id', 'role']));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'Support ticket retrieved successfully'. Guest Pham Thu Chi with email, one message.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/tickets/3"
+      }
+    },
+    {
+      "name": "9. Reply to the open ticket",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "const data = pm.response.json().data;",
+              "pm.test('In progress with admin reply', () => {",
+              "  pm.expect(data.status).to.eql('in_progress');",
+              "  pm.expect(data.message_count).to.eql(2);",
+              "  pm.expect(data.messages[1].sender.role).to.eql('admin');",
+              "  pm.expect(data.messages[1].sender.id).to.eql(1);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 201, message 'Reply sent successfully'. The reply is from the admin (role admin), message_count is 2, and the status changes from open to in_progress.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/tickets/{{ticketId}}/messages",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"Sorry about that. A technician will check it within an hour.\"\n}"
+        }
+      }
+    },
+    {
+      "name": "10. Reply again while in_progress",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "const data = pm.response.json().data;",
+              "pm.test('Still in progress', () => {",
+              "  pm.expect(data.status).to.eql('in_progress');",
+              "  pm.expect(data.message_count).to.eql(3);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 201. The status stays in_progress and message_count is 3.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/tickets/{{ticketId}}/messages",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"The technician is on the way.\"\n}"
+        }
+      }
+    },
+    {
+      "name": "11. Resolve the ticket",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Resolved', () => pm.expect(pm.response.json().data.status).to.eql('resolved'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "in_progress to resolved is allowed. Expected: 200, message 'Support ticket status updated successfully', status resolved.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/tickets/{{ticketId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"resolved\"\n}"
+        }
+      }
+    },
+    {
+      "name": "12. Reply to the resolved ticket (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"This support ticket is resolved and cannot receive new messages\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'This support ticket is resolved and cannot receive new messages'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/tickets/{{ticketId}}/messages",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"One more thing.\"\n}"
+        }
+      }
+    },
+    {
+      "name": "13. The guest cannot add a message to the resolved ticket (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"This support ticket is resolved and cannot receive new messages\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "An owns the ticket, but it is resolved. Expected: 400 with the same message.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/tickets/{{ticketId}}/messages",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"It is noisy again.\"\n}"
+        }
+      }
+    },
+    {
+      "name": "14. Reopen the resolved ticket (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Cannot change status from resolved to open\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "resolved to open is not allowed. Expected: 400 with message 'Cannot change status from resolved to open'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/tickets/{{ticketId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"open\"\n}"
+        }
+      }
+    },
+    {
+      "name": "15. Resolve an open ticket directly (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Cannot change status from open to resolved\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "open to resolved is not allowed; it must go through in_progress. Expected: 400 with message 'Cannot change status from open to resolved'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/tickets/{{openTicketId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"resolved\"\n}"
+        }
+      }
+    },
+    {
+      "name": "16. Move the second ticket to in_progress",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('In progress', () => pm.expect(pm.response.json().data.status).to.eql('in_progress'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "open to in_progress is allowed without a reply. Expected: 200, status in_progress.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/tickets/{{openTicketId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"in_progress\"\n}"
+        }
+      }
+    },
+    {
+      "name": "17. Resolve the second ticket",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Resolved', () => pm.expect(pm.response.json().data.status).to.eql('resolved'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, status resolved.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/tickets/{{openTicketId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"resolved\"\n}"
+        }
+      }
+    },
+    {
+      "name": "18. Send an unknown status (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Status must be one of: open, in_progress, resolved\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Status must be one of: open, in_progress, resolved'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/tickets/{{ticketId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"closed\"\n}"
+        }
+      }
+    },
+    {
+      "name": "19. Reply to a missing ticket (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 404', () => pm.response.to.have.status(404));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Support ticket not found\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 404 with message 'Support ticket not found'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/tickets/99999/messages",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"Hello\"\n}"
+        }
+      }
+    },
+    {
+      "name": "20. User calls an admin API (403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 403', () => pm.response.to.have.status(403));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "An is not an admin. Expected: 403.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/tickets"
+      }
+    }
+  ]
+}
