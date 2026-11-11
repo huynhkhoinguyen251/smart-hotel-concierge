@@ -102,7 +102,7 @@ Test từng API bằng Postman ngay sau khi viết xong.
 - [x] Xây dựng Food Ordering API (user và admin, đã test bằng Postman); đặt múi giờ `+07:00` cho kết nối database
 - [x] Xây dựng Tourism API (motorbike, airport pickup, shuttle, local tour; user và admin, đã test bằng Postman)
 - [x] Xây dựng Support Ticket API (user và admin, đã test bằng Postman)
-- [ ] Xây dựng Review API
+- [x] Xây dựng Review API (user, công khai và admin, đã test bằng Postman)
 - [ ] Xây dựng Admin API
 - [x] Xây dựng chức năng upload ảnh
 

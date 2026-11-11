@@ -19,7 +19,8 @@ export const listRooms = async ({ page, limit, ...filters }) => {
 };
 
 // Phòng inactive coi như không tồn tại với người dùng. Phòng maintenance vẫn xem được.
-const findVisibleRoom = async (id) => {
+// Dùng chung với danh sách đánh giá công khai của phòng.
+export const findVisibleRoom = async (id) => {
   const room = await roomsModel.findRoomById(id);
   if (!room || room.status === 'inactive') {
     throw new AppError(404, ROOM_NOT_FOUND_MESSAGE);

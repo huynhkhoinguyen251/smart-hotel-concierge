@@ -1,0 +1,320 @@
+{
+  "info": {
+    "name": "Smart Hotel - Admin Reviews",
+    "description": "Tests the admin review list with its filters. It only reads data, so it can be run any number of times.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "anToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Login admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('adminToken', pm.response.json().data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Logs in as admin@smarthotel.test (test account from database/README.md). Expected: 200. The token is saved to adminToken.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@smarthotel.test\",\n  \"password\": \"Admin@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "2. Login An",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('anToken', pm.response.json().data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Logs in as an.tran@example.com (test account from database/README.md). Expected: 200. The token is saved to anToken.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"an.tran@example.com\",\n  \"password\": \"User@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "3. List all reviews",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Target and reviewer', () => data.forEach((item) => {",
+              "  pm.expect(Object.keys(item.target).sort()).to.eql(['id', 'name', 'type']);",
+              "  pm.expect(Object.keys(item.reviewer).sort()).to.eql(['email', 'full_name', 'id']);",
+              "}));",
+              "pm.test('Contains seed reviews', () => pm.expect(data.map((item) => item.id)).to.include.members([1, 2, 3, 4, 5, 6]));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200 with pagination, newest first. Each review has a target { type, id, name } and a reviewer { id, full_name, email }. Seed reviews 1 to 6 are in the list.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/reviews?limit=50"
+      }
+    },
+    {
+      "name": "4. Filter reviews by rating (5)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('All rating 5', () => data.forEach((item) => pm.expect(item.rating).to.eql(5)));",
+              "pm.test('Contains 1, 3, 5', () => pm.expect(data.map((item) => item.id)).to.include.members([1, 3, 5]));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200. Every review has rating 5. Seed reviews 1, 3 and 5 are in the list.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/reviews?rating=5&limit=50"
+      }
+    },
+    {
+      "name": "5. Filter reviews by type (food_order)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('All food orders', () => data.forEach((item) => pm.expect(item.target.type).to.eql('food_order')));",
+              "pm.test('Review 4 named Food order #1', () => pm.expect(data.find((item) => item.id === 4).target.name).to.eql('Food order #1'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200. Every review is for a food order, and seed review 4 is named 'Food order #1'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/reviews?type=food_order&limit=50"
+      }
+    },
+    {
+      "name": "6. Filter reviews by user (Le Van Binh's)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Reviews of user 3', () => data.forEach((item) => pm.expect(item.reviewer.id).to.eql(3)));",
+              "pm.test('Contains 2 and 6', () => pm.expect(data.map((item) => item.id)).to.include.members([2, 6]));",
+              "pm.test('Review 6 is a transport review', () => pm.expect(data.find((item) => item.id === 6).target.type).to.eql('transport'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200. Every review is by user 3. Seed reviews 2 (Room 201) and 6 (transport) are in the list.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/reviews?user_id=3&limit=50"
+      }
+    },
+    {
+      "name": "7. Filter by an unknown type (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Type must be one of: room, service, food_order, tour, transport\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Type must be one of: room, service, food_order, tour, transport'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/reviews?type=hotel"
+      }
+    },
+    {
+      "name": "8. Filter by rating 6 (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Rating must be an integer from 1 to 5\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Rating must be an integer from 1 to 5'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/reviews?rating=6"
+      }
+    },
+    {
+      "name": "9. User calls an admin API (403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 403', () => pm.response.to.have.status(403));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "An is not an admin. Expected: 403.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/reviews"
+      }
+    }
+  ]
+}

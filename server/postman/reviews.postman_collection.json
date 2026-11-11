@@ -1,0 +1,1031 @@
+{
+  "info": {
+    "name": "Smart Hotel - Reviews",
+    "description": "Tests the 2 user review APIs and the 4 public review lists. Run the requests in order (Collection Runner). Each run creates a new tour booking, completes it as the admin and reviews it, so the collection can be run again. Service booking 2 and transport booking 1 are never used, so they stay unreviewed for the demo.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "anToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tourBookingId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "reviewId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Login An",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('anToken', pm.response.json().data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Logs in as an.tran@example.com (test account from database/README.md). Expected: 200. The token is saved to anToken.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"an.tran@example.com\",\n  \"password\": \"User@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "2. Login admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('adminToken', pm.response.json().data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Logs in as admin@smarthotel.test (test account from database/README.md). Expected: 200. The token is saved to adminToken.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@smarthotel.test\",\n  \"password\": \"Admin@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "3. An books tour 4 for 1 person",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "pm.collectionVariables.set('tourBookingId', pm.response.json().data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Creates a new tour booking to review, so the collection can be run again. Expected: 201. The id is saved to tourBookingId.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/tour-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tour_id\": 4,\n  \"tour_date\": \"2026-12-20\",\n  \"participants\": 1\n}"
+        }
+      }
+    },
+    {
+      "name": "4. Admin changes the tour booking to confirmed",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Status confirmed', () => pm.expect(pm.response.json().data.status).to.eql('confirmed'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, status confirmed.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/tour-bookings/{{tourBookingId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"confirmed\"\n}"
+        }
+      }
+    },
+    {
+      "name": "5. Admin changes the tour booking to in_progress",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Status in_progress', () => pm.expect(pm.response.json().data.status).to.eql('in_progress'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, status in_progress.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/tour-bookings/{{tourBookingId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"in_progress\"\n}"
+        }
+      }
+    },
+    {
+      "name": "6. Admin changes the tour booking to completed",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Status completed', () => pm.expect(pm.response.json().data.status).to.eql('completed'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, status completed.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/tour-bookings/{{tourBookingId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"completed\"\n}"
+        }
+      }
+    },
+    {
+      "name": "7. Review the completed tour booking",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "const data = pm.response.json().data;",
+              "pm.test('Rating, comment and target', () => {",
+              "  pm.expect(data.rating).to.eql(5);",
+              "  pm.expect(data.comment).to.eql('Great views from the top of Thuy Son.');",
+              "  pm.expect(data.target.type).to.eql('tour');",
+              "  pm.expect(String(data.target.id)).to.eql(String(pm.collectionVariables.get('tourBookingId')));",
+              "  pm.expect(data.target.name).to.eql('Marble Mountains and Non Nuoc Beach');",
+              "});",
+              "pm.collectionVariables.set('reviewId', pm.response.json().data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 201, message 'Review created successfully', rating 5, comment trimmed, target { type tour, id tourBookingId, name Marble Mountains and Non Nuoc Beach }. The id is saved to reviewId.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/reviews",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tour_booking_id\": \"{{tourBookingId}}\",\n  \"rating\": 5,\n  \"comment\": \"  Great views from the top of Thuy Son.  \"\n}"
+        }
+      }
+    },
+    {
+      "name": "8. Review the same tour booking again (409)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 409', () => pm.response.to.have.status(409));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"You have already reviewed this tour booking\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 409 with message 'You have already reviewed this tour booking'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/reviews",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tour_booking_id\": \"{{tourBookingId}}\",\n  \"rating\": 4\n}"
+        }
+      }
+    },
+    {
+      "name": "9. Review without an item (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Provide exactly one item to review\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Provide exactly one item to review'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/reviews",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"rating\": 5,\n  \"comment\": \"No item\"\n}"
+        }
+      }
+    },
+    {
+      "name": "10. Review two items at once (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Provide exactly one item to review\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Provide exactly one item to review'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/reviews",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 1,\n  \"food_order_id\": 1,\n  \"rating\": 5\n}"
+        }
+      }
+    },
+    {
+      "name": "11. Rating 0 (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Rating must be an integer from 1 to 5\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Ratings are whole numbers from 1 to 5. Expected: 400 with message 'Rating must be an integer from 1 to 5'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/reviews",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 1,\n  \"rating\": 0\n}"
+        }
+      }
+    },
+    {
+      "name": "12. Rating 6 (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Rating must be an integer from 1 to 5\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Ratings are whole numbers from 1 to 5. Expected: 400 with message 'Rating must be an integer from 1 to 5'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/reviews",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 1,\n  \"rating\": 6\n}"
+        }
+      }
+    },
+    {
+      "name": "13. Rating 4.5 (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Rating must be an integer from 1 to 5\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Ratings are whole numbers from 1 to 5. Expected: 400 with message 'Rating must be an integer from 1 to 5'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/reviews",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 1,\n  \"rating\": 4.5\n}"
+        }
+      }
+    },
+    {
+      "name": "14. Comment longer than 1000 characters (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Comment must be at most 1000 characters\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Comment must be at most 1000 characters'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/reviews",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 1,\n  \"rating\": 5,\n  \"comment\": \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"\n}"
+        }
+      }
+    },
+    {
+      "name": "15. Review a missing booking (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 404', () => pm.response.to.have.status(404));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Booking not found\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 404 with message 'Booking not found'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/reviews",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 99999,\n  \"rating\": 5\n}"
+        }
+      }
+    },
+    {
+      "name": "16. Review another guest's booking 2 (403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 403', () => pm.response.to.have.status(403));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"You do not have permission to access this booking\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Booking 2 belongs to Le Van Binh. Expected: 403 with message 'You do not have permission to access this booking'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/reviews",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 2,\n  \"rating\": 5\n}"
+        }
+      }
+    },
+    {
+      "name": "17. Review booking 3, not checked out yet (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"You can only review a checked-out booking\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Booking 3 is checked_in. Expected: 400 with message 'You can only review a checked-out booking'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/reviews",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 3,\n  \"rating\": 5\n}"
+        }
+      }
+    },
+    {
+      "name": "18. Review food order 3, not completed yet (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"You can only review a completed food order\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Food order 3 is preparing. Expected: 400 with message 'You can only review a completed food order'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/reviews",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"food_order_id\": 3,\n  \"rating\": 5\n}"
+        }
+      }
+    },
+    {
+      "name": "19. Review booking 1 again (409)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 409', () => pm.response.to.have.status(409));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"You have already reviewed this booking\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Booking 1 already has seed review 1. Expected: 409 with message 'You have already reviewed this booking'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/reviews",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 1,\n  \"rating\": 5\n}"
+        }
+      }
+    },
+    {
+      "name": "20. List my reviews",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Newest first', () => pm.expect(String(data[0].id)).to.eql(String(pm.collectionVariables.get('reviewId'))));",
+              "pm.test('Target names', () => {",
+              "  const names = Object.fromEntries(data.map((item) => [item.id, item.target.name]));",
+              "  pm.expect(names[1]).to.eql('Room 101');",
+              "  pm.expect(names[3]).to.eql('Restaurant breakfast');",
+              "  pm.expect(names[4]).to.eql('Food order #1');",
+              "  pm.expect(names[5]).to.eql('Hoi An Ancient Town by Night');",
+              "});",
+              "pm.test('Only my reviews', () => pm.expect(data.map((item) => item.id)).to.not.include(2));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200 with pagination, newest first. Each review has a target with type, id and name: Room 101 (review 1), Restaurant breakfast (review 3), Food order #1 (review 4), Hoi An Ancient Town by Night (review 5), and the new tour review first.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/reviews?limit=50"
+      }
+    },
+    {
+      "name": "21. Public reviews of room 1",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Has summary and pagination', () => {",
+              "  pm.expect(typeof body.data.summary.review_count).to.eql('number');",
+              "  pm.expect(body.data.summary.review_count >= 1).to.eql(true);",
+              "  pm.expect(typeof body.data.summary.average_rating).to.eql('number');",
+              "  pm.expect(body.pagination.total).to.eql(body.data.summary.review_count);",
+              "});",
+              "pm.test('Contains review 1', () => pm.expect(body.data.reviews.map((item) => item.id)).to.include(1));",
+              "pm.test('Reviewer shows only full_name', () => body.data.reviews.forEach((item) => pm.expect(Object.keys(item.reviewer)).to.eql(['full_name'])));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "No login. Expected: 200. data has summary { average_rating, review_count } and reviews; seed review 1 is in the list. Each reviewer shows only full_name.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/rooms/1/reviews"
+      }
+    },
+    {
+      "name": "22. Public reviews of service 6 (includes transport)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Has summary and pagination', () => {",
+              "  pm.expect(typeof body.data.summary.review_count).to.eql('number');",
+              "  pm.expect(body.data.summary.review_count >= 1).to.eql(true);",
+              "  pm.expect(typeof body.data.summary.average_rating).to.eql('number');",
+              "  pm.expect(body.pagination.total).to.eql(body.data.summary.review_count);",
+              "});",
+              "pm.test('Contains review 6', () => pm.expect(body.data.reviews.map((item) => item.id)).to.include(6));",
+              "pm.test('Reviewer shows only full_name', () => body.data.reviews.forEach((item) => pm.expect(Object.keys(item.reviewer)).to.eql(['full_name'])));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Service 6 is the motorbike rental. Seed review 6 is for a transport booking that uses it. Expected: 200 with summary, and review 6 is in the list.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/services/6/reviews"
+      }
+    },
+    {
+      "name": "23. Public reviews of tour 2",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Has summary and pagination', () => {",
+              "  pm.expect(typeof body.data.summary.review_count).to.eql('number');",
+              "  pm.expect(body.data.summary.review_count >= 1).to.eql(true);",
+              "  pm.expect(typeof body.data.summary.average_rating).to.eql('number');",
+              "  pm.expect(body.pagination.total).to.eql(body.data.summary.review_count);",
+              "});",
+              "pm.test('Contains review 5', () => pm.expect(body.data.reviews.map((item) => item.id)).to.include(5));",
+              "pm.test('Reviewer shows only full_name', () => body.data.reviews.forEach((item) => pm.expect(Object.keys(item.reviewer)).to.eql(['full_name'])));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200 with summary. Seed review 5 is in the list.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/tours/2/reviews"
+      }
+    },
+    {
+      "name": "24. Public food reviews",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Has summary and pagination', () => {",
+              "  pm.expect(typeof body.data.summary.review_count).to.eql('number');",
+              "  pm.expect(body.data.summary.review_count >= 1).to.eql(true);",
+              "  pm.expect(typeof body.data.summary.average_rating).to.eql('number');",
+              "  pm.expect(body.pagination.total).to.eql(body.data.summary.review_count);",
+              "});",
+              "pm.test('Contains review 4', () => pm.expect(body.data.reviews.map((item) => item.id)).to.include(4));",
+              "pm.test('Reviewer shows only full_name', () => body.data.reviews.forEach((item) => pm.expect(Object.keys(item.reviewer)).to.eql(['full_name'])));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "The shared 'Food reviews' section of the menu page. Expected: 200 with summary. Seed review 4 is in the list.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/food-reviews"
+      }
+    },
+    {
+      "name": "25. Public reviews of tour 4 include the new review",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Contains reviewId', () => pm.expect(data.reviews.map((item) => String(item.id))).to.include(String(pm.collectionVariables.get('reviewId'))));",
+              "pm.test('Rounded average', () => pm.expect(Math.round(data.summary.average_rating * 10) / 10).to.eql(data.summary.average_rating));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200. The review created in this run is in the list, and average_rating has at most 1 decimal place.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/tours/4/reviews?limit=50"
+      }
+    },
+    {
+      "name": "26. Public reviews of a missing room (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 404', () => pm.response.to.have.status(404));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Room not found\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 404 with message 'Room not found'.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/rooms/99999/reviews"
+      }
+    },
+    {
+      "name": "27. List my reviews without a token (401)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 401', () => pm.response.to.have.status(401));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 401.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/reviews"
+      }
+    }
+  ]
+}

@@ -176,6 +176,14 @@ Lưu ý: yêu cầu và tin nhắn đầu tiên được lưu trong cùng một 
 
 Lưu ý: `GET /food-reviews` lấy các dòng trong `reviews` có `food_order_id` khác NULL, không theo từng món và không cần đổi database. Khóa đến đơn là một trong `booking_id`, `service_booking_id`, `food_order_id`, `tour_booking_id`, `transport_booking_id`. Đơn phải thuộc người dùng và đã hoàn thành. Đánh giá lại cùng một đơn trả `409`.
 
+Bổ sung:
+
+- "Đã hoàn thành" nghĩa là đơn đặt phòng `checked_out`; yêu cầu dịch vụ, đơn đồ ăn, tour và vận chuyển `completed`.
+- Đánh giá không sửa và không xóa được.
+- `GET /services/:id/reviews` gồm đánh giá của cả yêu cầu dịch vụ khách sạn lẫn đơn vận chuyển dùng dịch vụ đó.
+- Các API đánh giá công khai có phân trang. `data` có dạng `{ summary: { average_rating, review_count }, reviews: [] }`, trong đó `average_rating` làm tròn 1 chữ số và bằng `null` khi chưa có đánh giá. Mỗi đánh giá chỉ hiện họ tên người viết, không hiện email.
+- TiDB không kiểm tra `CHECK`, nên backend phải tự kiểm tra `rating` từ 1 đến 5 và đúng một khóa đến đơn.
+
 ### 9. Quản trị
 
 **Người dùng**

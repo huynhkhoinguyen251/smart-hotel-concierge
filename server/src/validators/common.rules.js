@@ -122,16 +122,17 @@ export const descriptionRule = () =>
     .withMessage('Description must be at most 5000 characters')
     .customSanitizer((value) => (value === '' ? null : value));
 
-// Ghi chú của đơn, không bắt buộc. null hoặc chuỗi rỗng nghĩa là không có ghi chú.
-export const noteRule = () =>
-  body('note')
+// Chữ tự do không bắt buộc, mặc định là ghi chú của đơn (note, tối đa 1000 ký tự).
+// null hoặc chuỗi rỗng nghĩa là không có.
+export const noteRule = (field = 'note', label = 'Note', max = 1000) =>
+  body(field)
     .optional({ values: 'null' })
     .isString()
-    .withMessage('Note must be text')
+    .withMessage(`${label} must be text`)
     .bail()
     .trim()
-    .isLength({ max: 1000 })
-    .withMessage('Note must be at most 1000 characters')
+    .isLength({ max })
+    .withMessage(`${label} must be at most ${max} characters`)
     .customSanitizer((value) => (value === '' ? null : value));
 
 // :id trên đường dẫn.
