@@ -1,0 +1,15 @@
+@import 'tailwindcss';
+
+/* Màu chủ đạo: teal của Tailwind (teal-700 cho nút, teal-50 cho nền nhạt). */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-white text-slate-800 antialiased;
+    font-family:
+      ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+      sans-serif;
+  }
+}

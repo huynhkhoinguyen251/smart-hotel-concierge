@@ -175,6 +175,7 @@ The database is designed for Core and Extended features from the start, so that 
 |---|---|---|
 | Frontend | ReactJS with Vite, JavaScript | User and admin interfaces |
 | UI | Tailwind CSS | Styling |
+| Page routing | React Router | Moving between pages, protected user and admin pages |
 | API client | Axios | Connecting the frontend to the backend |
 | Charts | Chart.js | Admin dashboard statistics |
 | Backend | Node.js with Express.js | REST API and business logic |

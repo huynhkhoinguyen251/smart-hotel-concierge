@@ -49,8 +49,8 @@ Tài liệu chuẩn về phạm vi và nghiệp vụ: [proposal.md](proposal.md)
 | Environment Setup | Hoàn thành |
 | Giai đoạn 1: Database Design | Hoàn thành |
 | Giai đoạn 2: Backend | Hoàn thành phần Core (11/11/2026) |
-| Giai đoạn 3: Frontend | Chưa bắt đầu |
-| Giai đoạn 4: Integration | Chưa bắt đầu |
+| Giai đoạn 3: Frontend | Đang làm |
+| Giai đoạn 4: Integration | Đang làm |
 | Giai đoạn 5: Advanced Features | Chưa bắt đầu |
 | Giai đoạn 6: Testing & Deployment | Chưa bắt đầu |
 
@@ -108,10 +108,10 @@ Test từng API bằng Postman ngay sau khi viết xong.
 
 ## Giai đoạn 3: Frontend Development
 
-- [ ] Khởi tạo ReactJS + Vite
-- [ ] Cài đặt Tailwind CSS
+- [x] Khởi tạo ReactJS + Vite (kèm React Router, Axios, khung trang user và admin)
+- [x] Cài đặt Tailwind CSS
 - [ ] Thiết kế giao diện Home Page
-- [ ] Thiết kế Login/Register
+- [x] Thiết kế Login/Register
 - [ ] Thiết kế Room Listing
 - [ ] Thiết kế Room Detail
 - [ ] Thiết kế Booking Page
@@ -119,15 +119,15 @@ Test từng API bằng Postman ngay sau khi viết xong.
 - [ ] Thiết kế Food Ordering
 - [ ] Thiết kế Tourism Service
 - [ ] Thiết kế Support Ticket
-- [ ] Thiết kế User Profile
+- [x] Thiết kế User Profile
 - [ ] Thiết kế Admin Dashboard
 
 ## Giai đoạn 4: Integration
 
 Làm song song với Giai đoạn 2 và 3: mỗi chức năng đi lần lượt từ API, giao diện đến kết nối và test, rồi mới sang chức năng tiếp theo.
 
-- [ ] Kết nối Frontend với Backend
-- [ ] Tích hợp Authentication
+- [x] Kết nối Frontend với Backend
+- [x] Tích hợp Authentication (đăng nhập, đăng ký, hồ sơ, chặn trang theo vai trò)
 - [ ] Tích hợp Room Booking
 - [ ] Tích hợp Service Booking
 - [ ] Tích hợp Food Ordering
@@ -179,6 +179,8 @@ Chỉ bắt đầu khi toàn bộ tính năng Core đã chạy ổn.
 |---|---|---|
 | Frontend | ReactJS hoặc VueJS | ReactJS + Vite |
 | UI | Bootstrap hoặc Tailwind | Tailwind CSS |
+| Chuyển trang ở frontend | Chưa chọn | React Router (bạn đồng ý ngày 11/11/2026) |
+| Wireframe | Figma | Không vẽ riêng; bố cục từng trang được mô tả trong prompt và chỉnh trực tiếp trên giao diện |
 | Database | MongoDB hoặc MySQL | MySQL 8.0 |
 | Vai trò | Lễ tân và quản lý chưa rõ vai trò | Chỉ có `user` và `admin`; lễ tân và quản lý dùng `admin` |
 | Liên hệ lễ tân | Chat hoặc support ticket | Support ticket là Core; chat real-time là Optional |
