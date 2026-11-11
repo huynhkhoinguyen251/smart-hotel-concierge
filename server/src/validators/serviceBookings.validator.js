@@ -5,13 +5,14 @@ import {
   SERVICE_REQUEST_STATUSES,
 } from '../config/services.js';
 import { isValidDateTimeString } from '../utils/date.js';
-import { bodyIntRule, idParamRule, paginationRules } from './common.rules.js';
+import { bodyIntRule, idParamRule, noteRule, paginationRules } from './common.rules.js';
 
 const STATUS_MESSAGE = `Status must be one of: ${SERVICE_REQUEST_STATUSES.join(', ')}`;
 const SCHEDULED_AT_MESSAGE =
   'Scheduled time (scheduled_at) must be a valid date and time in YYYY-MM-DD HH:mm format';
 
-// location: query (lọc danh sách) hoặc body (admin đổi trạng thái). Bắt buộc, trừ khi gọi .optional().
+// location: query (lọc danh sách) hoặc body (admin đổi trạng thái).
+// Bắt buộc, trừ khi gọi .optional().
 export const serviceRequestStatusRule = (location) =>
   location('status')
     .isString()
@@ -37,16 +38,7 @@ export const createServiceBookingValidator = [
     `Quantity must be an integer from ${MIN_SERVICE_QUANTITY} to ${MAX_SERVICE_QUANTITY}`,
     { min: MIN_SERVICE_QUANTITY, max: MAX_SERVICE_QUANTITY },
   ).optional(),
-  // Không bắt buộc. null hoặc chuỗi rỗng nghĩa là không có ghi chú.
-  body('note')
-    .optional({ values: 'null' })
-    .isString()
-    .withMessage('Note must be text')
-    .bail()
-    .trim()
-    .isLength({ max: 1000 })
-    .withMessage('Note must be at most 1000 characters')
-    .customSanitizer((value) => (value === '' ? null : value)),
+  noteRule(),
 ];
 
 export const listMyServiceBookingsValidator = [

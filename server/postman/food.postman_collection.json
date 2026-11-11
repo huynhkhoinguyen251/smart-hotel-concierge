@@ -1,0 +1,839 @@
+{
+  "info": {
+    "name": "Smart Hotel - Food and Drink",
+    "description": "Tests the 2 public menu APIs and the 4 user food order APIs. Run the requests in order (Collection Runner). Each run adds two food orders on seed booking 3 (one is cancelled at the end), so the collection can be run again while booking 3 is checked in (until 6 Dec 2026).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "anToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Login An",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('anToken', pm.response.json().data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Logs in as an.tran@example.com (test account from database/README.md). Expected: 200. The token is saved to anToken.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"an.tran@example.com\",\n  \"password\": \"User@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "2. List the menu",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Has pagination', () => pm.expect(body.pagination.page).to.eql(1));",
+              "pm.test('Item 5 is hidden', () => pm.expect(body.data.map((item) => item.id)).to.not.include(5));",
+              "pm.test('Prices are numbers', () => body.data.forEach((item) => pm.expect(typeof item.price).to.eql('number')));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Public, no login. Expected: 200 with pagination. Only available items are listed, so seed item 5 (Goi Cuon) is not in the list. Prices are numbers. The seed data has 9 available items.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/menu-items?limit=50"
+      }
+    },
+    {
+      "name": "3. Filter the menu by category (coffee)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('All coffee', () => data.forEach((item) => pm.expect(item.category).to.eql('coffee')));",
+              "pm.test('Contains items 6, 7, 8', () => pm.expect(data.map((item) => item.id)).to.include.members([6, 7, 8]));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Public. Expected: 200. Every item has category coffee. Seed items 6, 7 and 8 are in the list.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/menu-items?category=coffee"
+      }
+    },
+    {
+      "name": "4. Filter by an unknown category (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Category must be one of: food, coffee, drink\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Category must be one of: food, coffee, drink'.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/menu-items?category=dessert"
+      }
+    },
+    {
+      "name": "5. Get menu item 1",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Price 75000', () => pm.expect(pm.response.json().data.price).to.eql(75000));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Public. Expected: 200, message 'Menu item retrieved successfully'. Pho Bo, price 75000.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/menu-items/1"
+      }
+    },
+    {
+      "name": "6. Get unavailable item 5 (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 404', () => pm.response.to.have.status(404));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Menu item not found\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Seed item 5 (Goi Cuon) has is_available = false, so the public API treats it as missing. Expected: 404 with message 'Menu item not found'.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/menu-items/5"
+      }
+    },
+    {
+      "name": "7. Order Pho Bo x2 and orange juice x1 on booking 3",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "const data = pm.response.json().data;",
+              "pm.test('Pending, total 200000', () => {",
+              "  pm.expect(data.status).to.eql('pending');",
+              "  pm.expect(data.total_price).to.eql(200000);",
+              "  pm.expect(data.discount_amount).to.eql(0);",
+              "  pm.expect(data.can_cancel).to.eql(true);",
+              "});",
+              "pm.test('Two items with line totals', () => {",
+              "  pm.expect(data.items.length).to.eql(2);",
+              "  pm.expect(data.items[0].menu_item.id).to.eql(1);",
+              "  pm.expect(data.items[0].unit_price).to.eql(75000);",
+              "  pm.expect(data.items[0].line_total).to.eql(150000);",
+              "  pm.expect(data.items[1].line_total).to.eql(50000);",
+              "});",
+              "pm.collectionVariables.set('orderId', data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Booking 3 belongs to An and is checked_in (6 Nov - 6 Dec 2026). Expected: 201, message 'Food order placed successfully', status pending, total_price 200000 (75000 x 2 + 50000 x 1), discount_amount 0, 2 items with line totals 150000 and 50000. The id is saved to orderId.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/food-orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 3,\n  \"items\": [\n    {\n      \"menu_item_id\": 1,\n      \"quantity\": 2\n    },\n    {\n      \"menu_item_id\": 9,\n      \"quantity\": 1\n    }\n  ],\n  \"note\": \"Less spicy, please.\"\n}"
+        }
+      }
+    },
+    {
+      "name": "8. Send a price in the body (ignored)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "const data = pm.response.json().data;",
+              "pm.test('Price from the database', () => {",
+              "  pm.expect(data.items[0].unit_price).to.eql(35000);",
+              "  pm.expect(data.total_price).to.eql(70000);",
+              "  pm.expect(data.status).to.eql('pending');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "The body contains unit_price 1, total_price 1 and status completed. The server ignores them. Expected: 201 with unit_price 35000 (from the database), total_price 70000 and status pending.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/food-orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 3,\n  \"items\": [\n    {\n      \"menu_item_id\": 6,\n      \"quantity\": 2,\n      \"unit_price\": 1\n    }\n  ],\n  \"total_price\": 1,\n  \"status\": \"completed\"\n}"
+        }
+      }
+    },
+    {
+      "name": "9. Order on confirmed booking 9 (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Food orders require a checked-in booking; this booking is confirmed\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Booking 9 belongs to An but is only confirmed. Food orders need a checked-in booking. Expected: 400 with message 'Food orders require a checked-in booking; this booking is confirmed'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/food-orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 9,\n  \"items\": [\n    {\n      \"menu_item_id\": 1,\n      \"quantity\": 1\n    }\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "10. Order on another guest's booking 4 (403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 403', () => pm.response.to.have.status(403));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"You do not have permission to access this booking\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Booking 4 belongs to Pham Thu Chi. Expected: 403 with message 'You do not have permission to access this booking'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/food-orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 4,\n  \"items\": [\n    {\n      \"menu_item_id\": 1,\n      \"quantity\": 1\n    }\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "11. Order on a missing booking (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 404', () => pm.response.to.have.status(404));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Booking not found\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 404 with message 'Booking not found'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/food-orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 99999,\n  \"items\": [\n    {\n      \"menu_item_id\": 1,\n      \"quantity\": 1\n    }\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "12. Order with an empty items list (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Items must be a list of 1 to 20 menu items\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Items must be a list of 1 to 20 menu items'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/food-orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 3,\n  \"items\": []\n}"
+        }
+      }
+    },
+    {
+      "name": "13. Order the same menu item twice (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Each menu item can appear only once in an order\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Menu item 1 appears twice. Expected: 400 with message 'Each menu item can appear only once in an order'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/food-orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 3,\n  \"items\": [\n    {\n      \"menu_item_id\": 1,\n      \"quantity\": 1\n    },\n    {\n      \"menu_item_id\": 1,\n      \"quantity\": 2\n    }\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "14. Order with an invalid quantity (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Quantity must be an integer from 1 to 20\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Quantity must be an integer from 1 to 20. Expected: 400 with message 'Quantity must be an integer from 1 to 20'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/food-orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 3,\n  \"items\": [\n    {\n      \"menu_item_id\": 1,\n      \"quantity\": 21\n    }\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "15. Order unavailable item 5 (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Menu item Goi Cuon (fresh spring rolls) is not available\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Menu item Goi Cuon (fresh spring rolls) is not available'. No order is saved.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/food-orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 3,\n  \"items\": [\n    {\n      \"menu_item_id\": 1,\n      \"quantity\": 1\n    },\n    {\n      \"menu_item_id\": 5,\n      \"quantity\": 1\n    }\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "16. Order a missing menu item (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 404', () => pm.response.to.have.status(404));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Menu item 99999 not found\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 404 with message 'Menu item 99999 not found'. No order is saved.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/food-orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 3,\n  \"items\": [\n    {\n      \"menu_item_id\": 1,\n      \"quantity\": 1\n    },\n    {\n      \"menu_item_id\": 99999,\n      \"quantity\": 1\n    }\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "17. List my food orders",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Contains orderId', () => pm.expect(data.map((order) => String(order.id))).to.include(String(pm.collectionVariables.get('orderId'))));",
+              "pm.test('Contains seed order 5', () => pm.expect(data.map((order) => String(order.id))).to.include(String(5)));",
+              "pm.test('No order 2', () => pm.expect(data.map((order) => order.id)).to.not.include(2));",
+              "pm.test('Room number and item count, no items', () => data.forEach((order) => {",
+              "  pm.expect(typeof order.booking.room.room_number).to.eql('string');",
+              "  pm.expect(typeof order.item_count).to.eql('number');",
+              "  pm.expect(order).to.not.have.property('items');",
+              "}));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200 with pagination, newest first. Only An's orders: the new order and seed order 5 are in the list, and seed order 2 (another guest) is not. Each order has room number and item_count, without items.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/food-orders?limit=50"
+      }
+    },
+    {
+      "name": "18. Filter my food orders by status (pending)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('All pending', () => pm.response.json().data.forEach((order) => pm.expect(order.status).to.eql('pending')));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200. Every order has status pending.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/food-orders?status=pending&limit=50"
+      }
+    },
+    {
+      "name": "19. Get my new order",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Room 301 and items', () => {",
+              "  pm.expect(data.booking.room.room_number).to.eql('301');",
+              "  pm.expect(data.item_count).to.eql(2);",
+              "  pm.expect(data.items[0].menu_item.name).to.eql('Pho Bo (beef noodle soup)');",
+              "  pm.expect(data.items[0].menu_item.category).to.eql('food');",
+              "  pm.expect(data.items[0].quantity).to.eql(2);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'Food order retrieved successfully'. Room 301, 2 items with name, category, quantity, unit_price and line_total.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/food-orders/{{orderId}}"
+      }
+    },
+    {
+      "name": "20. Get another guest's order 2 (403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 403', () => pm.response.to.have.status(403));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"You do not have permission to access this food order\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Seed food order 2 belongs to booking 4 of Pham Thu Chi. Expected: 403 with message 'You do not have permission to access this food order'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/food-orders/2"
+      }
+    },
+    {
+      "name": "21. Get a missing order (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 404', () => pm.response.to.have.status(404));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Food order not found\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 404 with message 'Food order not found'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/food-orders/99999"
+      }
+    },
+    {
+      "name": "22. Cancel my new order",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Cancelled', () => {",
+              "  pm.expect(data.status).to.eql('cancelled');",
+              "  pm.expect(data.can_cancel).to.eql(false);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "The order is pending. Expected: 200, message 'Food order cancelled successfully', status cancelled, can_cancel false.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [],
+        "url": "{{baseUrl}}/food-orders/{{orderId}}/cancel"
+      }
+    },
+    {
+      "name": "23. Cancel the same order again (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Only pending food orders can be cancelled\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Only pending food orders can be cancelled'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [],
+        "url": "{{baseUrl}}/food-orders/{{orderId}}/cancel"
+      }
+    }
+  ]
+}

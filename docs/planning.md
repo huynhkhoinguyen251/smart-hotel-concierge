@@ -99,7 +99,7 @@ Test từng API bằng Postman ngay sau khi viết xong.
 - [x] Xây dựng Room Management API (công khai và admin, đã test bằng Postman)
 - [x] Xây dựng Room Booking API, có chống đặt trùng phòng (user và admin, đã test bằng Postman)
 - [x] Xây dựng Hotel Service API (user và admin, đã test bằng Postman); seed: đơn 3 kéo dài đến 06/12/2026 để test và demo
-- [ ] Xây dựng Food Ordering API
+- [x] Xây dựng Food Ordering API (user và admin, đã test bằng Postman); đặt múi giờ `+07:00` cho kết nối database
 - [ ] Xây dựng Tourism API (motorbike, airport pickup, local tour)
 - [ ] Xây dựng Support Ticket API
 - [ ] Xây dựng Review API

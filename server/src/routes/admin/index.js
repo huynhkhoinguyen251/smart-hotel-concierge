@@ -3,6 +3,8 @@ import authenticate from '../../middlewares/authenticate.js';
 import requireAdmin from '../../middlewares/requireAdmin.js';
 import amenitiesRoutes from './amenities.routes.js';
 import bookingsRoutes from './bookings.routes.js';
+import foodOrdersRoutes from './foodOrders.routes.js';
+import menuItemsRoutes from './menuItems.routes.js';
 import roomImagesRoutes from './roomImages.routes.js';
 import roomsRoutes from './rooms.routes.js';
 import roomTypesRoutes from './roomTypes.routes.js';
@@ -23,5 +25,7 @@ router.use('/amenities', amenitiesRoutes);
 router.use('/bookings', bookingsRoutes);
 router.use('/services', servicesRoutes);
 router.use('/service-bookings', serviceBookingsRoutes);
+router.use('/menu-items', menuItemsRoutes);
+router.use('/food-orders', foodOrdersRoutes);
 
 export default router;

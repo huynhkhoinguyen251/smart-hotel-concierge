@@ -74,6 +74,18 @@ export const newPasswordRule = (field, label) =>
     .custom((value) => Buffer.byteLength(value, 'utf8') <= 72)
     .withMessage(`${label} is too long; use fewer accented characters`);
 
+// Ghi chú của đơn, không bắt buộc. null hoặc chuỗi rỗng nghĩa là không có ghi chú.
+export const noteRule = () =>
+  body('note')
+    .optional({ values: 'null' })
+    .isString()
+    .withMessage('Note must be text')
+    .bail()
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Note must be at most 1000 characters')
+    .customSanitizer((value) => (value === '' ? null : value));
+
 // :id trên đường dẫn.
 export const idParamRule = (message) =>
   param('id').isInt({ min: 1, max: MAX_INT }).withMessage(message).bail().toInt();

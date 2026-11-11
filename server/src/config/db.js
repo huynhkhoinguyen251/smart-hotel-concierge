@@ -22,6 +22,17 @@ const pool = mysql.createPool({
   connectionLimit: 10,
 });
 
+// Cột TIMESTAMP (created_at, updated_at) được trả theo múi giờ của phiên kết nối.
+// TiDB Cloud mặc định là UTC, nên đặt +07:00 cho mỗi kết nối mới để hiện giờ Việt Nam
+// giống nhau trên MySQL local và TiDB. Câu lệnh được xếp hàng trước mọi truy vấn khác của kết nối.
+pool.on('connection', (connection) => {
+  connection.query("SET time_zone = '+07:00'", (error) => {
+    if (error) {
+      console.error('Failed to set the session time zone:', error);
+    }
+  });
+});
+
 // Chạy work(conn) trong một transaction. Thành công thì commit, lỗi thì rollback rồi ném lại lỗi.
 // Kết nối luôn được trả về pool trong finally.
 export const withTransaction = async (work) => {

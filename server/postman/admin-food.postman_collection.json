@@ -1,0 +1,948 @@
+{
+  "info": {
+    "name": "Smart Hotel - Admin Food and Drink",
+    "description": "Tests the 4 admin menu item APIs and the 3 admin food order APIs. Run the requests in order (Collection Runner). The test menu item is deleted at the end of the CRUD steps, and each run adds one completed food order on seed booking 3, so the collection can be run again while booking 3 is checked in (until 6 Dec 2026).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "anToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "menuItemId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Login admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('adminToken', pm.response.json().data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Logs in as admin@smarthotel.test (test account from database/README.md). Expected: 200. The token is saved to adminToken.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@smarthotel.test\",\n  \"password\": \"Admin@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "2. Login An",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('anToken', pm.response.json().data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Logs in as an.tran@example.com (test account from database/README.md). Expected: 200. The token is saved to anToken.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"an.tran@example.com\",\n  \"password\": \"User@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "3. List all menu items",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Has is_available', () => data.forEach((item) => pm.expect(typeof item.is_available).to.eql('boolean')));",
+              "pm.test('Contains item 5', () => pm.expect(data.map((item) => item.id)).to.include(5));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200 with pagination. Includes unavailable item 5, and every item has is_available, created_at and updated_at.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/menu-items?limit=50"
+      }
+    },
+    {
+      "name": "4. Filter menu items (category=food, is_available=false)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Unavailable food only', () => data.forEach((item) => {",
+              "  pm.expect(item.category).to.eql('food');",
+              "  pm.expect(item.is_available).to.eql(false);",
+              "}));",
+              "pm.test('Contains item 5', () => pm.expect(data.map((item) => item.id)).to.include(5));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200. Every item is unavailable food. Seed item 5 is in the list.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/menu-items?category=food&is_available=false"
+      }
+    },
+    {
+      "name": "5. Create a menu item",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "const data = pm.response.json().data;",
+              "pm.test('Available, price 45000', () => {",
+              "  pm.expect(data.is_available).to.eql(true);",
+              "  pm.expect(data.price).to.eql(45000);",
+              "});",
+              "pm.collectionVariables.set('menuItemId', data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 201, message 'Menu item created successfully'. is_available is true by default and price is 45000. The id is saved to menuItemId.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/menu-items",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Coconut coffee\",\n  \"category\": \"coffee\",\n  \"price\": 45000,\n  \"image_url\": \"https://placehold.co/800x600?text=Coconut+Coffee\"\n}"
+        }
+      }
+    },
+    {
+      "name": "6. Create with invalid data (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Empty name, unknown category and negative price. Expected: 400.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/menu-items",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"\",\n  \"category\": \"dessert\",\n  \"price\": -1\n}"
+        }
+      }
+    },
+    {
+      "name": "7. Update the menu item (full update)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Updated and unavailable', () => {",
+              "  pm.expect(data.price).to.eql(50000);",
+              "  pm.expect(data.is_available).to.eql(false);",
+              "  pm.expect(data.image_url).to.eql(null);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "PUT replaces all fields. Here is_available is false and image_url is not sent, so it becomes null. Expected: 200, message 'Menu item updated successfully'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/menu-items/{{menuItemId}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Coconut coffee (large)\",\n  \"category\": \"coffee\",\n  \"price\": 50000,\n  \"is_available\": false\n}"
+        }
+      }
+    },
+    {
+      "name": "8. Public API hides the unavailable item (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 404', () => pm.response.to.have.status(404));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Menu item not found\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "The item from request 5 is now unavailable. Expected: 404 with message 'Menu item not found'.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/menu-items/{{menuItemId}}"
+      }
+    },
+    {
+      "name": "9. Update a missing menu item (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 404', () => pm.response.to.have.status(404));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Menu item not found\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 404 with message 'Menu item not found'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/menu-items/99999",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Missing\",\n  \"category\": \"food\",\n  \"price\": 1\n}"
+        }
+      }
+    },
+    {
+      "name": "10. Delete the menu item",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Menu item deleted successfully\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "The new item is not in any order. Expected: 200, message 'Menu item deleted successfully'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/admin/menu-items/{{menuItemId}}"
+      }
+    },
+    {
+      "name": "11. Delete it again (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 404', () => pm.response.to.have.status(404));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Menu item not found\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 404 with message 'Menu item not found'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/admin/menu-items/{{menuItemId}}"
+      }
+    },
+    {
+      "name": "12. Delete menu item 1, which is in orders (409)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 409', () => pm.response.to.have.status(409));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"This menu item is used in existing orders. Make it unavailable instead.\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Menu item 1 (Pho Bo) is used by seed food order 1. Expected: 409 with message 'This menu item is used in existing orders. Make it unavailable instead.'",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/admin/menu-items/1"
+      }
+    },
+    {
+      "name": "13. An orders food on booking 3",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "pm.test('Total 130000', () => pm.expect(pm.response.json().data.total_price).to.eql(130000));",
+              "pm.collectionVariables.set('orderId', pm.response.json().data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Creates a food order to test the status flow: Mi Quang x1 and black coffee x2. Expected: 201, status pending, total_price 130000. The id is saved to orderId.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/food-orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 3,\n  \"items\": [\n    {\n      \"menu_item_id\": 3,\n      \"quantity\": 1\n    },\n    {\n      \"menu_item_id\": 7,\n      \"quantity\": 2\n    }\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "14. List pending food orders",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('All pending with guest and room', () => data.forEach((order) => {",
+              "  pm.expect(order.status).to.eql('pending');",
+              "  pm.expect(typeof order.user.email).to.eql('string');",
+              "  pm.expect(typeof order.booking.room.room_number).to.eql('string');",
+              "  pm.expect(typeof order.item_count).to.eql('number');",
+              "}));",
+              "pm.test('Contains orderId', () => pm.expect(data.map((order) => String(order.id))).to.include(String(pm.collectionVariables.get('orderId'))));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200. Every order is pending and includes the guest (user) with full_name and email, the room number and item_count. The order from the previous step is in the list.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/food-orders?status=pending&limit=50"
+      }
+    },
+    {
+      "name": "15. Filter by user (Pham Thu Chi's orders)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Orders of user 4', () => data.forEach((order) => pm.expect(order.user.id).to.eql(4)));",
+              "pm.test('Contains seed orders', () => pm.expect(data.map((order) => order.id)).to.include.members([2, 4, 6, 7]));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200. Every order belongs to user 4 (Pham Thu Chi). Seed orders 2, 4, 6 and 7 are in the list.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/food-orders?user_id=4&limit=50"
+      }
+    },
+    {
+      "name": "16. Get the order",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Guest, room and items', () => {",
+              "  pm.expect(data.user.full_name).to.eql('Tran Thi An');",
+              "  pm.expect(data.user.email).to.eql('an.tran@example.com');",
+              "  pm.expect(data.booking.room.room_number).to.eql('301');",
+              "  pm.expect(data.items.length).to.eql(2);",
+              "  pm.expect(data.items[1].line_total).to.eql(60000);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'Food order retrieved successfully'. Guest Tran Thi An, room 301, 2 items.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/food-orders/{{orderId}}"
+      }
+    },
+    {
+      "name": "17. Jump from pending to delivering (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Cannot change status from pending to delivering\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Not allowed by the status flow. Expected: 400 with message 'Cannot change status from pending to delivering'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/food-orders/{{orderId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"delivering\"\n}"
+        }
+      }
+    },
+    {
+      "name": "18. Change status to confirmed",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Status confirmed', () => pm.expect(pm.response.json().data.status).to.eql('confirmed'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'Food order status updated successfully', status confirmed.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/food-orders/{{orderId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"confirmed\"\n}"
+        }
+      }
+    },
+    {
+      "name": "19. Change status to preparing",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Status preparing', () => pm.expect(pm.response.json().data.status).to.eql('preparing'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'Food order status updated successfully', status preparing.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/food-orders/{{orderId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"preparing\"\n}"
+        }
+      }
+    },
+    {
+      "name": "20. Change status to delivering",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Status delivering', () => pm.expect(pm.response.json().data.status).to.eql('delivering'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'Food order status updated successfully', status delivering.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/food-orders/{{orderId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"delivering\"\n}"
+        }
+      }
+    },
+    {
+      "name": "21. Change status to completed",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Status completed', () => pm.expect(pm.response.json().data.status).to.eql('completed'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'Food order status updated successfully', status completed.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/food-orders/{{orderId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"completed\"\n}"
+        }
+      }
+    },
+    {
+      "name": "22. Cancel a completed order (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Cannot change status from completed to cancelled\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Cannot change status from completed to cancelled'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/food-orders/{{orderId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"cancelled\"\n}"
+        }
+      }
+    },
+    {
+      "name": "23. Send an unknown status (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Status must be one of: pending, confirmed, preparing, delivering, completed, cancelled\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Status must be one of: pending, confirmed, preparing, delivering, completed, cancelled'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/food-orders/{{orderId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"in_progress\"\n}"
+        }
+      }
+    },
+    {
+      "name": "24. Get a missing order (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 404', () => pm.response.to.have.status(404));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Food order not found\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 404 with message 'Food order not found'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/food-orders/99999"
+      }
+    },
+    {
+      "name": "25. User calls an admin API (403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 403', () => pm.response.to.have.status(403));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "An is not an admin. Expected: 403.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/food-orders"
+      }
+    }
+  ]
+}
