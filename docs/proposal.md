@@ -146,6 +146,8 @@ The database is designed for Core and Extended features from the start, so that 
 - The system does not track individual motorbikes or limit their number. An admin approves a request (`confirmed`) or rejects it (`cancelled`).
 - When approving a motorbike rental, the admin must enter the licence plate, and the user can then see it. The plate is optional for airport pickup and shuttle.
 - Each motorbike rental request is for one motorbike (`quantity` = 1). A user who needs more motorbikes creates more requests.
+- A motorbike rental is charged per started 24 hours, from 1 to 30 days. Airport pickup is charged per car (1 to 5 cars) and needs a flight number. The shuttle is charged per person (1 to 20).
+- A local tour is charged per participant (1 to 20). The tour date and the start time of a transport request must be in the future and at most one year ahead.
 - Service and order items store the price at the time of the request.
 - A user can cancel a service, food, or tourism request only while it is `pending`. An admin can cancel it while it is `pending` or `confirmed`.
 

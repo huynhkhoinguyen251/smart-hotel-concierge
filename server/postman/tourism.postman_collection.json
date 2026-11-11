@@ -1,0 +1,1429 @@
+{
+  "info": {
+    "name": "Smart Hotel - Tourism",
+    "description": "Tests the 2 public tour APIs, the 4 user tour booking APIs and the 4 user transport booking APIs. Run the requests in order (Collection Runner). Each run creates one tour booking and three transport bookings and cancels them at the end, so the collection can be run again. The fixed dates in December 2026 work until 20 Dec 2026.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "anToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tourBookingId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "motorbikeId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "airportId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "shuttleId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Login An",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('anToken', pm.response.json().data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Logs in as an.tran@example.com (test account from database/README.md). Expected: 200. The token is saved to anToken.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"an.tran@example.com\",\n  \"password\": \"User@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "2. List active tours",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Has pagination', () => pm.expect(body.pagination.page).to.eql(1));",
+              "pm.test('Prices are numbers', () => body.data.forEach((tour) => pm.expect(typeof tour.price).to.eql('number')));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Public, no login. Expected: 200 with pagination. Only active tours are listed, and prices are numbers. The seed data has 4 active tours.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/tours?limit=50"
+      }
+    },
+    {
+      "name": "3. Filter tours by location (Da Nang)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('All in Da Nang', () => data.forEach((tour) => pm.expect(tour.location).to.eql('Da Nang')));",
+              "pm.test('Contains tours 1 and 4', () => pm.expect(data.map((tour) => tour.id)).to.include.members([1, 4]));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Public. Expected: 200. Every tour is in Da Nang (exact match). Seed tours 1 and 4 are in the list.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/tours?location=Da Nang"
+      }
+    },
+    {
+      "name": "4. Get tour 1",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Price 1250000', () => pm.expect(pm.response.json().data.price).to.eql(1250000));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Public. Expected: 200, message 'Tour retrieved successfully'. Ba Na Hills Discovery, price 1250000.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/tours/1"
+      }
+    },
+    {
+      "name": "5. Get a missing tour (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 404', () => pm.response.to.have.status(404));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Tour not found\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 404 with message 'Tour not found'. An inactive tour gives the same result (see the admin collection).",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/tours/99999"
+      }
+    },
+    {
+      "name": "6. Book tour 1 for 2 people (20 Dec 2026)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "const data = pm.response.json().data;",
+              "pm.test('Pending, total 2500000', () => {",
+              "  pm.expect(data.status).to.eql('pending');",
+              "  pm.expect(data.unit_price).to.eql(1250000);",
+              "  pm.expect(data.total_price).to.eql(2500000);",
+              "  pm.expect(data.tour.name).to.eql('Ba Na Hills Discovery');",
+              "});",
+              "pm.collectionVariables.set('tourBookingId', pm.response.json().data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 201, message 'Tour booked successfully', status pending, unit_price 1250000 (from the database), total_price 2500000. A price sent in the body is ignored. The id is saved to tourBookingId.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/tour-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tour_id\": 1,\n  \"tour_date\": \"2026-12-20\",\n  \"participants\": 2,\n  \"note\": \"Vegetarian lunch for one person.\",\n  \"unit_price\": 1,\n  \"total_price\": 1\n}"
+        }
+      }
+    },
+    {
+      "name": "7. Book a tour on a past date (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Tour date (tour_date) must be after today\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "tour_date must be after today. Expected: 400 with message 'Tour date (tour_date) must be after today'. Today's date gives the same result.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/tour-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tour_id\": 1,\n  \"tour_date\": \"2026-01-01\",\n  \"participants\": 1\n}"
+        }
+      }
+    },
+    {
+      "name": "8. Book a tour more than 365 days ahead (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Tour date (tour_date) cannot be more than 365 days from today\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Tour date (tour_date) cannot be more than 365 days from today'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/tour-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tour_id\": 1,\n  \"tour_date\": \"2028-01-01\",\n  \"participants\": 1\n}"
+        }
+      }
+    },
+    {
+      "name": "9. Book a tour for 0 people (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Participants must be an integer from 1 to 20\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Participants must be an integer from 1 to 20'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/tour-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tour_id\": 1,\n  \"tour_date\": \"2026-12-20\",\n  \"participants\": 0\n}"
+        }
+      }
+    },
+    {
+      "name": "10. Book a tour for 21 people (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Participants must be an integer from 1 to 20\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Participants must be an integer from 1 to 20'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/tour-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tour_id\": 1,\n  \"tour_date\": \"2026-12-20\",\n  \"participants\": 21\n}"
+        }
+      }
+    },
+    {
+      "name": "11. Book a missing tour (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 404', () => pm.response.to.have.status(404));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Tour not found\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 404 with message 'Tour not found'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/tour-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tour_id\": 99999,\n  \"tour_date\": \"2026-12-20\",\n  \"participants\": 1\n}"
+        }
+      }
+    },
+    {
+      "name": "12. Rent a motorbike for 3 days",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "const data = pm.response.json().data;",
+              "pm.test('3 days, total 450000', () => {",
+              "  pm.expect(data.quantity).to.eql(1);",
+              "  pm.expect(data.unit_price).to.eql(150000);",
+              "  pm.expect(data.total_price).to.eql(450000);",
+              "  pm.expect(data.service.category).to.eql('motorbike_rental');",
+              "});",
+              "pm.test('User cannot set the plate or a flight number', () => {",
+              "  pm.expect(data.vehicle_plate).to.eql(null);",
+              "  pm.expect(data.flight_number).to.eql(null);",
+              "});",
+              "pm.collectionVariables.set('motorbikeId', pm.response.json().data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Service 6, from 2026-12-20 08:00 to 2026-12-22 10:00 (50 hours, so 3 rental days). The body also sends vehicle_plate, flight_number and unit_price; they are ignored. Expected: 201, message 'Transport booked successfully', quantity 1, unit_price 150000, total_price 450000, vehicle_plate null, flight_number null. The id is saved to motorbikeId.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/transport-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"service_id\": 6,\n  \"start_at\": \"2026-12-20 08:00\",\n  \"end_at\": \"2026-12-22 10:00\",\n  \"pickup_location\": \"Hotel\",\n  \"dropoff_location\": \"Hotel\",\n  \"vehicle_plate\": \"99Z9-999.99\",\n  \"flight_number\": \"VN 999\",\n  \"unit_price\": 1\n}"
+        }
+      }
+    },
+    {
+      "name": "13. Rent 2 motorbikes in one booking (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Each motorbike rental is for one motorbike\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Each motorbike rental is for one motorbike'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/transport-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"service_id\": 6,\n  \"start_at\": \"2026-12-20 08:00\",\n  \"end_at\": \"2026-12-22 10:00\",\n  \"pickup_location\": \"Hotel\",\n  \"dropoff_location\": \"Hotel\",\n  \"quantity\": 2\n}"
+        }
+      }
+    },
+    {
+      "name": "14. Rent a motorbike without end_at (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"End time (end_at) is required for a motorbike rental\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'End time (end_at) is required for a motorbike rental'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/transport-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"service_id\": 6,\n  \"start_at\": \"2026-12-20 08:00\",\n  \"pickup_location\": \"Hotel\",\n  \"dropoff_location\": \"Hotel\"\n}"
+        }
+      }
+    },
+    {
+      "name": "15. Rent a motorbike for 31 days (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"A motorbike rental can be at most 30 days\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "From 2026-12-20 08:00 to 2027-01-20 08:00. Expected: 400 with message 'A motorbike rental can be at most 30 days'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/transport-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"service_id\": 6,\n  \"start_at\": \"2026-12-20 08:00\",\n  \"end_at\": \"2027-01-20 08:00\",\n  \"pickup_location\": \"Hotel\",\n  \"dropoff_location\": \"Hotel\"\n}"
+        }
+      }
+    },
+    {
+      "name": "16. Rent a motorbike with end_at before start_at (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"End time (end_at) must be after the start time (start_at)\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'End time (end_at) must be after the start time (start_at)'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/transport-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"service_id\": 6,\n  \"start_at\": \"2026-12-20 08:00\",\n  \"end_at\": \"2026-12-19 08:00\",\n  \"pickup_location\": \"Hotel\",\n  \"dropoff_location\": \"Hotel\"\n}"
+        }
+      }
+    },
+    {
+      "name": "17. Book an airport pickup with 2 cars",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "const data = pm.response.json().data;",
+              "pm.test('2 cars, total 700000', () => {",
+              "  pm.expect(data.quantity).to.eql(2);",
+              "  pm.expect(data.total_price).to.eql(700000);",
+              "  pm.expect(data.flight_number).to.eql('VN 118');",
+              "  pm.expect(data.end_at).to.eql(null);",
+              "});",
+              "pm.collectionVariables.set('airportId', pm.response.json().data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Service 7, flight VN 118. Expected: 201, quantity 2, unit_price 350000, total_price 700000, flight_number VN 118. The id is saved to airportId.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/transport-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"service_id\": 7,\n  \"start_at\": \"2026-12-20 10:30\",\n  \"pickup_location\": \"Da Nang International Airport\",\n  \"dropoff_location\": \"Hotel\",\n  \"flight_number\": \"VN 118\",\n  \"quantity\": 2\n}"
+        }
+      }
+    },
+    {
+      "name": "18. Book an airport pickup without flight_number (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Flight number (flight_number) is required for an airport pickup\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Flight number (flight_number) is required for an airport pickup'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/transport-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"service_id\": 7,\n  \"start_at\": \"2026-12-20 10:30\",\n  \"pickup_location\": \"Da Nang International Airport\",\n  \"dropoff_location\": \"Hotel\",\n  \"quantity\": 2\n}"
+        }
+      }
+    },
+    {
+      "name": "19. Book an airport pickup with 6 cars (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Quantity for an airport pickup is the number of cars, from 1 to 5\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Quantity for an airport pickup is the number of cars, from 1 to 5'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/transport-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"service_id\": 7,\n  \"start_at\": \"2026-12-20 10:30\",\n  \"pickup_location\": \"Da Nang International Airport\",\n  \"dropoff_location\": \"Hotel\",\n  \"flight_number\": \"VN 118\",\n  \"quantity\": 6\n}"
+        }
+      }
+    },
+    {
+      "name": "20. Book a shuttle with end_at (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"end_at is only used for motorbike rentals\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'end_at is only used for motorbike rentals'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/transport-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"service_id\": 8,\n  \"start_at\": \"2026-12-21 09:00\",\n  \"pickup_location\": \"Hotel\",\n  \"dropoff_location\": \"Han Market\",\n  \"quantity\": 3,\n  \"end_at\": \"2026-12-21 12:00\"\n}"
+        }
+      }
+    },
+    {
+      "name": "21. Book a shuttle for 3 people",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "const data = pm.response.json().data;",
+              "pm.test('3 people, total 240000', () => {",
+              "  pm.expect(data.quantity).to.eql(3);",
+              "  pm.expect(data.total_price).to.eql(240000);",
+              "});",
+              "pm.collectionVariables.set('shuttleId', pm.response.json().data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Service 8. Expected: 201, quantity 3, unit_price 80000, total_price 240000. The id is saved to shuttleId.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/transport-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"service_id\": 8,\n  \"start_at\": \"2026-12-21 09:00\",\n  \"pickup_location\": \"Hotel\",\n  \"dropoff_location\": \"Han Market\",\n  \"quantity\": 3\n}"
+        }
+      }
+    },
+    {
+      "name": "22. Book hotel service 1 through the transport API (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"This service is booked through the hotel service API\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Service 1 is a hotel breakfast. Expected: 400 with message 'This service is booked through the hotel service API'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/transport-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"service_id\": 1,\n  \"start_at\": \"2026-12-21 09:00\",\n  \"pickup_location\": \"Hotel\",\n  \"dropoff_location\": \"Han Market\",\n  \"quantity\": 3\n}"
+        }
+      }
+    },
+    {
+      "name": "23. Book transport in the past (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Start time (start_at) must be in the future\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Start time (start_at) must be in the future'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/transport-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"service_id\": 8,\n  \"start_at\": \"2026-01-01 09:00\",\n  \"pickup_location\": \"Hotel\",\n  \"dropoff_location\": \"Han Market\",\n  \"quantity\": 3\n}"
+        }
+      }
+    },
+    {
+      "name": "24. Book transport without pickup_location (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Pickup location (pickup_location) is required\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Pickup location (pickup_location) is required'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/transport-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"service_id\": 8,\n  \"start_at\": \"2026-12-21 09:00\",\n  \"dropoff_location\": \"Han Market\",\n  \"quantity\": 3\n}"
+        }
+      }
+    },
+    {
+      "name": "25. List my tour bookings",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Contains tourBookingId', () => pm.expect(data.map((item) => String(item.id))).to.include(String(pm.collectionVariables.get('tourBookingId'))));",
+              "pm.test('No booking 2', () => pm.expect(data.map((item) => item.id)).to.not.include(2));",
+              "pm.test('Has tour name and location', () => data.forEach((item) => pm.expect(typeof item.tour.location).to.eql('string')));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200 with pagination, newest first. Only An's bookings, with tour name and location. The new booking is in the list and seed booking 2 (another guest) is not.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/tour-bookings?limit=50"
+      }
+    },
+    {
+      "name": "26. Get my tour booking",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Tour 1 on 2026-12-20', () => {",
+              "  pm.expect(data.tour.id).to.eql(1);",
+              "  pm.expect(data.tour_date).to.eql('2026-12-20');",
+              "  pm.expect(data.participants).to.eql(2);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'Tour booking retrieved successfully'. Tour 1 on 2026-12-20 for 2 people.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/tour-bookings/{{tourBookingId}}"
+      }
+    },
+    {
+      "name": "27. List my transport bookings",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Contains motorbikeId', () => pm.expect(data.map((item) => String(item.id))).to.include(String(pm.collectionVariables.get('motorbikeId'))));",
+              "pm.test('No booking 4', () => pm.expect(data.map((item) => item.id)).to.not.include(4));",
+              "pm.test('Has category and vehicle_plate', () => data.forEach((item) => {",
+              "  pm.expect(typeof item.service.category).to.eql('string');",
+              "  pm.expect(Object.keys(item)).to.include('vehicle_plate');",
+              "}));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200 with pagination, newest first. Only An's bookings, with service name, category and vehicle_plate (null until an admin sets it). The motorbike rental from earlier is in the list and seed booking 4 (another guest) is not.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/transport-bookings?limit=50"
+      }
+    },
+    {
+      "name": "28. Filter my transport bookings by status (pending)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('All pending', () => pm.response.json().data.forEach((item) => pm.expect(item.status).to.eql('pending')));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200. Every booking has status pending.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/transport-bookings?status=pending&limit=50"
+      }
+    },
+    {
+      "name": "29. Get my motorbike rental",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Dates and total', () => {",
+              "  pm.expect(data.start_at).to.eql('2026-12-20 08:00:00');",
+              "  pm.expect(data.end_at).to.eql('2026-12-22 10:00:00');",
+              "  pm.expect(data.total_price).to.eql(450000);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'Transport booking retrieved successfully'. end_at 2026-12-22 10:00:00, total_price 450000.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/transport-bookings/{{motorbikeId}}"
+      }
+    },
+    {
+      "name": "30. Get another guest's tour booking 2 (403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 403', () => pm.response.to.have.status(403));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"You do not have permission to access this tour booking\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Seed tour booking 2 belongs to Le Van Binh. Expected: 403 with message 'You do not have permission to access this tour booking'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/tour-bookings/2"
+      }
+    },
+    {
+      "name": "31. Get another guest's transport booking 4 (403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 403', () => pm.response.to.have.status(403));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"You do not have permission to access this transport booking\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Seed transport booking 4 belongs to Le Van Binh. Expected: 403 with message 'You do not have permission to access this transport booking'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/transport-bookings/4"
+      }
+    },
+    {
+      "name": "32. Get a missing transport booking (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 404', () => pm.response.to.have.status(404));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Transport booking not found\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 404 with message 'Transport booking not found'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/transport-bookings/99999"
+      }
+    },
+    {
+      "name": "33. Cancel my tour booking",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Cancelled', () => {",
+              "  pm.expect(pm.response.json().data.status).to.eql('cancelled');",
+              "  pm.expect(pm.response.json().data.can_cancel).to.eql(false);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "The booking is pending. Expected: 200, status cancelled, can_cancel false.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [],
+        "url": "{{baseUrl}}/tour-bookings/{{tourBookingId}}/cancel"
+      }
+    },
+    {
+      "name": "34. Cancel the same tour booking again (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Only pending tour bookings can be cancelled\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Only pending tour bookings can be cancelled'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [],
+        "url": "{{baseUrl}}/tour-bookings/{{tourBookingId}}/cancel"
+      }
+    },
+    {
+      "name": "35. Cancel my motorbike rental",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Cancelled', () => {",
+              "  pm.expect(pm.response.json().data.status).to.eql('cancelled');",
+              "  pm.expect(pm.response.json().data.can_cancel).to.eql(false);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "The booking is pending. Expected: 200, status cancelled, can_cancel false.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [],
+        "url": "{{baseUrl}}/transport-bookings/{{motorbikeId}}/cancel"
+      }
+    },
+    {
+      "name": "36. Cancel the same motorbike rental again (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Only pending transport bookings can be cancelled\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Only pending transport bookings can be cancelled'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [],
+        "url": "{{baseUrl}}/transport-bookings/{{motorbikeId}}/cancel"
+      }
+    },
+    {
+      "name": "37. Cancel my airport pickup",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Cancelled', () => {",
+              "  pm.expect(pm.response.json().data.status).to.eql('cancelled');",
+              "  pm.expect(pm.response.json().data.can_cancel).to.eql(false);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "The booking is pending. Expected: 200, status cancelled, can_cancel false.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [],
+        "url": "{{baseUrl}}/transport-bookings/{{airportId}}/cancel"
+      }
+    },
+    {
+      "name": "38. Cancel my shuttle booking",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Cancelled', () => {",
+              "  pm.expect(pm.response.json().data.status).to.eql('cancelled');",
+              "  pm.expect(pm.response.json().data.can_cancel).to.eql(false);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "The booking is pending. Expected: 200, status cancelled, can_cancel false.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [],
+        "url": "{{baseUrl}}/transport-bookings/{{shuttleId}}/cancel"
+      }
+    }
+  ]
+}

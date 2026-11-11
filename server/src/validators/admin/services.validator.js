@@ -1,10 +1,10 @@
 import { body, query } from 'express-validator';
 import {
+  descriptionRule,
+  imageUrlRule,
   isBooleanLike,
-  isImageUrl,
-  isScalar,
   paginationRules,
-  PRICE_PATTERN,
+  priceRule,
 } from '../common.rules.js';
 import { categoryRule, serviceIdValidator } from '../services.validator.js';
 
@@ -21,41 +21,6 @@ const nameRule = () =>
     .bail()
     .isLength({ max: 150 })
     .withMessage('Service name must be at most 150 characters');
-
-// Không bắt buộc. null hoặc chuỗi rỗng nghĩa là không có mô tả.
-const descriptionRule = () =>
-  body('description')
-    .optional({ values: 'null' })
-    .isString()
-    .withMessage('Description must be text')
-    .bail()
-    .trim()
-    .isLength({ max: 5000 })
-    .withMessage('Description must be at most 5000 characters')
-    .customSanitizer((value) => (value === '' ? null : value));
-
-// Giá được phép bằng 0, ví dụ dịch vụ miễn phí.
-const priceRule = () =>
-  body('price')
-    .custom((value) => isScalar(value) && PRICE_PATTERN.test(String(value)))
-    .withMessage('Price must be a number of at least 0 with at most 2 decimal places')
-    .bail()
-    .toFloat();
-
-// Không bắt buộc. null hoặc chuỗi rỗng nghĩa là không có ảnh.
-const imageUrlRule = () =>
-  body('image_url')
-    .optional({ values: 'null' })
-    .isString()
-    .withMessage('Image URL must be text')
-    .bail()
-    .trim()
-    .isLength({ max: 500 })
-    .withMessage('Image URL must be at most 500 characters')
-    .bail()
-    .custom((value) => value === '' || isImageUrl(value))
-    .withMessage('Image URL must be a valid link starting with http://, https:// or /uploads/')
-    .customSanitizer((value) => (value === '' ? null : value));
 
 const isActiveBodyRule = () =>
   body('is_active')

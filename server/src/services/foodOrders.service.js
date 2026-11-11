@@ -8,20 +8,16 @@ import * as foodOrderItemsModel from '../models/foodOrderItems.model.js';
 import * as foodOrdersModel from '../models/foodOrders.model.js';
 import * as menuItemsModel from '../models/menuItems.model.js';
 import AppError from '../utils/AppError.js';
+import { fromCents, multiplyPrice, toCents } from '../utils/money.js';
 import { getPagination } from '../utils/pagination.js';
 import { BOOKING_NOT_FOUND } from './bookings.service.js';
 
 export const FOOD_ORDER_NOT_FOUND = 'Food order not found';
 const FOOD_ORDER_FORBIDDEN = 'You do not have permission to access this food order';
 
-// Tính tiền theo đơn vị xu (x100) để tránh sai số khi nhân và cộng số thập phân trong JavaScript.
-const toCents = (amount) => Math.round(amount * 100);
-const fromCents = (cents) => cents / 100;
-const calculateLineTotal = (quantity, unitPrice) => fromCents(quantity * toCents(unitPrice));
-
 const toFoodOrderItemResponse = (item) => ({
   ...item,
-  line_total: calculateLineTotal(item.quantity, item.unit_price),
+  line_total: multiplyPrice(item.unit_price, item.quantity),
 });
 
 // Dữ liệu trả về của một đơn. Danh sách không kèm các món; chi tiết có thêm items.

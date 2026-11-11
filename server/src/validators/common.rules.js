@@ -74,6 +74,54 @@ export const newPasswordRule = (field, label) =>
     .custom((value) => Buffer.byteLength(value, 'utf8') <= 72)
     .withMessage(`${label} is too long; use fewer accented characters`);
 
+// Chuỗi bắt buộc, được trim, không rỗng và tối đa max ký tự. location: body hoặc query.
+export const requiredTextRule = (field, label, max, location = body) =>
+  location(field)
+    .isString()
+    .withMessage(`${label} is required`)
+    .bail()
+    .trim()
+    .notEmpty()
+    .withMessage(`${label} is required`)
+    .bail()
+    .isLength({ max })
+    .withMessage(`${label} must be at most ${max} characters`);
+
+// Giá trong body, dùng cho danh mục dịch vụ, thực đơn và tour. Được phép bằng 0.
+export const priceRule = () =>
+  body('price')
+    .custom((value) => isScalar(value) && PRICE_PATTERN.test(String(value)))
+    .withMessage('Price must be a number of at least 0 with at most 2 decimal places')
+    .bail()
+    .toFloat();
+
+// Link ảnh không bắt buộc. null hoặc chuỗi rỗng nghĩa là không có ảnh.
+export const imageUrlRule = () =>
+  body('image_url')
+    .optional({ values: 'null' })
+    .isString()
+    .withMessage('Image URL must be text')
+    .bail()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Image URL must be at most 500 characters')
+    .bail()
+    .custom((value) => value === '' || isImageUrl(value))
+    .withMessage('Image URL must be a valid link starting with http://, https:// or /uploads/')
+    .customSanitizer((value) => (value === '' ? null : value));
+
+// Mô tả không bắt buộc. null hoặc chuỗi rỗng nghĩa là không có mô tả.
+export const descriptionRule = () =>
+  body('description')
+    .optional({ values: 'null' })
+    .isString()
+    .withMessage('Description must be text')
+    .bail()
+    .trim()
+    .isLength({ max: 5000 })
+    .withMessage('Description must be at most 5000 characters')
+    .customSanitizer((value) => (value === '' ? null : value));
+
 // Ghi chú của đơn, không bắt buộc. null hoặc chuỗi rỗng nghĩa là không có ghi chú.
 export const noteRule = () =>
   body('note')

@@ -141,6 +141,17 @@ Lưu ý: `booking_id` phải là đơn `checked_in` của người dùng. Món c
 
 Dữ liệu của `POST /transport-bookings`: `service_id`, `start_at`, `end_at`, `pickup_location`, `dropoff_location`, `flight_number`, `quantity`, `note`. API này chỉ nhận `motorbike_rental`, `airport_pickup`, `shuttle`. Khi thuê xe máy, `quantity` phải bằng 1 và phải có `end_at`.
 
+Cách tính tiền và giới hạn:
+
+| Loại | `quantity` | Tổng tiền | Bắt buộc thêm |
+|---|---|---|---|
+| `motorbike_rental` | Luôn là 1 | Giá × số ngày thuê (mỗi 24 giờ bắt đầu tính là 1 ngày, từ 1 đến 30 ngày) | `end_at` sau `start_at` |
+| `airport_pickup` | Số xe, 1–5 | Giá × số xe | `flight_number`; không gửi `end_at` |
+| `shuttle` | Số người, 1–20 | Giá × số người | Không gửi `end_at` |
+| Tour | `participants` 1–20 | Giá × số người | `tour_date` |
+
+`start_at` và `tour_date` phải ở tương lai và không quá 1 năm. `pickup_location` và `dropoff_location` bắt buộc với cả 3 loại vận chuyển. Admin nhập `vehicle_plate` khi duyệt (`confirmed`): bắt buộc với thuê xe máy, không bắt buộc với đón sân bay và xe đưa đón.
+
 ### 7. Hỗ trợ
 
 | Method | Endpoint | Quyền | Mô tả |

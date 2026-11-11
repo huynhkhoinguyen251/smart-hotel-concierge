@@ -10,6 +10,9 @@ import roomsRoutes from './rooms.routes.js';
 import roomTypesRoutes from './roomTypes.routes.js';
 import serviceBookingsRoutes from './serviceBookings.routes.js';
 import servicesRoutes from './services.routes.js';
+import tourBookingsRoutes from './tourBookings.routes.js';
+import toursRoutes from './tours.routes.js';
+import transportBookingsRoutes from './transportBookings.routes.js';
 import usersRoutes from './users.routes.js';
 
 const router = Router();
@@ -25,6 +28,9 @@ router.use('/services', servicesRoutes);
 router.use('/service-bookings', serviceBookingsRoutes);
 router.use('/menu-items', menuItemsRoutes);
 router.use('/food-orders', foodOrdersRoutes);
+router.use('/tours', toursRoutes);
+router.use('/tour-bookings', tourBookingsRoutes);
+router.use('/transport-bookings', transportBookingsRoutes);
 router.use('/admin', adminRoutes);
 
 export default router;
