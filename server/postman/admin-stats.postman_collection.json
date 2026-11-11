@@ -1,0 +1,469 @@
+{
+  "info": {
+    "name": "Smart Hotel - Admin Statistics",
+    "description": "Tests the 5 admin statistics APIs. It only reads data, so it can be run any number of times. Other collections add data, so the tests check shapes and ordering, not exact totals.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "anToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Login admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('adminToken', pm.response.json().data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Logs in as admin@smarthotel.test (test account from database/README.md). Expected: 200. The token is saved to adminToken.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@smarthotel.test\",\n  \"password\": \"Admin@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "2. Login An",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('anToken', pm.response.json().data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Logs in as an.tran@example.com (test account from database/README.md). Expected: 200. The token is saved to anToken.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"an.tran@example.com\",\n  \"password\": \"User@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "3. Overview",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('All five booking statuses', () => pm.expect(Object.keys(data.bookings.by_status).sort()).to.eql(['cancelled', 'checked_in', 'checked_out', 'confirmed', 'pending']));",
+              "pm.test('Numbers are numbers', () => {",
+              "  [data.bookings.total, data.users.total, data.users.active, ...Object.values(data.bookings.by_status), ...Object.values(data.revenue)].forEach((value) => pm.expect(typeof value).to.eql('number'));",
+              "});",
+              "pm.test('Revenue parts', () => pm.expect(Object.keys(data.revenue).sort()).to.eql(['food', 'rooms', 'services', 'total', 'tours', 'transport']));",
+              "pm.test('Booking total excludes cancelled', () => {",
+              "  const s = data.bookings.by_status;",
+              "  pm.expect(data.bookings.total).to.eql(s.pending + s.confirmed + s.checked_in + s.checked_out);",
+              "});",
+              "pm.test('Active users <= total', () => pm.expect(data.users.active <= data.users.total).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'Overview retrieved successfully'. bookings { total, by_status with all five statuses }, revenue { total, rooms, services, food, tours, transport }, users { total, active }. Every value is a number. Other collections add data, so only the shape is checked.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/stats/overview"
+      }
+    },
+    {
+      "name": "4. Revenue by month (2026)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('12 months of 2026', () => {",
+              "  pm.expect(data.year).to.eql(2026);",
+              "  pm.expect(data.months.map((m) => m.month)).to.eql([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);",
+              "});",
+              "pm.test('November has revenue', () => pm.expect(data.months[10].total > 0).to.eql(true));",
+              "pm.test('Totals add up', () => data.months.forEach((m) => pm.expect(Math.abs(m.total - (m.rooms + m.services + m.food + m.tours + m.transport)) < 0.01).to.eql(true)));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200. year 2026 and 12 months in order. November has revenue from seed data, so months[10].total is greater than 0. Each month total equals the sum of its parts.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/stats/revenue?year=2026"
+      }
+    },
+    {
+      "name": "5. Revenue without a year (current year)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Current year, 12 months', () => {",
+              "  pm.expect(data.year).to.eql(new Date().getFullYear());",
+              "  pm.expect(data.months.length).to.eql(12);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200. year is the current year and there are 12 months.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/stats/revenue"
+      }
+    },
+    {
+      "name": "6. Revenue for year 1999 (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Year must be an integer from 2000 to 2100\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Year must be an integer from 2000 to 2100'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/stats/revenue?year=1999"
+      }
+    },
+    {
+      "name": "7. Top 3 rooms",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('At most 3', () => pm.expect(data.length <= 3).to.eql(true));",
+              "pm.test('Sorted by booking_count', () => data.forEach((item, i) => { if (i > 0) pm.expect(data[i - 1].booking_count >= item.booking_count).to.eql(true); }));",
+              "pm.test('Item shape', () => data.forEach((item) => {",
+              "  pm.expect(typeof item.room.room_number).to.eql('string');",
+              "  pm.expect(typeof item.room.room_type.name).to.eql('string');",
+              "  pm.expect(typeof item.revenue).to.eql('number');",
+              "}));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200. At most 3 rooms, sorted by booking_count from high to low. Each item has room { id, room_number, room_type }, booking_count and revenue.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/stats/top-rooms?limit=3"
+      }
+    },
+    {
+      "name": "8. Top rooms with limit 0 (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Limit must be an integer from 1 to 20\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Limit must be an integer from 1 to 20'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/stats/top-rooms?limit=0"
+      }
+    },
+    {
+      "name": "9. Top rooms with limit 21 (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Limit must be an integer from 1 to 20\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Limit must be an integer from 1 to 20'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/stats/top-rooms?limit=21"
+      }
+    },
+    {
+      "name": "10. Top rooms with the default limit",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('At most 5', () => pm.expect(pm.response.json().data.length <= 5).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200 with at most 5 rooms.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/stats/top-rooms"
+      }
+    },
+    {
+      "name": "11. Top services",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('At most 5', () => pm.expect(data.length <= 5).to.eql(true));",
+              "pm.test('Sorted by usage_count', () => data.forEach((item, i) => { if (i > 0) pm.expect(data[i - 1].usage_count >= item.usage_count).to.eql(true); }));",
+              "pm.test('Item shape', () => data.forEach((item) => {",
+              "  pm.expect(Object.keys(item.service).sort()).to.eql(['category', 'id', 'name']);",
+              "  pm.expect(typeof item.revenue).to.eql('number');",
+              "}));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200. At most 5 services, sorted by usage_count from high to low. usage_count includes hotel service requests and transport bookings. Each item has service { id, name, category }, usage_count and revenue.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/stats/top-services"
+      }
+    },
+    {
+      "name": "12. Feedback",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('All five ratings', () => pm.expect(Object.keys(data.by_rating)).to.eql(['1', '2', '3', '4', '5']));",
+              "pm.test('All five types', () => pm.expect(data.by_type.map((item) => item.type)).to.eql(['room', 'service', 'food_order', 'tour', 'transport']));",
+              "pm.test('Counts add up', () => pm.expect(Object.values(data.by_rating).reduce((a, b) => a + b, 0)).to.eql(data.review_count));",
+              "pm.test('Average is a number', () => pm.expect(typeof data.average_rating).to.eql('number'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200. average_rating, review_count, by_rating with all five keys \"1\" to \"5\", and by_type with room, service, food_order, tour and transport.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/stats/feedback"
+      }
+    },
+    {
+      "name": "13. User calls a stats API (403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 403', () => pm.response.to.have.status(403));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "An is not an admin. Expected: 403.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/stats/overview"
+      }
+    }
+  ]
+}

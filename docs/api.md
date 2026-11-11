@@ -287,6 +287,21 @@ Lưu ý: khi duyệt thuê xe máy (`confirmed`) mà thiếu `vehicle_plate` th�
 
 Doanh thu được tính từ `total_price` của đơn đặt phòng `checked_out` và các đơn dịch vụ, đồ ăn, tour, vận chuyển `completed`. Nhờ đó, thống kê chạy được ngay cả khi chưa làm phần thanh toán giả lập.
 
+Bổ sung cho quản lý người dùng:
+
+- `search` tìm trong họ tên, email và số điện thoại. Danh sách có phân trang, người mới nhất trước. Không bao giờ trả `password_hash`.
+- Admin không tự khóa và không tự đổi vai trò của chính mình (trả `400`). Vì vậy hệ thống luôn còn ít nhất một admin đang hoạt động.
+- Tài khoản bị khóa không đăng nhập được, và token cũ của tài khoản đó bị từ chối ngay (`403`), vì middleware luôn đọc trạng thái mới nhất từ database.
+- Gửi lại đúng trạng thái hoặc vai trò hiện tại vẫn trả `200`.
+
+Bổ sung cho thống kê:
+
+- Mỗi khoản doanh thu được tính vào tháng của ngày sử dụng: đơn đặt phòng theo `check_out`, yêu cầu dịch vụ theo `scheduled_at`, đơn đồ ăn theo `created_at`, tour theo `tour_date`, vận chuyển theo `start_at`.
+- `GET /admin/stats/overview`: tổng số đơn đặt phòng (không tính đơn `cancelled`) kèm số đơn theo từng trạng thái, tổng doanh thu kèm phần của từng loại, số người dùng vai trò `user` và số đang hoạt động.
+- `GET /admin/stats/revenue?year=2026`: luôn trả đủ 12 tháng, tháng không có doanh thu bằng 0. Mặc định là năm hiện tại.
+- `GET /admin/stats/top-rooms` và `/top-services`: tham số `limit` (mặc định 5, tối đa 20). Số lượt dùng không tính đơn `cancelled`. Top dịch vụ gồm cả yêu cầu dịch vụ khách sạn và đơn vận chuyển; tour không nằm trong danh sách này.
+- `GET /admin/stats/feedback`: điểm trung bình, tổng số đánh giá, số đánh giá của từng mức 1–5 sao (luôn đủ 5 mức) và điểm trung bình theo từng loại đơn.
+
 ## Extended
 
 Chỉ làm sau khi toàn bộ phần Core đã chạy ổn.

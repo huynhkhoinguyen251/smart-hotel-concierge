@@ -48,7 +48,7 @@ Tài liệu chuẩn về phạm vi và nghiệp vụ: [proposal.md](proposal.md)
 | Idea & Proposal | Hoàn thành |
 | Environment Setup | Hoàn thành |
 | Giai đoạn 1: Database Design | Hoàn thành |
-| Giai đoạn 2: Backend | Đang làm |
+| Giai đoạn 2: Backend | Hoàn thành phần Core (11/11/2026) |
 | Giai đoạn 3: Frontend | Chưa bắt đầu |
 | Giai đoạn 4: Integration | Chưa bắt đầu |
 | Giai đoạn 5: Advanced Features | Chưa bắt đầu |
@@ -103,7 +103,7 @@ Test từng API bằng Postman ngay sau khi viết xong.
 - [x] Xây dựng Tourism API (motorbike, airport pickup, shuttle, local tour; user và admin, đã test bằng Postman)
 - [x] Xây dựng Support Ticket API (user và admin, đã test bằng Postman)
 - [x] Xây dựng Review API (user, công khai và admin, đã test bằng Postman)
-- [ ] Xây dựng Admin API
+- [x] Xây dựng Admin API (quản lý người dùng và thống kê, đã test bằng Postman)
 - [x] Xây dựng chức năng upload ảnh
 
 ## Giai đoạn 3: Frontend Development

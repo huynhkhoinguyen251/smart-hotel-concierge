@@ -11,11 +11,13 @@ import roomsRoutes from './rooms.routes.js';
 import roomTypesRoutes from './roomTypes.routes.js';
 import serviceBookingsRoutes from './serviceBookings.routes.js';
 import servicesRoutes from './services.routes.js';
+import statsRoutes from './stats.routes.js';
 import ticketsRoutes from './tickets.routes.js';
 import tourBookingsRoutes from './tourBookings.routes.js';
 import toursRoutes from './tours.routes.js';
 import transportBookingsRoutes from './transportBookings.routes.js';
 import uploadsRoutes from './uploads.routes.js';
+import usersRoutes from './users.routes.js';
 
 const router = Router();
 
@@ -37,5 +39,7 @@ router.use('/tour-bookings', tourBookingsRoutes);
 router.use('/transport-bookings', transportBookingsRoutes);
 router.use('/tickets', ticketsRoutes);
 router.use('/reviews', reviewsRoutes);
+router.use('/users', usersRoutes);
+router.use('/stats', statsRoutes);
 
 export default router;

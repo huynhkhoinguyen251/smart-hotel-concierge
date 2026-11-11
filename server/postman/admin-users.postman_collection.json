@@ -1,0 +1,921 @@
+{
+  "info": {
+    "name": "Smart Hotel - Admin Users",
+    "description": "Tests the 4 admin user management APIs. Run the requests in order (Collection Runner). Each run registers a new test user with a unique email, locks, unlocks and changes its role, and leaves it active with role user, so the collection can be run again.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "anToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userEmail",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Login admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('adminToken', pm.response.json().data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Logs in as admin@smarthotel.test (test account from database/README.md). Expected: 200. The token is saved to adminToken.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@smarthotel.test\",\n  \"password\": \"Admin@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "2. Register a new test user",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "const data = pm.response.json().data;",
+              "pm.collectionVariables.set('userId', data.user.id);",
+              "pm.collectionVariables.set('userEmail', data.user.email);",
+              "pm.collectionVariables.set('userToken', data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Uses a unique email with {{$timestamp}}, so the collection can be run again. Expected: 201. The user id, email and token are saved to userId, userEmail and userToken.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/register",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"full_name\": \"Test Guest\",\n  \"email\": \"test.guest.{{$timestamp}}@example.com\",\n  \"password\": \"Test@1234\",\n  \"phone\": \"0905999999\"\n}"
+        }
+      }
+    },
+    {
+      "name": "3. Log in as the test user",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('userToken', pm.response.json().data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "The test user logs in with the password used at registration. Expected: 200. The new token is saved to userToken.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"Test@1234\"\n}"
+        }
+      }
+    },
+    {
+      "name": "4. Search users by the test email",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Exactly the test user', () => {",
+              "  pm.expect(body.pagination.total).to.eql(1);",
+              "  pm.expect(String(body.data[0].id)).to.eql(String(pm.collectionVariables.get('userId')));",
+              "});",
+              "pm.test('No password_hash', () => pm.expect(JSON.stringify(pm.response.json()).includes('password_hash')).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "search matches full_name, email or phone. Expected: 200, exactly one user: the test user, without password_hash.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/users?search={{userEmail}}"
+      }
+    },
+    {
+      "name": "5. Get the test user",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Active user', () => {",
+              "  pm.expect(data.role).to.eql('user');",
+              "  pm.expect(data.is_active).to.eql(true);",
+              "  pm.expect(data.full_name).to.eql('Test Guest');",
+              "});",
+              "pm.test('No password_hash', () => pm.expect(JSON.stringify(pm.response.json()).includes('password_hash')).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'User retrieved successfully'. Role user, is_active true, no password_hash.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/users/{{userId}}"
+      }
+    },
+    {
+      "name": "6. Lock the test user",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('is_active false', () => pm.expect(pm.response.json().data.is_active).to.eql(false));",
+              "pm.test('No password_hash', () => pm.expect(JSON.stringify(pm.response.json()).includes('password_hash')).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'User status updated successfully', is_active false.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/users/{{userId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"is_active\": false\n}"
+        }
+      }
+    },
+    {
+      "name": "7. The old token is rejected at once (403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 403', () => pm.response.to.have.status(403));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Account is locked\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "The middleware reads the latest status from the database. Expected: 403 with message 'Account is locked'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{userToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/users/me"
+      }
+    },
+    {
+      "name": "8. The locked user cannot log in (403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 403', () => pm.response.to.have.status(403));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Account is locked\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "The account is locked. Expected: 403 with message 'Account is locked'.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"Test@1234\"\n}"
+        }
+      }
+    },
+    {
+      "name": "9. Unlock the test user",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('is_active true', () => pm.expect(pm.response.json().data.is_active).to.eql(true));",
+              "pm.test('No password_hash', () => pm.expect(JSON.stringify(pm.response.json()).includes('password_hash')).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'User status updated successfully', is_active true.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/users/{{userId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"is_active\": true\n}"
+        }
+      }
+    },
+    {
+      "name": "10. The user can log in again",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('userToken', pm.response.json().data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "The test user logs in with the password used at registration. Expected: 200. The new token is saved to userToken.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"Test@1234\"\n}"
+        }
+      }
+    },
+    {
+      "name": "11. Lock the user",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('is_active false', () => pm.expect(pm.response.json().data.is_active).to.eql(false));",
+              "pm.test('No password_hash', () => pm.expect(JSON.stringify(pm.response.json()).includes('password_hash')).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'User status updated successfully', is_active false.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/users/{{userId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"is_active\": false\n}"
+        }
+      }
+    },
+    {
+      "name": "12. Lock the user again (same value)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('is_active false', () => pm.expect(pm.response.json().data.is_active).to.eql(false));",
+              "pm.test('No password_hash', () => pm.expect(JSON.stringify(pm.response.json()).includes('password_hash')).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'User status updated successfully', is_active false. Sending the current value again still returns 200.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/users/{{userId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"is_active\": false\n}"
+        }
+      }
+    },
+    {
+      "name": "13. Unlock the user",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('is_active true', () => pm.expect(pm.response.json().data.is_active).to.eql(true));",
+              "pm.test('No password_hash', () => pm.expect(JSON.stringify(pm.response.json()).includes('password_hash')).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'User status updated successfully', is_active true.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/users/{{userId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"is_active\": true\n}"
+        }
+      }
+    },
+    {
+      "name": "14. Change the role to admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Role admin', () => pm.expect(pm.response.json().data.role).to.eql('admin'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'User role updated successfully', role admin.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/users/{{userId}}/role",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"role\": \"admin\"\n}"
+        }
+      }
+    },
+    {
+      "name": "15. Change the role to user",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Role user', () => pm.expect(pm.response.json().data.role).to.eql('user'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'User role updated successfully', role user.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/users/{{userId}}/role",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"role\": \"user\"\n}"
+        }
+      }
+    },
+    {
+      "name": "16. Admin locks their own account (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"You cannot change the status of your own account\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "User 1 is the logged-in admin. Expected: 400 with message 'You cannot change the status of your own account'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/users/1/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"is_active\": false\n}"
+        }
+      }
+    },
+    {
+      "name": "17. Admin changes their own role (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"You cannot change your own role\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'You cannot change your own role'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/users/1/role",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"role\": \"user\"\n}"
+        }
+      }
+    },
+    {
+      "name": "18. Get a missing user (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 404', () => pm.response.to.have.status(404));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"User not found\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 404 with message 'User not found'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/users/99999"
+      }
+    },
+    {
+      "name": "19. Send is_active \"maybe\" (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"is_active must be true or false\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'is_active must be true or false'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/users/{{userId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"is_active\": \"maybe\"\n}"
+        }
+      }
+    },
+    {
+      "name": "20. Send role \"manager\" (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Role must be one of: user, admin\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Role must be one of: user, admin'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/users/{{userId}}/role",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"role\": \"manager\"\n}"
+        }
+      }
+    },
+    {
+      "name": "21. Filter users (role=admin, is_active=true)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Active admins only', () => data.forEach((user) => {",
+              "  pm.expect(user.role).to.eql('admin');",
+              "  pm.expect(user.is_active).to.eql(true);",
+              "}));",
+              "pm.test('Contains user 1', () => pm.expect(data.map((user) => user.id)).to.include(1));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200. Every user is an active admin. User 1 is in the list.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/users?role=admin&is_active=true&limit=50"
+      }
+    },
+    {
+      "name": "22. List users (no password_hash, newest first)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('No password_hash in any item', () => data.forEach((user) => pm.expect(Object.keys(user)).to.not.include('password_hash')));",
+              "pm.test('Newest first', () => pm.expect(data[0].created_at >= data[data.length - 1].created_at).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200 with pagination. No item has password_hash, and the newest user comes first.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/users?limit=50"
+      }
+    },
+    {
+      "name": "23. Login An",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('anToken', pm.response.json().data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Logs in as an.tran@example.com (test account from database/README.md). Expected: 200. The token is saved to anToken.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"an.tran@example.com\",\n  \"password\": \"User@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "24. User calls an admin API (403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 403', () => pm.response.to.have.status(403));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "An is not an admin. Expected: 403.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/users"
+      }
+    }
+  ]
+}
