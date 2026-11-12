@@ -3,12 +3,15 @@ import { ADMIN_NAV } from '../config/navigation.js';
 import AdminLayout from '../layouts/AdminLayout.jsx';
 import MainLayout from '../layouts/MainLayout.jsx';
 import DashboardPage from '../pages/admin/DashboardPage.jsx';
+import BookPage from '../pages/BookPage.jsx';
 import ComingSoonPage from '../pages/ComingSoonPage.jsx';
 import HomePage from '../pages/HomePage.jsx';
 import LoginPage from '../pages/LoginPage.jsx';
 import NotFoundPage from '../pages/NotFoundPage.jsx';
 import ProfilePage from '../pages/ProfilePage.jsx';
 import RegisterPage from '../pages/RegisterPage.jsx';
+import RoomDetailPage from '../pages/RoomDetailPage.jsx';
+import RoomsPage from '../pages/RoomsPage.jsx';
 import AdminRoute from './AdminRoute.jsx';
 import ProtectedRoute from './ProtectedRoute.jsx';
 
@@ -20,7 +23,8 @@ export default function AppRoutes() {
     <Routes>
       <Route element={<MainLayout />}>
         <Route index element={<HomePage />} />
-        <Route path="rooms" element={<ComingSoonPage title="Rooms" />} />
+        <Route path="rooms" element={<RoomsPage />} />
+        <Route path="rooms/:id" element={<RoomDetailPage />} />
         <Route path="services" element={<ComingSoonPage title="Hotel Services" />} />
         <Route path="food" element={<ComingSoonPage title="Food and Drinks" />} />
         <Route path="tours" element={<ComingSoonPage title="Tours and Transport" />} />
@@ -29,6 +33,7 @@ export default function AppRoutes() {
 
         <Route element={<ProtectedRoute />}>
           <Route path="profile" element={<ProfilePage />} />
+          <Route path="book" element={<BookPage />} />
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />

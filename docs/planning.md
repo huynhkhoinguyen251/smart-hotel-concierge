@@ -110,10 +110,10 @@ Test từng API bằng Postman ngay sau khi viết xong.
 
 - [x] Khởi tạo ReactJS + Vite (kèm React Router, Axios, khung trang user và admin)
 - [x] Cài đặt Tailwind CSS
-- [ ] Thiết kế giao diện Home Page
+- [x] Thiết kế giao diện Home Page (ô tìm phòng, phòng được đánh giá cao)
 - [x] Thiết kế Login/Register
-- [ ] Thiết kế Room Listing
-- [ ] Thiết kế Room Detail
+- [x] Thiết kế Room Listing (bộ lọc, sắp xếp, phân trang)
+- [x] Thiết kế Room Detail (ảnh, tiện nghi, kiểm tra phòng trống, đánh giá)
 - [ ] Thiết kế Booking Page
 - [ ] Thiết kế Service Booking
 - [ ] Thiết kế Food Ordering
