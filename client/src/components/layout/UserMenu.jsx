@@ -4,7 +4,8 @@ import useAuth from '../../hooks/useAuth.js';
 
 const ITEM_CLASS = 'block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50';
 
-// Nút tên người dùng ở góc phải header, mở menu: Profile, Admin Dashboard (admin), Logout.
+// Nút tên người dùng ở góc phải header, mở menu: Profile, My bookings (khách),
+// Admin Dashboard (admin), Logout.
 export default function UserMenu() {
   const { user, isAdmin, logout } = useAuth();
   const navigate = useNavigate();
@@ -60,6 +61,12 @@ export default function UserMenu() {
           <Link to="/profile" role="menuitem" className={ITEM_CLASS} onClick={() => setOpen(false)}>
             Profile
           </Link>
+          {/* Admin không đặt phòng, nên không có mục My bookings. */}
+          {!isAdmin && (
+            <Link to="/my-bookings" role="menuitem" className={ITEM_CLASS} onClick={() => setOpen(false)}>
+              My bookings
+            </Link>
+          )}
           {isAdmin && (
             <Link to="/admin" role="menuitem" className={ITEM_CLASS} onClick={() => setOpen(false)}>
               Admin Dashboard

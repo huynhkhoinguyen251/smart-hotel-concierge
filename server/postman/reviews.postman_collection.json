@@ -1026,6 +1026,46 @@
         "header": [],
         "url": "{{baseUrl}}/reviews"
       }
+    },
+    {
+      "name": "28. Admin reviews booking 1 (403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 403', () => pm.response.to.have.status(403));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Admin accounts cannot make guest bookings or requests\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "The body is valid, but admin accounts cannot make guest bookings or requests. Expected: 403 with message 'Admin accounts cannot make guest bookings or requests'. Nothing is created, so the collection can be run again.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/reviews",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 1,\n  \"rating\": 5\n}"
+        }
+      }
     }
   ]
 }

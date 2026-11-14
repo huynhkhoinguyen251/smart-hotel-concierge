@@ -11,6 +11,12 @@ export const cleanParams = (params = {}) => {
   return result;
 };
 
+// Trang hiện tại trong ?page=...; giá trị lạ thì về trang 1.
+export const readPage = (searchParams) => {
+  const page = Number(searchParams.get('page'));
+  return Number.isInteger(page) && page >= 1 ? page : 1;
+};
+
 // { check_in: '2026-12-06', guests: 2 } thành "?check_in=2026-12-06&guests=2"; không có gì thì "".
 // Giữ dấu phẩy dễ đọc trong amenity_ids=1,2,3.
 export const toQueryString = (params) => {

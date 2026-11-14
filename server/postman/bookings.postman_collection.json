@@ -911,6 +911,46 @@
         "header": [],
         "url": "{{baseUrl}}/admin/bookings/6"
       }
+    },
+    {
+      "name": "24. Admin books room 1 (403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 403', () => pm.response.to.have.status(403));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Admin accounts cannot make guest bookings or requests\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "The body is valid, but admin accounts cannot make guest bookings or requests. Expected: 403 with message 'Admin accounts cannot make guest bookings or requests'. Nothing is created, so the collection can be run again.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"room_id\": 1,\n  \"check_in\": \"2027-02-10\",\n  \"check_out\": \"2027-02-13\",\n  \"guests\": 2\n}"
+        }
+      }
     }
   ]
 }

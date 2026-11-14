@@ -114,7 +114,7 @@ Test từng API bằng Postman ngay sau khi viết xong.
 - [x] Thiết kế Login/Register
 - [x] Thiết kế Room Listing (bộ lọc, sắp xếp, phân trang)
 - [x] Thiết kế Room Detail (ảnh, tiện nghi, kiểm tra phòng trống, đánh giá)
-- [ ] Thiết kế Booking Page
+- [x] Thiết kế Booking Page (đặt phòng, lịch sử đặt phòng, chi tiết đơn, đổi ngày, hủy đơn)
 - [ ] Thiết kế Service Booking
 - [ ] Thiết kế Food Ordering
 - [ ] Thiết kế Tourism Service
@@ -128,7 +128,7 @@ Làm song song với Giai đoạn 2 và 3: mỗi chức năng đi lần lượt 
 
 - [x] Kết nối Frontend với Backend
 - [x] Tích hợp Authentication (đăng nhập, đăng ký, hồ sơ, chặn trang theo vai trò)
-- [ ] Tích hợp Room Booking
+- [x] Tích hợp Room Booking
 - [ ] Tích hợp Service Booking
 - [ ] Tích hợp Food Ordering
 - [ ] Tích hợp Tourism Service
@@ -143,7 +143,7 @@ Chỉ bắt đầu khi toàn bộ tính năng Core đã chạy ổn.
 **Extended (đã lên kế hoạch):**
 
 - [ ] Notification System
-- [ ] Payment Simulation
+- [ ] Payment Simulation (QR giả lập, giữ đơn 15 phút, thanh toán xong tự xác nhận đơn; quy tắc ở `api.md` mục 11)
 - [ ] Invoice Generation
 - [ ] Voucher & Discount
 - [ ] So sánh phòng và dịch vụ
@@ -196,3 +196,5 @@ Chỉ bắt đầu khi toàn bộ tính năng Core đã chạy ổn.
 | Thuê xe máy | Chưa có quy tắc duyệt | Admin duyệt hoặc từ chối, và nhập biển số khi duyệt |
 | Upload ảnh | Cloudinary hoặc local | Multer, lưu local; chuyển Cloudinary nếu hosting cần |
 | Nội dung mới | Chưa có | Mức ưu tiên, quy tắc nghiệp vụ, bảo mật, danh sách API, Support Ticket API |
+| Thanh toán đặt phòng | Payment Simulation chung chung; admin duyệt đơn | Mã QR giả lập, giữ đơn chưa thanh toán 15 phút rồi tự hủy; thanh toán xong đơn tự `confirmed`, admin không cần duyệt (xem `api.md` mục 11); làm sau khi xong phần Core |
+| Admin đặt đơn | Chưa quy định | Tài khoản admin không được đặt phòng hay tạo đơn, yêu cầu, đánh giá của khách |

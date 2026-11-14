@@ -55,6 +55,7 @@ Mọi `message`, `reason` và dữ liệu hiển thị cho người dùng phải
 
 - Backend tự lấy giá từ database và tự tính tổng tiền; không tin giá do frontend gửi lên.
 - `user_id` lấy từ token, không lấy từ dữ liệu gửi lên.
+- Tài khoản `admin` không được tạo đơn hay yêu cầu của khách: `POST /bookings`, `/service-bookings`, `/food-orders`, `/tour-bookings`, `/transport-bookings`, `/tickets`, `/reviews` trả `403` "Admin accounts cannot make guest bookings or requests". Các API xem dữ liệu của chính mình vẫn dùng được.
 - Không bao giờ trả `password_hash`.
 - Trạng thái chỉ được đổi theo luồng ở Mục 5 của `proposal.md`.
 - Khi khai báo route, đặt địa chỉ cố định trước địa chỉ có tham số, ví dụ `/rooms/compare` trước `/rooms/:id`.
@@ -328,6 +329,18 @@ Thông báo được backend tự tạo khi trạng thái đơn thay đổi, nê
 | PATCH | `/admin/payments/:id/refund` | Admin | Đánh dấu đã hoàn tiền |
 
 Lưu ý: số tiền do backend lấy từ đơn. Hóa đơn được tạo tự động khi thanh toán thành công. Không xử lý tiền thật.
+
+Bổ sung cho thanh toán đơn đặt phòng bằng QR (thống nhất ngày 13/11/2026, sửa ngày 14/11/2026; làm sau khi xong phần Core):
+
+- Đặt phòng xong thì hiện trang thanh toán có mã QR giả lập và đồng hồ đếm ngược 15 phút. Khách bấm "I have paid" để mô phỏng việc quét QR và trả tiền. Không kết nối ngân hàng thật.
+- Trong 15 phút này, đơn là `pending` và thanh toán là `unpaid`. Khách vẫn đổi được ngày và số khách (`PUT /bookings/:id` như hiện tại). Khách thoát ra vẫn thanh toán tiếp được từ chi tiết đơn trong "My bookings", nếu còn hạn.
+- Hạn giữ đơn: 15 phút từ lúc đặt. Đổi ngày hoặc số khách không làm gia hạn.
+- Quá 15 phút mà chưa thanh toán thì đơn tự chuyển `cancelled` và phòng được mở lại. Render gói Free ngủ khi không có người dùng, nên backend kiểm tra và hủy đơn quá hạn mỗi khi có yêu cầu liên quan (xem đơn, danh sách đơn, tìm phòng, kiểm tra phòng trống, đặt phòng, thanh toán), không dựa vào bộ đếm giờ chạy nền. Thanh toán gửi lên sau khi hết hạn bị từ chối.
+- Thanh toán thành công thì trong cùng một transaction: thanh toán chuyển `paid`, hóa đơn được tạo, và đơn **tự chuyển `confirmed`**. Admin không cần duyệt đơn đặt phòng nữa; admin vẫn check-in, check-out và hủy đơn như cũ.
+- Đơn `confirmed` không đổi ngày được (giống hiện tại). Hủy đơn đã thanh toán (theo quy tắc 24 giờ) thì thanh toán chuyển `refunded`.
+- Trước khi làm phần thanh toán, đơn vẫn `pending` và admin duyệt như hiện tại.
+- Luồng trạng thái đặt phòng ở Mục 5 của `proposal.md` cần cập nhật khi làm phần này: `pending` → `confirmed` do thanh toán, không phải do admin.
+- QR được lưu với `method = e_wallet`, nên không cần đổi cấu trúc database. Tạo mã QR cần thư viện `qrcode`; phải hỏi lại trước khi cài.
 
 ### 12. Voucher
 

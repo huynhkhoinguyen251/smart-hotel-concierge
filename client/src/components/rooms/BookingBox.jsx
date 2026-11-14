@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { checkAvailability } from '../../api/rooms.api.js';
+import useAuth from '../../hooks/useAuth.js';
+import { ADMIN_BOOKING_NOTE, clampGuests } from '../../utils/bookingHelpers.js';
 import formatCurrency from '../../utils/formatCurrency.js';
 import { toQueryString } from '../../utils/queryString.js';
 import {
@@ -15,21 +17,15 @@ import Card from '../ui/Card.jsx';
 import Input from '../ui/Input.jsx';
 import Select from '../ui/Select.jsx';
 
-// Số khách từ địa chỉ trang, giới hạn trong 1..capacity.
-const toGuestValue = (value, capacity) => {
-  const count = Number(value);
-  if (!Number.isInteger(count) || count < 1) return '1';
-  return String(Math.min(count, capacity));
-};
-
 // Khung kiểm tra phòng trống. initialStay: ngày và số khách lấy từ địa chỉ trang.
 // Đổi bất kỳ ô nào thì ẩn kết quả cũ, vì kết quả đó không còn đúng.
 export default function BookingBox({ room, initialStay }) {
+  const { isAdmin } = useAuth();
   const capacity = room.room_type.capacity;
   const [form, setForm] = useState({
     check_in: initialStay.check_in,
     check_out: initialStay.check_out,
-    guests: toGuestValue(initialStay.guests, capacity),
+    guests: clampGuests(initialStay.guests, capacity),
   });
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
@@ -126,12 +122,17 @@ export default function BookingBox({ room, initialStay }) {
                 <span className="font-semibold">{formatCurrency(result.estimated_total)}</span>
               </p>
             </Alert>
-            <Link
-              to={bookingLink}
-              className="flex w-full items-center justify-center rounded-lg bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800"
-            >
-              Book now
-            </Link>
+            {/* Admin vẫn kiểm tra phòng trống được, nhưng không có nút đặt. */}
+            {isAdmin ? (
+              <p className="text-center text-sm text-slate-500">{ADMIN_BOOKING_NOTE}</p>
+            ) : (
+              <Link
+                to={bookingLink}
+                className="flex w-full items-center justify-center rounded-lg bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800"
+              >
+                Book now
+              </Link>
+            )}
           </>
         )}
       </div>

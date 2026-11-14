@@ -1,0 +1,32 @@
+// Nhãn và màu của các trạng thái, dùng cho StatusBadge.
+// Module sau (dịch vụ, đồ ăn, tour, hỗ trợ) chỉ cần thêm trạng thái mới vào đây.
+// tone là một khóa trong TONE_CLASSES của StatusBadge.
+export const STATUS_CONFIG = {
+  pending: { label: 'Pending', tone: 'amber' },
+  confirmed: { label: 'Confirmed', tone: 'sky' },
+  checked_in: { label: 'Checked in', tone: 'teal' },
+  checked_out: { label: 'Checked out', tone: 'slate' },
+  cancelled: { label: 'Cancelled', tone: 'red' },
+};
+
+// Trạng thái lạ: "in_progress" thành "In progress", màu xám.
+export const getStatusConfig = (status) => {
+  if (STATUS_CONFIG[status]) {
+    return STATUS_CONFIG[status];
+  }
+  const text = String(status ?? '').replace(/_/g, ' ');
+  return { label: text.charAt(0).toUpperCase() + text.slice(1), tone: 'slate' };
+};
+
+// Các tab lọc của trang "My bookings", theo đúng luồng trạng thái trong proposal.
+export const BOOKING_STATUS_TABS = [
+  { value: '', label: 'All' },
+  ...['pending', 'confirmed', 'checked_in', 'checked_out', 'cancelled'].map((status) => ({
+    value: status,
+    label: STATUS_CONFIG[status].label,
+  })),
+];
+
+// Đơn đặt phòng còn hủy hoặc đổi được ở phía khách.
+export const CANCELLABLE_BOOKING_STATUSES = ['pending', 'confirmed'];
+export const EDITABLE_BOOKING_STATUS = 'pending';

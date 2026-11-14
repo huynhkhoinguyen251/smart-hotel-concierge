@@ -29,12 +29,6 @@ export const readRoomFilters = (searchParams) => {
   return filters;
 };
 
-// Trang hiện tại; giá trị lạ thì về trang 1.
-export const readPage = (searchParams) => {
-  const page = Number(searchParams.get('page'));
-  return Number.isInteger(page) && page >= 1 ? page : 1;
-};
-
 // Có ít nhất một bộ lọc đang bật (không tính thứ tự sắp xếp).
 export const hasActiveFilters = (filters) =>
   Object.entries(filters).some(([key, value]) =>

@@ -10,9 +10,17 @@ const linkClass = ({ isActive }) =>
     isActive ? 'bg-teal-50 text-teal-800' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
   }`;
 
+// Khung xám nhỏ thay chỗ nút tài khoản trong lúc đang tải hồ sơ.
+function AccountPlaceholder() {
+  return (
+    <div className="h-9 w-28 animate-pulse rounded-lg bg-slate-100" role="status" aria-label="Loading account" />
+  );
+}
+
 // Header của trang khách. Trên điện thoại, menu thu vào nút ba gạch.
 export default function Header() {
-  const { user, isAdmin, logout } = useAuth();
+  // loading: đang tải hồ sơ từ token cũ, chưa biết đã đăng nhập hay chưa.
+  const { user, isAdmin, loading, logout } = useAuth();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const close = () => setMobileOpen(false);
@@ -37,7 +45,10 @@ export default function Header() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
-          {user ? (
+          {/* Chưa tải xong hồ sơ thì chỉ hiện khung chờ, tránh nháy Login/Register. */}
+          {loading ? (
+            <AccountPlaceholder />
+          ) : user ? (
             <UserMenu />
           ) : (
             <>
@@ -85,7 +96,9 @@ export default function Header() {
             ))}
           </nav>
           <div className="mt-3 flex flex-col gap-1 border-t border-slate-100 pt-3">
-            {user ? (
+            {loading ? (
+              <AccountPlaceholder />
+            ) : user ? (
               <>
                 <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
                   {user.full_name}
@@ -93,6 +106,11 @@ export default function Header() {
                 <NavLink to="/profile" className={linkClass} onClick={close}>
                   Profile
                 </NavLink>
+                {!isAdmin && (
+                  <NavLink to="/my-bookings" className={linkClass} onClick={close}>
+                    My bookings
+                  </NavLink>
+                )}
                 {isAdmin && (
                   <NavLink to="/admin" className={linkClass} onClick={close}>
                     Admin Dashboard

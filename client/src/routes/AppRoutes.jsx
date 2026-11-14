@@ -3,10 +3,12 @@ import { ADMIN_NAV } from '../config/navigation.js';
 import AdminLayout from '../layouts/AdminLayout.jsx';
 import MainLayout from '../layouts/MainLayout.jsx';
 import DashboardPage from '../pages/admin/DashboardPage.jsx';
+import BookingDetailPage from '../pages/BookingDetailPage.jsx';
 import BookPage from '../pages/BookPage.jsx';
 import ComingSoonPage from '../pages/ComingSoonPage.jsx';
 import HomePage from '../pages/HomePage.jsx';
 import LoginPage from '../pages/LoginPage.jsx';
+import MyBookingsPage from '../pages/MyBookingsPage.jsx';
 import NotFoundPage from '../pages/NotFoundPage.jsx';
 import ProfilePage from '../pages/ProfilePage.jsx';
 import RegisterPage from '../pages/RegisterPage.jsx';
@@ -34,6 +36,8 @@ export default function AppRoutes() {
         <Route element={<ProtectedRoute />}>
           <Route path="profile" element={<ProfilePage />} />
           <Route path="book" element={<BookPage />} />
+          <Route path="my-bookings" element={<MyBookingsPage />} />
+          <Route path="my-bookings/:id" element={<BookingDetailPage />} />
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />

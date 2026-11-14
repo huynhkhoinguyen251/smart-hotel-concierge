@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import * as reviewsController from '../controllers/reviews.controller.js';
 import authenticate from '../middlewares/authenticate.js';
+import requireGuest from '../middlewares/requireGuest.js';
 import validate from '../middlewares/validate.js';
 import {
   createReviewValidator,
@@ -13,7 +14,8 @@ const router = Router();
 // dịch vụ, tour và /food-reviews.
 router.use(authenticate);
 
-router.post('/', createReviewValidator, validate, reviewsController.createReview);
+// Admin không được viết đánh giá.
+router.post('/', requireGuest, createReviewValidator, validate, reviewsController.createReview);
 router.get('/', listMyReviewsValidator, validate, reviewsController.getMyReviews);
 
 export default router;

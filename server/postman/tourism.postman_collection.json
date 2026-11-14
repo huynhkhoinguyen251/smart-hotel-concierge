@@ -34,6 +34,11 @@
       "key": "shuttleId",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -1423,6 +1428,119 @@
         "method": "PATCH",
         "header": [],
         "url": "{{baseUrl}}/transport-bookings/{{shuttleId}}/cancel"
+      }
+    },
+    {
+      "name": "39. Login admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('adminToken', pm.response.json().data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Logs in as admin@smarthotel.test (test account from database/README.md). Expected: 200. The token is saved to adminToken.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@smarthotel.test\",\n  \"password\": \"Admin@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "40. Admin books tour 1 (403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 403', () => pm.response.to.have.status(403));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Admin accounts cannot make guest bookings or requests\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "The body is valid, but admin accounts cannot make guest bookings or requests. Expected: 403 with message 'Admin accounts cannot make guest bookings or requests'. Nothing is created, so the collection can be run again.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/tour-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tour_id\": 1,\n  \"tour_date\": \"2026-12-20\",\n  \"participants\": 2\n}"
+        }
+      }
+    },
+    {
+      "name": "41. Admin rents a motorbike (403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 403', () => pm.response.to.have.status(403));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Admin accounts cannot make guest bookings or requests\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "The body is valid, but admin accounts cannot make guest bookings or requests. Expected: 403 with message 'Admin accounts cannot make guest bookings or requests'. Nothing is created, so the collection can be run again.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/transport-bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"service_id\": 6,\n  \"start_at\": \"2026-12-20 08:00\",\n  \"end_at\": \"2026-12-22 10:00\",\n  \"pickup_location\": \"Hotel\",\n  \"dropoff_location\": \"Hotel\"\n}"
+        }
       }
     }
   ]

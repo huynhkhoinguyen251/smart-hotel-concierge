@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import * as transportBookingsController from '../controllers/transportBookings.controller.js';
 import authenticate from '../middlewares/authenticate.js';
+import requireGuest from '../middlewares/requireGuest.js';
 import validate from '../middlewares/validate.js';
 import {
   createTransportBookingValidator,
@@ -13,8 +14,10 @@ const router = Router();
 // Mọi API đơn vận chuyển đều cần đăng nhập.
 router.use(authenticate);
 
+// Admin không được tạo đơn vận chuyển của khách.
 router.post(
   '/',
+  requireGuest,
   createTransportBookingValidator,
   validate,
   transportBookingsController.createTransportBooking,

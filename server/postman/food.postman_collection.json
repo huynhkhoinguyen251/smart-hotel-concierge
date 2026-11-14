@@ -19,6 +19,11 @@
       "key": "orderId",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -833,6 +838,79 @@
         "method": "PATCH",
         "header": [],
         "url": "{{baseUrl}}/food-orders/{{orderId}}/cancel"
+      }
+    },
+    {
+      "name": "24. Login admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('adminToken', pm.response.json().data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Logs in as admin@smarthotel.test (test account from database/README.md). Expected: 200. The token is saved to adminToken.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@smarthotel.test\",\n  \"password\": \"Admin@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "25. Admin orders Pho Bo on booking 3 (403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 403', () => pm.response.to.have.status(403));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Admin accounts cannot make guest bookings or requests\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "The body is valid, but admin accounts cannot make guest bookings or requests. Expected: 403 with message 'Admin accounts cannot make guest bookings or requests'. Nothing is created, so the collection can be run again.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/food-orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 3,\n  \"items\": [\n    {\n      \"menu_item_id\": 1,\n      \"quantity\": 1\n    }\n  ]\n}"
+        }
       }
     }
   ]
