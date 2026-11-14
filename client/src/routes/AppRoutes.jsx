@@ -6,9 +6,12 @@ import DashboardPage from '../pages/admin/DashboardPage.jsx';
 import BookingDetailPage from '../pages/BookingDetailPage.jsx';
 import BookPage from '../pages/BookPage.jsx';
 import ComingSoonPage from '../pages/ComingSoonPage.jsx';
+import FoodMenuPage from '../pages/FoodMenuPage.jsx';
+import FoodOrderDetailPage from '../pages/FoodOrderDetailPage.jsx';
 import HomePage from '../pages/HomePage.jsx';
 import LoginPage from '../pages/LoginPage.jsx';
 import MyBookingsPage from '../pages/MyBookingsPage.jsx';
+import MyFoodOrdersPage from '../pages/MyFoodOrdersPage.jsx';
 import MyServicesPage from '../pages/MyServicesPage.jsx';
 import NotFoundPage from '../pages/NotFoundPage.jsx';
 import ProfilePage from '../pages/ProfilePage.jsx';
@@ -33,7 +36,7 @@ export default function AppRoutes() {
         <Route path="rooms/:id" element={<RoomDetailPage />} />
         <Route path="services" element={<ServicesPage />} />
         <Route path="services/:id" element={<ServiceDetailPage />} />
-        <Route path="food" element={<ComingSoonPage title="Food and Drinks" />} />
+        <Route path="food" element={<FoodMenuPage />} />
         <Route path="tours" element={<ComingSoonPage title="Tours and Transport" />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
@@ -45,6 +48,8 @@ export default function AppRoutes() {
           <Route path="my-bookings/:id" element={<BookingDetailPage />} />
           <Route path="my-services" element={<MyServicesPage />} />
           <Route path="my-services/:id" element={<ServiceRequestDetailPage />} />
+          <Route path="my-food-orders" element={<MyFoodOrdersPage />} />
+          <Route path="my-food-orders/:id" element={<FoodOrderDetailPage />} />
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />

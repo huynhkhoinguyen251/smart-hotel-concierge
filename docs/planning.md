@@ -116,7 +116,7 @@ Test từng API bằng Postman ngay sau khi viết xong.
 - [x] Thiết kế Room Detail (ảnh, tiện nghi, kiểm tra phòng trống, đánh giá)
 - [x] Thiết kế Booking Page (đặt phòng, lịch sử đặt phòng, chi tiết đơn, đổi ngày, hủy đơn)
 - [x] Thiết kế Service Booking (danh sách dịch vụ, đặt dịch vụ theo đơn phòng, lịch sử và hủy yêu cầu)
-- [ ] Thiết kế Food Ordering
+- [x] Thiết kế Food Ordering (thực đơn, giỏ hàng, đặt món giao đến phòng, lịch sử, chi tiết và hủy đơn, đánh giá đồ ăn)
 - [ ] Thiết kế Tourism Service
 - [ ] Thiết kế Support Ticket
 - [x] Thiết kế User Profile
@@ -130,7 +130,7 @@ Làm song song với Giai đoạn 2 và 3: mỗi chức năng đi lần lượt 
 - [x] Tích hợp Authentication (đăng nhập, đăng ký, hồ sơ, chặn trang theo vai trò)
 - [x] Tích hợp Room Booking
 - [x] Tích hợp Service Booking
-- [ ] Tích hợp Food Ordering
+- [x] Tích hợp Food Ordering
 - [ ] Tích hợp Tourism Service
 - [ ] Tích hợp Support Ticket và Review
 - [ ] Hiển thị dữ liệu từ MySQL lên giao diện

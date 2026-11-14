@@ -11,6 +11,7 @@ import ErrorState from '../components/ui/ErrorState.jsx';
 import NotFoundView from '../components/ui/NotFoundView.jsx';
 import { PageSpinner } from '../components/ui/Spinner.jsx';
 import StatusBadge from '../components/ui/StatusBadge.jsx';
+import { FOOD_ORDER_BOOKING_STATUS } from '../config/food.js';
 import { SERVICE_ELIGIBLE_BOOKING_STATUSES } from '../config/services.js';
 import { CANCELLABLE_BOOKING_STATUSES, EDITABLE_BOOKING_STATUS } from '../config/statuses.js';
 import useFetch from '../hooks/useFetch.js';
@@ -58,6 +59,8 @@ function BookingDetails({ initialBooking, initialMessage }) {
   const canEdit = booking.status === EDITABLE_BOOKING_STATUS;
   const canTryCancel = CANCELLABLE_BOOKING_STATUSES.includes(booking.status);
   const canRequestService = SERVICE_ELIGIBLE_BOOKING_STATUSES.includes(booking.status);
+  // Đồ ăn chỉ giao khi đang ở (checked_in); trạng thái này cũng nằm trong canRequestService.
+  const canOrderFood = booking.status === FOOD_ORDER_BOOKING_STATUS;
   const deadline = canTryCancel ? getFreeCancellationDeadline(booking.check_in) : null;
   const nightsLabel = `${booking.nights} ${booking.nights === 1 ? 'night' : 'nights'}`;
 
@@ -181,14 +184,26 @@ function BookingDetails({ initialBooking, initialMessage }) {
             <Card>
               <h2 className="text-lg font-semibold text-slate-900">Hotel services</h2>
               <p className="mt-2 text-sm text-slate-600">
-                Book breakfast, massage, laundry and more for this stay.
+                {canOrderFood
+                  ? 'Book breakfast, massage, laundry and more, or order food to your room.'
+                  : 'Book breakfast, massage, laundry and more for this stay.'}
               </p>
-              <Link
-                to={`/services?booking_id=${booking.id}`}
-                className="mt-4 flex w-full items-center justify-center rounded-lg bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800"
-              >
-                Request a service
-              </Link>
+              <div className="mt-4 flex flex-col gap-2">
+                <Link
+                  to={`/services?booking_id=${booking.id}`}
+                  className="flex w-full items-center justify-center rounded-lg bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800"
+                >
+                  Request a service
+                </Link>
+                {canOrderFood && (
+                  <Link
+                    to={`/food?booking_id=${booking.id}`}
+                    className="flex w-full items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  >
+                    Order food
+                  </Link>
+                )}
+              </div>
             </Card>
           )}
 
