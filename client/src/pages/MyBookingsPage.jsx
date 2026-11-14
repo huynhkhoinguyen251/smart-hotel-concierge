@@ -4,6 +4,7 @@ import BookingCard from '../components/bookings/BookingCard.jsx';
 import Alert from '../components/ui/Alert.jsx';
 import EmptyState from '../components/ui/EmptyState.jsx';
 import ErrorState from '../components/ui/ErrorState.jsx';
+import FilterTabs from '../components/ui/FilterTabs.jsx';
 import PageTitle from '../components/ui/PageTitle.jsx';
 import Pagination from '../components/ui/Pagination.jsx';
 import { PageSpinner } from '../components/ui/Spinner.jsx';
@@ -76,29 +77,13 @@ export default function MyBookingsPage() {
     <div className="mx-auto max-w-5xl px-4 py-10">
       <PageTitle title="My bookings" subtitle="Your room bookings, newest first." />
 
-      {/* Trên điện thoại các tab cuộn ngang bên trong khung, trang không bị cuộn ngang. */}
-      <nav aria-label="Filter by status" className="-mx-4 mb-6 overflow-x-auto px-4">
-        <ul className="flex w-max gap-2">
-          {BOOKING_STATUS_TABS.map((tab) => {
-            const active = tab.value === status;
-            return (
-              <li key={tab.value || 'all'}>
-                <Link
-                  to={`/my-bookings${toQueryString({ status: tab.value })}`}
-                  aria-current={active ? 'page' : undefined}
-                  className={`block whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition ${
-                    active
-                      ? 'bg-teal-700 text-white'
-                      : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
-                  }`}
-                >
-                  {tab.label}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+      <FilterTabs
+        label="Filter by status"
+        className="mb-6"
+        tabs={BOOKING_STATUS_TABS}
+        active={status}
+        getLink={(value) => `/my-bookings${toQueryString({ status: value })}`}
+      />
 
       {renderList()}
     </div>

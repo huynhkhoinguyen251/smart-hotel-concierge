@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import { cancelBooking, getBooking } from '../api/bookings.api.js';
 import EditBookingForm from '../components/bookings/EditBookingForm.jsx';
 import RoomImage from '../components/rooms/RoomImage.jsx';
@@ -8,10 +8,13 @@ import Button from '../components/ui/Button.jsx';
 import Card from '../components/ui/Card.jsx';
 import ConfirmDialog from '../components/ui/ConfirmDialog.jsx';
 import ErrorState from '../components/ui/ErrorState.jsx';
+import NotFoundView from '../components/ui/NotFoundView.jsx';
 import { PageSpinner } from '../components/ui/Spinner.jsx';
 import StatusBadge from '../components/ui/StatusBadge.jsx';
+import { SERVICE_ELIGIBLE_BOOKING_STATUSES } from '../config/services.js';
 import { CANCELLABLE_BOOKING_STATUSES, EDITABLE_BOOKING_STATUS } from '../config/statuses.js';
 import useFetch from '../hooks/useFetch.js';
+import useFlashMessage from '../hooks/useFlashMessage.js';
 import { CHECK_IN_TIME, getFreeCancellationDeadline } from '../utils/cancellation.js';
 import formatCurrency from '../utils/formatCurrency.js';
 import formatDate from '../utils/formatDate.js';
@@ -24,17 +27,12 @@ const LATE_CANCEL_NOTE =
 // 404 (không có) hoặc 403 (đơn của người khác): cùng một thông báo, không lộ đơn có tồn tại hay không.
 function BookingNotFound() {
   return (
-    <div className="mx-auto flex max-w-xl flex-col items-center px-4 py-20 text-center">
-      <p className="text-6xl font-bold text-teal-700">404</p>
-      <h1 className="mt-4 text-2xl font-bold text-slate-900">Booking not found</h1>
-      <p className="mt-2 text-slate-600">This booking does not exist or does not belong to you.</p>
-      <Link
-        to="/my-bookings"
-        className="mt-8 rounded-lg bg-teal-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal-800"
-      >
-        Back to my bookings
-      </Link>
-    </div>
+    <NotFoundView
+      title="Booking not found"
+      message="This booking does not exist or does not belong to you."
+      to="/my-bookings"
+      linkLabel="Back to my bookings"
+    />
   );
 }
 
@@ -59,6 +57,7 @@ function BookingDetails({ initialBooking, initialMessage }) {
   const { room } = booking;
   const canEdit = booking.status === EDITABLE_BOOKING_STATUS;
   const canTryCancel = CANCELLABLE_BOOKING_STATUSES.includes(booking.status);
+  const canRequestService = SERVICE_ELIGIBLE_BOOKING_STATUSES.includes(booking.status);
   const deadline = canTryCancel ? getFreeCancellationDeadline(booking.check_in) : null;
   const nightsLabel = `${booking.nights} ${booking.nights === 1 ? 'night' : 'nights'}`;
 
@@ -178,6 +177,21 @@ function BookingDetails({ initialBooking, initialMessage }) {
             </dl>
           </Card>
 
+          {canRequestService && (
+            <Card>
+              <h2 className="text-lg font-semibold text-slate-900">Hotel services</h2>
+              <p className="mt-2 text-sm text-slate-600">
+                Book breakfast, massage, laundry and more for this stay.
+              </p>
+              <Link
+                to={`/services?booking_id=${booking.id}`}
+                className="mt-4 flex w-full items-center justify-center rounded-lg bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800"
+              >
+                Request a service
+              </Link>
+            </Card>
+          )}
+
           {canTryCancel && (
             <Card>
               <h2 className="text-lg font-semibold text-slate-900">Cancellation</h2>
@@ -220,17 +234,8 @@ function BookingDetails({ initialBooking, initialMessage }) {
 // /my-bookings/:id (chỉ cho người đã đăng nhập).
 export default function BookingDetailPage() {
   const { id } = useParams();
-  const location = useLocation();
-  const navigate = useNavigate();
-  // Thông báo từ trang đặt phòng chỉ hiện một lần: đọc ra rồi xóa khỏi lịch sử,
-  // nên tải lại trang hoặc bấm Back/Forward sẽ không hiện lại.
-  const [flashMessage] = useState(() => location.state?.success ?? '');
-
-  useEffect(() => {
-    if (location.state?.success) {
-      navigate(`${location.pathname}${location.search}`, { replace: true, state: null });
-    }
-  }, [location, navigate]);
+  // Thông báo từ trang đặt phòng, chỉ hiện một lần.
+  const flashMessage = useFlashMessage();
 
   const request = useFetch(() => getBooking(id), [id]);
 

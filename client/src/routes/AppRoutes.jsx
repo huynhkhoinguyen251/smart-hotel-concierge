@@ -9,11 +9,15 @@ import ComingSoonPage from '../pages/ComingSoonPage.jsx';
 import HomePage from '../pages/HomePage.jsx';
 import LoginPage from '../pages/LoginPage.jsx';
 import MyBookingsPage from '../pages/MyBookingsPage.jsx';
+import MyServicesPage from '../pages/MyServicesPage.jsx';
 import NotFoundPage from '../pages/NotFoundPage.jsx';
 import ProfilePage from '../pages/ProfilePage.jsx';
 import RegisterPage from '../pages/RegisterPage.jsx';
 import RoomDetailPage from '../pages/RoomDetailPage.jsx';
 import RoomsPage from '../pages/RoomsPage.jsx';
+import ServiceDetailPage from '../pages/ServiceDetailPage.jsx';
+import ServiceRequestDetailPage from '../pages/ServiceRequestDetailPage.jsx';
+import ServicesPage from '../pages/ServicesPage.jsx';
 import AdminRoute from './AdminRoute.jsx';
 import ProtectedRoute from './ProtectedRoute.jsx';
 
@@ -27,7 +31,8 @@ export default function AppRoutes() {
         <Route index element={<HomePage />} />
         <Route path="rooms" element={<RoomsPage />} />
         <Route path="rooms/:id" element={<RoomDetailPage />} />
-        <Route path="services" element={<ComingSoonPage title="Hotel Services" />} />
+        <Route path="services" element={<ServicesPage />} />
+        <Route path="services/:id" element={<ServiceDetailPage />} />
         <Route path="food" element={<ComingSoonPage title="Food and Drinks" />} />
         <Route path="tours" element={<ComingSoonPage title="Tours and Transport" />} />
         <Route path="login" element={<LoginPage />} />
@@ -38,6 +43,8 @@ export default function AppRoutes() {
           <Route path="book" element={<BookPage />} />
           <Route path="my-bookings" element={<MyBookingsPage />} />
           <Route path="my-bookings/:id" element={<BookingDetailPage />} />
+          <Route path="my-services" element={<MyServicesPage />} />
+          <Route path="my-services/:id" element={<ServiceRequestDetailPage />} />
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />

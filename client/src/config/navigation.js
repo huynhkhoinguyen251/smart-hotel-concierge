@@ -8,6 +8,12 @@ export const MAIN_NAV = [
   { to: '/tours', label: 'Tours' },
 ];
 
+// Mục của khách trong menu tài khoản (máy tính và điện thoại). Admin không thấy các mục này.
+export const GUEST_ACCOUNT_NAV = [
+  { to: '/my-bookings', label: 'My bookings' },
+  { to: '/my-services', label: 'My service requests' },
+];
+
 // Các trang admin ngoài Dashboard tạm là "Coming soon"; sẽ làm ở các bước sau.
 export const ADMIN_NAV = [
   { to: '/admin', label: 'Dashboard', end: true },

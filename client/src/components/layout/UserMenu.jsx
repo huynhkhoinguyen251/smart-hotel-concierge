@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { GUEST_ACCOUNT_NAV } from '../../config/navigation.js';
 import useAuth from '../../hooks/useAuth.js';
 
 const ITEM_CLASS = 'block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50';
 
-// Nút tên người dùng ở góc phải header, mở menu: Profile, My bookings (khách),
+// Nút tên người dùng ở góc phải header, mở menu: Profile, My bookings và My service requests (khách),
 // Admin Dashboard (admin), Logout.
 export default function UserMenu() {
   const { user, isAdmin, logout } = useAuth();
@@ -61,12 +62,19 @@ export default function UserMenu() {
           <Link to="/profile" role="menuitem" className={ITEM_CLASS} onClick={() => setOpen(false)}>
             Profile
           </Link>
-          {/* Admin không đặt phòng, nên không có mục My bookings. */}
-          {!isAdmin && (
-            <Link to="/my-bookings" role="menuitem" className={ITEM_CLASS} onClick={() => setOpen(false)}>
-              My bookings
-            </Link>
-          )}
+          {/* Admin không đặt đơn của khách, nên không có các mục này. */}
+          {!isAdmin &&
+            GUEST_ACCOUNT_NAV.map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                role="menuitem"
+                className={ITEM_CLASS}
+                onClick={() => setOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ))}
           {isAdmin && (
             <Link to="/admin" role="menuitem" className={ITEM_CLASS} onClick={() => setOpen(false)}>
               Admin Dashboard

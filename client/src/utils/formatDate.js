@@ -15,3 +15,14 @@ export default function formatDate(value, { withTime = false } = {}) {
   const date = `${Number(day)} ${MONTHS[Number(month) - 1]} ${year}`;
   return withTime && hour ? `${date}, ${hour}:${minute}` : date;
 }
+
+// Khoảng ngày gọn: cùng năm thì "28 Dec - 31 Dec 2026", khác năm thì "30 Dec 2026 - 2 Jan 2027".
+export function formatDateRange(start, end) {
+  const from = formatDate(start);
+  const to = formatDate(end);
+  if (!from || !to) {
+    return from || to;
+  }
+  const sameYear = start.slice(0, 4) === end.slice(0, 4);
+  return `${sameYear ? from.slice(0, -5) : from} - ${to}`;
+}

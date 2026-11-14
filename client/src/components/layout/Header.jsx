@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { MAIN_NAV } from '../../config/navigation.js';
+import { GUEST_ACCOUNT_NAV, MAIN_NAV } from '../../config/navigation.js';
 import useAuth from '../../hooks/useAuth.js';
 import Logo from './Logo.jsx';
 import UserMenu from './UserMenu.jsx';
@@ -106,11 +106,12 @@ export default function Header() {
                 <NavLink to="/profile" className={linkClass} onClick={close}>
                   Profile
                 </NavLink>
-                {!isAdmin && (
-                  <NavLink to="/my-bookings" className={linkClass} onClick={close}>
-                    My bookings
-                  </NavLink>
-                )}
+                {!isAdmin &&
+                  GUEST_ACCOUNT_NAV.map((item) => (
+                    <NavLink key={item.to} to={item.to} className={linkClass} onClick={close}>
+                      {item.label}
+                    </NavLink>
+                  ))}
                 {isAdmin && (
                   <NavLink to="/admin" className={linkClass} onClick={close}>
                     Admin Dashboard
