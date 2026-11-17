@@ -51,6 +51,9 @@ export const SERVICE_REQUEST_STATUS_TABS = toTabs([
   'cancelled',
 ]);
 
+// Các bước của yêu cầu dịch vụ, đơn tour và đơn vận chuyển (cùng một luồng); cancelled hiện riêng.
+export const SERVICE_REQUEST_STEPS = ['pending', 'confirmed', 'in_progress', 'completed'];
+
 // Khách chỉ tự hủy được yêu cầu dịch vụ còn pending.
 export const CANCELLABLE_SERVICE_REQUEST_STATUS = 'pending';
 

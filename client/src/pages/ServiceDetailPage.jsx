@@ -24,12 +24,15 @@ function BookingPanel({ service, bookingId }) {
   const category = getServiceCategory(service.category);
 
   if (!category) {
-    // Dịch vụ vận chuyển đặt ở trang Tours.
+    // Dịch vụ vận chuyển có trang đặt riêng (/transport/:id), thuộc mục Tours.
     return (
       <div className="space-y-4">
         <Alert type="info">This service is booked from the Tours page.</Alert>
-        <Link to="/tours" className="text-sm font-semibold text-teal-700 hover:text-teal-800">
-          Go to Tours →
+        <Link
+          to={`/transport/${service.id}`}
+          className="text-sm font-semibold text-teal-700 hover:text-teal-800"
+        >
+          Book this transport →
         </Link>
       </div>
     );

@@ -13,6 +13,7 @@ import LoginPage from '../pages/LoginPage.jsx';
 import MyBookingsPage from '../pages/MyBookingsPage.jsx';
 import MyFoodOrdersPage from '../pages/MyFoodOrdersPage.jsx';
 import MyServicesPage from '../pages/MyServicesPage.jsx';
+import MyTripsPage from '../pages/MyTripsPage.jsx';
 import NotFoundPage from '../pages/NotFoundPage.jsx';
 import ProfilePage from '../pages/ProfilePage.jsx';
 import RegisterPage from '../pages/RegisterPage.jsx';
@@ -21,6 +22,11 @@ import RoomsPage from '../pages/RoomsPage.jsx';
 import ServiceDetailPage from '../pages/ServiceDetailPage.jsx';
 import ServiceRequestDetailPage from '../pages/ServiceRequestDetailPage.jsx';
 import ServicesPage from '../pages/ServicesPage.jsx';
+import TourBookingDetailPage from '../pages/TourBookingDetailPage.jsx';
+import TourDetailPage from '../pages/TourDetailPage.jsx';
+import ToursPage from '../pages/ToursPage.jsx';
+import TransportBookingDetailPage from '../pages/TransportBookingDetailPage.jsx';
+import TransportDetailPage from '../pages/TransportDetailPage.jsx';
 import AdminRoute from './AdminRoute.jsx';
 import ProtectedRoute from './ProtectedRoute.jsx';
 
@@ -37,7 +43,9 @@ export default function AppRoutes() {
         <Route path="services" element={<ServicesPage />} />
         <Route path="services/:id" element={<ServiceDetailPage />} />
         <Route path="food" element={<FoodMenuPage />} />
-        <Route path="tours" element={<ComingSoonPage title="Tours and Transport" />} />
+        <Route path="tours" element={<ToursPage />} />
+        <Route path="tours/:id" element={<TourDetailPage />} />
+        <Route path="transport/:id" element={<TransportDetailPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
 
@@ -50,6 +58,9 @@ export default function AppRoutes() {
           <Route path="my-services/:id" element={<ServiceRequestDetailPage />} />
           <Route path="my-food-orders" element={<MyFoodOrdersPage />} />
           <Route path="my-food-orders/:id" element={<FoodOrderDetailPage />} />
+          <Route path="my-trips" element={<MyTripsPage />} />
+          <Route path="my-trips/tours/:id" element={<TourBookingDetailPage />} />
+          <Route path="my-trips/transport/:id" element={<TransportBookingDetailPage />} />
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />

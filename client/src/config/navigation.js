@@ -13,6 +13,7 @@ export const GUEST_ACCOUNT_NAV = [
   { to: '/my-bookings', label: 'My bookings' },
   { to: '/my-services', label: 'My service requests' },
   { to: '/my-food-orders', label: 'My food orders' },
+  { to: '/my-trips', label: 'My trips' },
 ];
 
 // Các trang admin ngoài Dashboard tạm là "Coming soon"; sẽ làm ở các bước sau.

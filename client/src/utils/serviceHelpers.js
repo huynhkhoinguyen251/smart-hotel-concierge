@@ -1,11 +1,8 @@
 import { getStatusConfig } from '../config/statuses.js';
 import { HOTEL_SERVICE_CATEGORIES, STAY_END_TIME } from '../config/services.js';
 import { CHECK_IN_TIME } from './cancellation.js';
+import { isDateTimeLocal, toDateTimeLocal } from './dateHelpers.js';
 import { formatDateRange } from './formatDate.js';
-
-const pad = (value) => String(value).padStart(2, '0');
-// Giá trị của ô datetime-local: "YYYY-MM-DDTHH:mm".
-const DATETIME_LOCAL_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 
 // Cấu hình của một loại dịch vụ; loại lạ (ví dụ dịch vụ vận chuyển) thì trả null.
 export const getServiceCategory = (category) => HOTEL_SERVICE_CATEGORIES[category] ?? null;
@@ -26,10 +23,6 @@ export const formatQuantity = (quantity, category) => {
 // Nhãn của một đơn đặt phòng trong ô chọn: "Room 302 · 28 Dec - 31 Dec 2026 · Checked in".
 export const getBookingOptionLabel = (booking) =>
   `Room ${booking.room.room_number} · ${formatDateRange(booking.check_in, booking.check_out)} · ${getStatusConfig(booking.status).label}`;
-
-// Date thành "YYYY-MM-DDTHH:mm" theo giờ của máy người dùng (không dùng toISOString, vì đổi sang UTC).
-export const toDateTimeLocal = (date) =>
-  `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 
 // Khoảng thời gian được chọn cho một đơn: từ 14:00 ngày check-in (hoặc phút kế tiếp nếu đã qua)
 // đến 23:59 ngày check-out. Các chuỗi cùng dạng nên so sánh trực tiếp được.
@@ -53,7 +46,7 @@ export const getEligibleBookings = (bookings, category, now = new Date()) => {
 // Lỗi của ô ngày giờ, hoặc '' nếu hợp lệ. Backend vẫn kiểm tra lại.
 export const getScheduleError = (value, limits) => {
   if (!value) return 'Choose a date and time';
-  if (!DATETIME_LOCAL_PATTERN.test(value)) return 'Choose a valid date and time';
+  if (!isDateTimeLocal(value)) return 'Choose a valid date and time';
   if (!limits) return 'This stay has already ended';
   if (value < limits.min || value > limits.max) {
     return limits.min > limits.stayStart
@@ -62,6 +55,3 @@ export const getScheduleError = (value, limits) => {
   }
   return '';
 };
-
-// "2026-12-28T09:30" thành "2026-12-28 09:30" như backend yêu cầu.
-export const toApiDateTime = (value) => value.replace('T', ' ');

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { cancelFoodOrder, getFoodOrder } from '../api/foodOrders.api.js';
 import FoodOrderItems from '../components/food/FoodOrderItems.jsx';
-import FoodOrderProgress from '../components/food/FoodOrderProgress.jsx';
 import Alert from '../components/ui/Alert.jsx';
 import Button from '../components/ui/Button.jsx';
 import Card from '../components/ui/Card.jsx';
@@ -11,7 +10,8 @@ import ErrorState from '../components/ui/ErrorState.jsx';
 import NotFoundView from '../components/ui/NotFoundView.jsx';
 import { PageSpinner } from '../components/ui/Spinner.jsx';
 import StatusBadge from '../components/ui/StatusBadge.jsx';
-import { FOOD_ORDER_CANCELLED_MESSAGE } from '../config/food.js';
+import StatusProgress from '../components/ui/StatusProgress.jsx';
+import { FOOD_ORDER_CANCELLED_MESSAGE, FOOD_ORDER_STEPS } from '../config/food.js';
 import { CANCELLABLE_FOOD_ORDER_STATUS } from '../config/statuses.js';
 import useFetch from '../hooks/useFetch.js';
 import useFlashMessage from '../hooks/useFlashMessage.js';
@@ -78,7 +78,12 @@ function OrderDetails({ initialOrder, initialMessage }) {
 
       <Card className="mb-6">
         <h2 className="mb-4 text-lg font-semibold text-slate-900">Order status</h2>
-        <FoodOrderProgress status={order.status} />
+        <StatusProgress
+          status={order.status}
+          steps={FOOD_ORDER_STEPS}
+          label="Order progress"
+          cancelledMessage="This order was cancelled."
+        />
       </Card>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px] lg:items-start">

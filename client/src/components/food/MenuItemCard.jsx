@@ -2,7 +2,7 @@ import { getMenuCategoryLabel, MAX_ITEM_QUANTITY } from '../../config/food.js';
 import formatCurrency from '../../utils/formatCurrency.js';
 import RoomImage from '../rooms/RoomImage.jsx';
 import Button from '../ui/Button.jsx';
-import QuantityControl from './QuantityControl.jsx';
+import QuantityControl from '../ui/QuantityControl.jsx';
 
 // Một món trong thực đơn. quantity: số phần đang có trong giỏ (0 = chưa có).
 // showControls = false (tài khoản admin): chỉ xem, không có nút thêm vào giỏ.

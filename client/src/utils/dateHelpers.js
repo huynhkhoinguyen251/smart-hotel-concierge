@@ -24,6 +24,27 @@ export const countNights = (checkIn, checkOut) => {
   return Math.max(0, Math.round((toUtc(checkOut) - toUtc(checkIn)) / 86400000));
 };
 
+// Date thành "YYYY-MM-DDTHH:mm" (giá trị của ô datetime-local) theo giờ của máy người dùng.
+export const toDateTimeLocal = (date) =>
+  `${toDateString(date)}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+
+// "2026-12-28T09:30" thành "2026-12-28 09:30" như backend yêu cầu.
+export const toApiDateTime = (value) => value.replace('T', ' ');
+
+// Ô datetime-local: đúng dạng "YYYY-MM-DDTHH:mm".
+export const isDateTimeLocal = (value) =>
+  typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value);
+
+// "2026-12-28T09:30" hoặc "2026-12-28 09:30:00" thành Date theo giờ của máy; sai dạng thì null.
+export const parseLocalDateTime = (value) => {
+  const match = typeof value === 'string' && value.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+  if (!match) {
+    return null;
+  }
+  const [, year, month, day, hour, minute] = match.map(Number);
+  return new Date(year, month - 1, day, hour, minute);
+};
+
 // addDays('2026-12-31', 1) = '2027-01-01'. Chuỗi không hợp lệ thì trả ''.
 export const addDays = (dateString, days) => {
   if (!isDateString(dateString)) {

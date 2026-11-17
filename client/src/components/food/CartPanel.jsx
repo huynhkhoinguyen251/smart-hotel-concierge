@@ -4,7 +4,7 @@ import useAuth from '../../hooks/useAuth.js';
 import formatCurrency from '../../utils/formatCurrency.js';
 import Spinner from '../ui/Spinner.jsx';
 import FoodOrderForm from './FoodOrderForm.jsx';
-import QuantityControl from './QuantityControl.jsx';
+import QuantityControl from '../ui/QuantityControl.jsx';
 
 // Phần dưới giỏ hàng: đang tải hồ sơ, nút đăng nhập, hoặc form đặt hàng.
 function OrderSection({ lines, bookingId, onOrdered }) {

@@ -1,25 +1,27 @@
-import { FOOD_ORDER_STEPS } from '../../config/food.js';
 import { getStatusConfig } from '../../config/statuses.js';
 
-// Tiến trình đơn: pending → confirmed → preparing → delivering → completed.
-// Đơn bị hủy không nằm trên đường này, nên hiện một dòng riêng.
+// Tiến trình trạng thái theo các bước (đơn đồ ăn, đơn tour, đơn vận chuyển...).
+// steps: các trạng thái theo thứ tự. Đơn bị hủy không nằm trên đường này, nên hiện cancelledMessage.
 // Điện thoại: các bước xếp dọc; màn hình rộng: xếp ngang.
-export default function FoodOrderProgress({ status }) {
+const COLUMNS = { 4: 'sm:grid-cols-4', 5: 'sm:grid-cols-5' };
+
+export default function StatusProgress({ status, steps, cancelledMessage, label = 'Progress' }) {
   if (status === 'cancelled') {
     return (
       <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-        This order was cancelled.
+        {cancelledMessage}
       </p>
     );
   }
 
-  const currentIndex = FOOD_ORDER_STEPS.indexOf(status);
+  const currentIndex = steps.indexOf(status);
 
   return (
-    <ol className="grid gap-3 sm:grid-cols-5 sm:gap-2" aria-label="Order progress">
-      {FOOD_ORDER_STEPS.map((step, index) => {
-        const done = index < currentIndex;
+    <ol className={`grid gap-3 sm:gap-2 ${COLUMNS[steps.length] ?? 'sm:grid-flow-col'}`} aria-label={label}>
+      {steps.map((step, index) => {
         const current = index === currentIndex;
+        // Bước cuối (completed) cũng hiện dấu ✓, vì đơn đã xong hết.
+        const done = index < currentIndex || (current && index === steps.length - 1);
         return (
           <li
             key={step}
