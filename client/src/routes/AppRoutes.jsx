@@ -1,8 +1,9 @@
+import { lazy, Suspense } from 'react';
 import { Route, Routes } from 'react-router-dom';
+import { PageSpinner } from '../components/ui/Spinner.jsx';
 import { ADMIN_NAV } from '../config/navigation.js';
 import AdminLayout from '../layouts/AdminLayout.jsx';
 import MainLayout from '../layouts/MainLayout.jsx';
-import DashboardPage from '../pages/admin/DashboardPage.jsx';
 import BookingDetailPage from '../pages/BookingDetailPage.jsx';
 import BookPage from '../pages/BookPage.jsx';
 import ComingSoonPage from '../pages/ComingSoonPage.jsx';
@@ -34,8 +35,17 @@ import TransportDetailPage from '../pages/TransportDetailPage.jsx';
 import AdminRoute from './AdminRoute.jsx';
 import ProtectedRoute from './ProtectedRoute.jsx';
 
-// Các trang admin chưa làm: mọi mục sidebar trừ Dashboard.
-const ADMIN_PLACEHOLDERS = ADMIN_NAV.filter((item) => item.to !== '/admin');
+// Các trang admin (Dashboard dùng Chart.js, khá nặng) được tách thành file riêng và chỉ tải
+// khi admin mở, để khách không phải tải phần code của admin.
+const DashboardPage = lazy(() => import('../pages/admin/DashboardPage.jsx'));
+const AdminBookingsPage = lazy(() => import('../pages/admin/AdminBookingsPage.jsx'));
+const AdminBookingDetailPage = lazy(() => import('../pages/admin/AdminBookingDetailPage.jsx'));
+
+const withSuspense = (element) => <Suspense fallback={<PageSpinner />}>{element}</Suspense>;
+
+// Các trang admin đã làm; mọi mục sidebar còn lại tạm là "Coming soon".
+const ADMIN_BUILT = ['/admin', '/admin/bookings'];
+const ADMIN_PLACEHOLDERS = ADMIN_NAV.filter((item) => !ADMIN_BUILT.includes(item.to));
 
 export default function AppRoutes() {
   return (
@@ -76,7 +86,9 @@ export default function AppRoutes() {
 
       <Route path="admin" element={<AdminRoute />}>
         <Route element={<AdminLayout />}>
-          <Route index element={<DashboardPage />} />
+          <Route index element={withSuspense(<DashboardPage />)} />
+          <Route path="bookings" element={withSuspense(<AdminBookingsPage />)} />
+          <Route path="bookings/:id" element={withSuspense(<AdminBookingDetailPage />)} />
           {ADMIN_PLACEHOLDERS.map((item) => (
             <Route
               key={item.to}
