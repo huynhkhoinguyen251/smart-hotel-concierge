@@ -40,11 +40,28 @@ import ProtectedRoute from './ProtectedRoute.jsx';
 const DashboardPage = lazy(() => import('../pages/admin/DashboardPage.jsx'));
 const AdminBookingsPage = lazy(() => import('../pages/admin/AdminBookingsPage.jsx'));
 const AdminBookingDetailPage = lazy(() => import('../pages/admin/AdminBookingDetailPage.jsx'));
+const AdminServiceRequestsPage = lazy(() => import('../pages/admin/AdminServiceRequestsPage.jsx'));
+const AdminServiceRequestDetailPage = lazy(() => import('../pages/admin/AdminServiceRequestDetailPage.jsx'));
+const AdminFoodOrdersPage = lazy(() => import('../pages/admin/AdminFoodOrdersPage.jsx'));
+const AdminFoodOrderDetailPage = lazy(() => import('../pages/admin/AdminFoodOrderDetailPage.jsx'));
+const AdminTourBookingsPage = lazy(() => import('../pages/admin/AdminTourBookingsPage.jsx'));
+const AdminTourBookingDetailPage = lazy(() => import('../pages/admin/AdminTourBookingDetailPage.jsx'));
+const AdminTransportBookingsPage = lazy(() => import('../pages/admin/AdminTransportBookingsPage.jsx'));
+const AdminTransportBookingDetailPage = lazy(() => import('../pages/admin/AdminTransportBookingDetailPage.jsx'));
+const AdminTicketsPage = lazy(() => import('../pages/admin/AdminTicketsPage.jsx'));
+const AdminTicketDetailPage = lazy(() => import('../pages/admin/AdminTicketDetailPage.jsx'));
 
 const withSuspense = (element) => <Suspense fallback={<PageSpinner />}>{element}</Suspense>;
 
 // Các trang admin đã làm; mọi mục sidebar còn lại tạm là "Coming soon".
-const ADMIN_BUILT = ['/admin', '/admin/bookings'];
+const ADMIN_BUILT = [
+  '/admin',
+  '/admin/bookings',
+  '/admin/services',
+  '/admin/food-orders',
+  '/admin/tourism',
+  '/admin/tickets',
+];
 const ADMIN_PLACEHOLDERS = ADMIN_NAV.filter((item) => !ADMIN_BUILT.includes(item.to));
 
 export default function AppRoutes() {
@@ -89,6 +106,16 @@ export default function AppRoutes() {
           <Route index element={withSuspense(<DashboardPage />)} />
           <Route path="bookings" element={withSuspense(<AdminBookingsPage />)} />
           <Route path="bookings/:id" element={withSuspense(<AdminBookingDetailPage />)} />
+          <Route path="services" element={withSuspense(<AdminServiceRequestsPage />)} />
+          <Route path="services/:id" element={withSuspense(<AdminServiceRequestDetailPage />)} />
+          <Route path="food-orders" element={withSuspense(<AdminFoodOrdersPage />)} />
+          <Route path="food-orders/:id" element={withSuspense(<AdminFoodOrderDetailPage />)} />
+          <Route path="tourism" element={withSuspense(<AdminTourBookingsPage />)} />
+          <Route path="tourism/tours/:id" element={withSuspense(<AdminTourBookingDetailPage />)} />
+          <Route path="tourism/transport" element={withSuspense(<AdminTransportBookingsPage />)} />
+          <Route path="tourism/transport/:id" element={withSuspense(<AdminTransportBookingDetailPage />)} />
+          <Route path="tickets" element={withSuspense(<AdminTicketsPage />)} />
+          <Route path="tickets/:id" element={withSuspense(<AdminTicketDetailPage />)} />
           {ADMIN_PLACEHOLDERS.map((item) => (
             <Route
               key={item.to}
