@@ -20,6 +20,10 @@ export const STATUS_CONFIG = {
   // Bật/tắt của danh mục: dịch vụ và tour dùng active/inactive, món ăn dùng available/unavailable.
   active: { label: 'Active', tone: 'emerald' },
   unavailable: { label: 'Unavailable', tone: 'slate' },
+  // Tài khoản người dùng (admin quản lý): vai trò và trạng thái khóa.
+  guest: { label: 'Guest', tone: 'sky' },
+  admin: { label: 'Admin', tone: 'violet' },
+  locked: { label: 'Locked', tone: 'red' },
   // Yêu cầu hỗ trợ: open → in_progress → resolved.
   open: { label: 'Open', tone: 'amber' },
   resolved: { label: 'Resolved', tone: 'emerald' },

@@ -23,3 +23,9 @@ export const toQueryString = (params) => {
   const query = new URLSearchParams(cleanParams(params)).toString().replace(/%2C/gi, ',');
   return query ? `?${query}` : '';
 };
+
+// Id dương trên địa chỉ trang (ví dụ ?user_id=4); giá trị lạ thì trả '' (bỏ qua).
+export const readId = (searchParams, key) => {
+  const value = searchParams.get(key) ?? '';
+  return /^[1-9]\d{0,9}$/.test(value) && Number(value) <= 2147483647 ? value : '';
+};

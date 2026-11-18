@@ -18,7 +18,7 @@ export const GUEST_ACCOUNT_NAV = [
   { to: '/support', label: 'Support' },
 ];
 
-// Các trang admin ngoài Dashboard tạm là "Coming soon"; sẽ làm ở các bước sau.
+// Các mục của sidebar admin; mỗi mục có một trang riêng (routes/AppRoutes.jsx).
 export const ADMIN_NAV = [
   { to: '/admin', label: 'Dashboard', end: true },
   { to: '/admin/rooms', label: 'Rooms' },

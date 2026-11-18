@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getAdminBookings } from '../../api/adminBookings.api.js';
 import AdminBookingList from '../../components/admin/AdminBookingList.jsx';
+import UserFilterChip from '../../components/admin/UserFilterChip.jsx';
 import Alert from '../../components/ui/Alert.jsx';
 import Button from '../../components/ui/Button.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
@@ -15,7 +16,7 @@ import { ADMIN_BOOKINGS_PAGE_SIZE } from '../../config/adminBookings.js';
 import { BOOKING_STATUS_TABS } from '../../config/statuses.js';
 import useFetch from '../../hooks/useFetch.js';
 import { isDateString } from '../../utils/dateHelpers.js';
-import { cleanParams, readPage, toQueryString } from '../../utils/queryString.js';
+import { cleanParams, readId, readPage, toQueryString } from '../../utils/queryString.js';
 
 // Ngày lạ trên địa chỉ trang thì bỏ qua.
 const readDate = (searchParams, key) => {
@@ -79,7 +80,8 @@ function DateFilter({ from, to, onApply, onReset }) {
   );
 }
 
-// /admin/bookings: mọi đơn đặt phòng. Trạng thái, ngày nhận phòng và trang đều nằm trên địa chỉ trang.
+// /admin/bookings: mọi đơn đặt phòng. Trạng thái, ngày nhận phòng, khách (user_id) và trang đều nằm
+// trên địa chỉ trang.
 export default function AdminBookingsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const rawStatus = searchParams.get('status') ?? '';
@@ -88,6 +90,7 @@ export default function AdminBookingsPage() {
   const from = readDate(searchParams, 'check_in_from');
   const to = readDate(searchParams, 'check_in_to');
   const page = readPage(searchParams);
+  const userId = readId(searchParams, 'user_id');
   const [message, setMessage] = useState({ type: 'success', text: '' });
 
   const list = useFetch(
@@ -96,14 +99,15 @@ export default function AdminBookingsPage() {
         status,
         check_in_from: from,
         check_in_to: to,
+        user_id: userId,
         page,
         limit: ADMIN_BOOKINGS_PAGE_SIZE,
       }),
-    [status, from, to, page],
+    [status, from, to, page, userId],
   );
 
   const updateUrl = (changes) => {
-    setSearchParams(cleanParams({ status, check_in_from: from, check_in_to: to, ...changes }));
+    setSearchParams(cleanParams({ status, check_in_from: from, check_in_to: to, user_id: userId, ...changes }));
   };
   const goToPage = (nextPage) => {
     updateUrl({ page: nextPage > 1 ? nextPage : '' });
@@ -128,7 +132,7 @@ export default function AdminBookingsPage() {
       );
     }
     if (list.data.bookings.length === 0) {
-      const filtered = status || from || to;
+      const filtered = status || from || to || userId;
       return (
         <EmptyState
           title={filtered ? 'No bookings match these filters' : 'No bookings yet'}
@@ -158,14 +162,20 @@ export default function AdminBookingsPage() {
         className="mb-4"
         tabs={BOOKING_STATUS_TABS}
         active={status}
-        getLink={(value) => `/admin/bookings${toQueryString({ status: value, check_in_from: from, check_in_to: to })}`}
+        getLink={(value) =>
+          `/admin/bookings${toQueryString({ status: value, check_in_from: from, check_in_to: to, user_id: userId })}`
+        }
       />
       <DateFilter
         key={`${from}|${to}`}
         from={from}
         to={to}
         onApply={(values) => updateUrl({ check_in_from: values.from, check_in_to: values.to, page: '' })}
-        onReset={() => setSearchParams(cleanParams({ status }))}
+        onReset={() => setSearchParams(cleanParams({ status, user_id: userId }))}
+      />
+      <UserFilterChip
+        userId={userId}
+        clearTo={`/admin/bookings${toQueryString({ status, check_in_from: from, check_in_to: to })}`}
       />
       <div className="mb-4 empty:hidden" aria-live="polite">
         <Alert type={message.type}>{message.text}</Alert>

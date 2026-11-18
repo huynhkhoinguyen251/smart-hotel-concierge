@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ADMIN_LIST_PAGE_SIZE } from '../../config/adminRequests.js';
 import useFetch from '../../hooks/useFetch.js';
-import { cleanParams, readPage, toQueryString } from '../../utils/queryString.js';
+import { cleanParams, readId, readPage, toQueryString } from '../../utils/queryString.js';
 import Alert from '../ui/Alert.jsx';
 import EmptyState from '../ui/EmptyState.jsx';
 import ErrorState from '../ui/ErrorState.jsx';
@@ -12,12 +12,14 @@ import Pagination from '../ui/Pagination.jsx';
 import Select from '../ui/Select.jsx';
 import { PageSpinner } from '../ui/Spinner.jsx';
 import AdminRequestTable from './AdminRequestTable.jsx';
+import UserFilterChip from './UserFilterChip.jsx';
 
 // Khung trang danh sách của admin: tiêu đề, (tab phụ), tab trạng thái, ô lọc, thông báo, danh sách
 // và phân trang. Trạng thái, các ô lọc và trang đều nằm trên địa chỉ trang.
 // - basePath: ví dụ "/admin/food-orders"; statusTabs: [{ value, label }].
 // - filters: [{ name, label, options: [{ value, label }] }], value '' nghĩa là tất cả.
 // - load(params) trả { items, pagination }.
+// - ?user_id= trên địa chỉ trang (từ trang chi tiết người dùng) lọc theo một khách; giá trị lạ bị bỏ qua.
 // - table: props của AdminRequestTable trừ items; renderActions(item, actionProps).
 // - header: phần thêm dưới tiêu đề (ví dụ tab "Tour bookings / Transport"). Bước sau có thể đặt
 //   thanh điều hướng phụ (quản lý danh mục) ở đây.
@@ -44,15 +46,17 @@ export default function AdminRequestListPage({
     }),
   );
   const page = readPage(searchParams);
+  const userId = readId(searchParams, 'user_id');
   const [message, setMessage] = useState({ type: 'success', text: '' });
 
   const filterKey = filters.map((filter) => filterValues[filter.name]);
   const list = useFetch(
-    () => load({ status, ...filterValues, page, limit: ADMIN_LIST_PAGE_SIZE }),
-    [basePath, status, ...filterKey, page],
+    () => load({ status, ...filterValues, user_id: userId, page, limit: ADMIN_LIST_PAGE_SIZE }),
+    [basePath, status, ...filterKey, page, userId],
   );
 
-  const updateUrl = (changes) => setSearchParams(cleanParams({ status, ...filterValues, ...changes }));
+  const updateUrl = (changes) =>
+    setSearchParams(cleanParams({ status, ...filterValues, user_id: userId, ...changes }));
   const goToPage = (nextPage) => {
     updateUrl({ page: nextPage > 1 ? nextPage : '' });
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -77,7 +81,7 @@ export default function AdminRequestListPage({
       );
     }
     if (list.data.items.length === 0) {
-      const filtered = status || Object.values(filterValues).some(Boolean);
+      const filtered = status || userId || Object.values(filterValues).some(Boolean);
       return (
         <EmptyState
           title={filtered ? `No ${emptyNoun} match these filters` : `No ${emptyNoun} yet`}
@@ -113,7 +117,7 @@ export default function AdminRequestListPage({
           className="min-w-0 lg:mx-0 lg:px-0"
           tabs={statusTabs}
           active={status}
-          getLink={(value) => `${basePath}${toQueryString({ ...filterValues, status: value })}`}
+          getLink={(value) => `${basePath}${toQueryString({ ...filterValues, user_id: userId, status: value })}`}
         />
         {filters.map((filter) => (
           <Select
@@ -126,6 +130,7 @@ export default function AdminRequestListPage({
           />
         ))}
       </div>
+      <UserFilterChip userId={userId} clearTo={`${basePath}${toQueryString({ status, ...filterValues })}`} />
       <div className="mb-4 empty:hidden" aria-live="polite">
         <Alert type={message.type}>{message.text}</Alert>
       </div>

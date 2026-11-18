@@ -1,12 +1,10 @@
 import { lazy, Suspense } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { PageSpinner } from '../components/ui/Spinner.jsx';
-import { ADMIN_NAV } from '../config/navigation.js';
 import AdminLayout from '../layouts/AdminLayout.jsx';
 import MainLayout from '../layouts/MainLayout.jsx';
 import BookingDetailPage from '../pages/BookingDetailPage.jsx';
 import BookPage from '../pages/BookPage.jsx';
-import ComingSoonPage from '../pages/ComingSoonPage.jsx';
 import FoodMenuPage from '../pages/FoodMenuPage.jsx';
 import FoodOrderDetailPage from '../pages/FoodOrderDetailPage.jsx';
 import HomePage from '../pages/HomePage.jsx';
@@ -53,6 +51,9 @@ const AdminTransportBookingsPage = lazy(() => import('../pages/admin/AdminTransp
 const AdminTransportBookingDetailPage = lazy(() => import('../pages/admin/AdminTransportBookingDetailPage.jsx'));
 const AdminTicketsPage = lazy(() => import('../pages/admin/AdminTicketsPage.jsx'));
 const AdminTicketDetailPage = lazy(() => import('../pages/admin/AdminTicketDetailPage.jsx'));
+const AdminReviewsPage = lazy(() => import('../pages/admin/AdminReviewsPage.jsx'));
+const AdminUsersPage = lazy(() => import('../pages/admin/AdminUsersPage.jsx'));
+const AdminUserDetailPage = lazy(() => import('../pages/admin/AdminUserDetailPage.jsx'));
 const AdminRoomsPage = lazy(() => import('../pages/admin/AdminRoomsPage.jsx'));
 const AdminRoomNewPage = lazy(() => import('../pages/admin/AdminRoomNewPage.jsx'));
 const AdminRoomEditPage = lazy(() => import('../pages/admin/AdminRoomEditPage.jsx'));
@@ -61,18 +62,6 @@ const AdminRoomTypeFormPage = lazy(() => import('../pages/admin/AdminRoomTypeFor
 const AdminAmenitiesPage = lazy(() => import('../pages/admin/AdminAmenitiesPage.jsx'));
 
 const withSuspense = (element) => <Suspense fallback={<PageSpinner />}>{element}</Suspense>;
-
-// Các trang admin đã làm; mọi mục sidebar còn lại tạm là "Coming soon".
-const ADMIN_BUILT = [
-  '/admin',
-  '/admin/rooms',
-  '/admin/bookings',
-  '/admin/services',
-  '/admin/food-orders',
-  '/admin/tourism',
-  '/admin/tickets',
-];
-const ADMIN_PLACEHOLDERS = ADMIN_NAV.filter((item) => !ADMIN_BUILT.includes(item.to));
 
 export default function AppRoutes() {
   return (
@@ -136,13 +125,9 @@ export default function AppRoutes() {
           <Route path="tourism/transport/:id" element={withSuspense(<AdminTransportBookingDetailPage />)} />
           <Route path="tickets" element={withSuspense(<AdminTicketsPage />)} />
           <Route path="tickets/:id" element={withSuspense(<AdminTicketDetailPage />)} />
-          {ADMIN_PLACEHOLDERS.map((item) => (
-            <Route
-              key={item.to}
-              path={item.to.replace('/admin/', '')}
-              element={<ComingSoonPage title={item.label} />}
-            />
-          ))}
+          <Route path="reviews" element={withSuspense(<AdminReviewsPage />)} />
+          <Route path="users" element={withSuspense(<AdminUsersPage />)} />
+          <Route path="users/:id" element={withSuspense(<AdminUserDetailPage />)} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Route>
