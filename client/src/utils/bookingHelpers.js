@@ -9,6 +9,10 @@ export const clampGuests = (value, capacity) => {
 // (giống quy tắc ở backend). Chuỗi "YYYY-MM-DD" so sánh được trực tiếp.
 export const staysOverlap = (a, b) => a.check_in < b.check_out && a.check_out > b.check_in;
 
+// 3 thành "3 nights", 1 thành "1 guest".
+export const formatNights = (nights) => `${nights} ${nights === 1 ? 'night' : 'nights'}`;
+export const formatGuests = (guests) => `${guests} ${guests === 1 ? 'guest' : 'guests'}`;
+
 export const BOOKING_CREATED_MESSAGE = 'Your booking is pending confirmation by the hotel.';
 
 // Tài khoản admin không được đặt phòng (backend trả 403), nên giao diện ẩn nút đặt.

@@ -8,7 +8,7 @@ import Alert from '../components/ui/Alert.jsx';
 import Button from '../components/ui/Button.jsx';
 import Card from '../components/ui/Card.jsx';
 import EmptyState from '../components/ui/EmptyState.jsx';
-import ErrorState from '../components/ui/ErrorState.jsx';
+import LoadError from '../components/ui/LoadError.jsx';
 import PageTitle from '../components/ui/PageTitle.jsx';
 import Pagination from '../components/ui/Pagination.jsx';
 import { PageSpinner } from '../components/ui/Spinner.jsx';
@@ -63,11 +63,7 @@ export default function RoomsPage() {
     }
     if (list.error) {
       // 400: dữ liệu tìm kiếm không hợp lệ, hiện đúng thông báo của backend.
-      return list.error.status === 400 ? (
-        <Alert type="error">{list.error.message}</Alert>
-      ) : (
-        <ErrorState message={list.error.message} onRetry={list.retry} />
-      );
+      return <LoadError error={list.error} onRetry={list.retry} />;
     }
     if (list.data.rooms.length === 0) {
       return (

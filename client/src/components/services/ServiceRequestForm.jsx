@@ -29,6 +29,7 @@ import Input from '../ui/Input.jsx';
 import Select from '../ui/Select.jsx';
 import Spinner from '../ui/Spinner.jsx';
 import Textarea from '../ui/Textarea.jsx';
+import { multiplyPrice } from '../../utils/price.js';
 
 // Mỗi trạng thái lấy tối đa 50 đơn (giới hạn limit của backend); khách thường chỉ có vài đơn.
 const BOOKINGS_LIMIT = 50;
@@ -191,7 +192,7 @@ function RequestFields({ service, category, bookings, initialBookingId }) {
           </p>
         </div>
         <p className="text-right text-lg font-bold text-teal-700">
-          {formatCurrency(service.price * quantity)}
+          {formatCurrency(multiplyPrice(service.price, quantity))}
         </p>
       </div>
 

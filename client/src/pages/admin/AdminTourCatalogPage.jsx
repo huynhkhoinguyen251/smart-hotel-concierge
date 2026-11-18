@@ -1,8 +1,8 @@
 import { adminToursApi } from '../../api/adminCatalog.api.js';
 import { CatalogItemCell, PriceCell } from '../../components/admin/AdminCells.jsx';
 import CatalogListPage from '../../components/admin/catalog/CatalogListPage.jsx';
-import TourismTabs from '../../components/admin/TourismTabs.jsx';
-import { TOUR_LOCATION_MAX_LENGTH } from '../../config/adminCatalog.js';
+import AdminSubNav from '../../components/admin/AdminSubNav.jsx';
+import { TOURISM_SECTION_NAV, TOUR_LOCATION_MAX_LENGTH } from '../../config/adminCatalog.js';
 import { TOUR_FIELDS } from '../../config/adminCatalogItems.js';
 
 const CATALOG = {
@@ -40,7 +40,7 @@ export default function AdminTourCatalogPage() {
     <CatalogListPage
       title="Tourism"
       subtitle="Local tours offered to guests, including inactive ones."
-      subNav={<TourismTabs />}
+      subNav={<AdminSubNav {...TOURISM_SECTION_NAV} />}
       catalog={CATALOG}
       search={SEARCH}
       columns={COLUMNS}

@@ -2,7 +2,7 @@
 // type: tên loại backend trả trong target.type của GET /reviews.
 // field: khóa gửi lên POST /reviews; doneStatus: trạng thái "đã hoàn thành" mới được đánh giá;
 // detailPath(id): trang chi tiết đơn của tôi; adminPath(id): trang chi tiết đơn của admin.
-export const REVIEW_TYPES = {
+const REVIEW_TYPES = {
   room: {
     label: 'Room stay',
     field: 'booking_id',

@@ -1,7 +1,7 @@
 // Đọc và ghi bộ lọc của trang /rooms trên địa chỉ trang (query string).
 // Địa chỉ trang là nguồn dữ liệu duy nhất: tải lại trang hoặc bấm Back vẫn giữ bộ lọc.
 
-export const EMPTY_ROOM_FILTERS = {
+const EMPTY_ROOM_FILTERS = {
   check_in: '',
   check_out: '',
   guests: '',

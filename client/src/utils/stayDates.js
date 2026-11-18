@@ -1,3 +1,4 @@
+import { formatGuests } from './bookingHelpers.js';
 import { addDays, getToday, isDateString } from './dateHelpers.js';
 
 // Kiểm tra ngày nhận và trả phòng ở trình duyệt, trước khi gọi API.
@@ -42,5 +43,5 @@ export const getStayDateLimits = (checkIn) => {
 export const guestOptions = (max = 10) =>
   Array.from({ length: max }, (_, index) => {
     const count = index + 1;
-    return { value: String(count), label: `${count} ${count === 1 ? 'guest' : 'guests'}` };
+    return { value: String(count), label: formatGuests(count) };
   });

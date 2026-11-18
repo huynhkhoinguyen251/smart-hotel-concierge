@@ -12,6 +12,10 @@ import Input from '../ui/Input.jsx';
 //   Có ô nhập thêm thì lỗi của server hiện ngay trong hộp thoại để admin sửa và thử lại.
 // - onSuccess(updated, message), onError(message): trang cha cập nhật và hiện thông báo.
 // - compact: nút nhỏ cho từng dòng của danh sách.
+// Tùy chọn (dùng cho đơn đặt phòng):
+// - dialogIntro: câu mở đầu của hộp thoại, mặc định là itemLabel viết hoa chữ đầu.
+// - getSuccessMessage(action): thông báo sau khi đổi, mặc định "<ItemLabel>: <action.success>".
+// - getDisabledReason(action): lý do khóa nút (hiện khi rê chuột), '' nếu bấm được.
 export default function AdminStatusActions({
   actions,
   update,
@@ -20,6 +24,9 @@ export default function AdminStatusActions({
   onSuccess,
   onError,
   compact = false,
+  dialogIntro,
+  getSuccessMessage,
+  getDisabledReason = () => '',
 }) {
   const [action, setAction] = useState(null);
   const [extraValue, setExtraValue] = useState('');
@@ -28,13 +35,15 @@ export default function AdminStatusActions({
 
   if (actions.length === 0) return null;
 
+  const title = `${itemLabel.charAt(0).toUpperCase()}${itemLabel.slice(1)}`;
+  const intro = dialogIntro ?? title;
   const extraField = action ? getExtraField(action) : null;
 
   const run = async (item, value) => {
     setSaving(true);
     try {
       const updated = await update(item, value);
-      onSuccess(updated, `${itemLabel.charAt(0).toUpperCase()}${itemLabel.slice(1)}: ${item.success}`);
+      onSuccess(updated, getSuccessMessage ? getSuccessMessage(item) : `${title}: ${item.success}`);
       setAction(null);
     } catch (apiError) {
       // Ví dụ 400: đơn vừa đổi trạng thái ở tab khác, hoặc biển số sai.
@@ -73,26 +82,30 @@ export default function AdminStatusActions({
   return (
     <>
       <div className={`flex flex-wrap gap-2 ${compact ? '' : 'flex-col'}`}>
-        {actions.map((item) => (
-          <Button
-            key={item.status}
-            variant={item.variant === 'danger' ? 'danger' : compact ? 'secondary' : item.variant}
-            size={compact ? 'sm' : 'md'}
-            className={compact ? '' : 'w-full'}
-            loading={saving && item.confirm === false}
-            disabled={saving}
-            aria-label={compact ? `${item.label}, ${itemLabel}` : undefined}
-            onClick={() => open(item)}
-          >
-            {item.label}
-          </Button>
-        ))}
+        {actions.map((item) => {
+          const disabledReason = getDisabledReason(item);
+          return (
+            <Button
+              key={item.status}
+              variant={item.variant === 'danger' ? 'danger' : compact ? 'secondary' : item.variant}
+              size={compact ? 'sm' : 'md'}
+              className={compact ? '' : 'w-full'}
+              loading={saving && item.confirm === false}
+              disabled={saving || Boolean(disabledReason)}
+              title={disabledReason || undefined}
+              aria-label={compact ? `${item.label}, ${itemLabel}` : undefined}
+              onClick={() => open(item)}
+            >
+              {item.label}
+            </Button>
+          );
+        })}
       </div>
 
       <ConfirmDialog
         open={Boolean(action)}
         title={action?.title}
-        message={action ? `${itemLabel.charAt(0).toUpperCase()}${itemLabel.slice(1)}. ${action.message}` : ''}
+        message={action ? `${intro}. ${action.message}` : ''}
         confirmLabel={action ? `Yes, ${action.label.toLowerCase()}` : 'Confirm'}
         cancelLabel="Go back"
         variant={action?.variant === 'danger' ? 'danger' : 'primary'}

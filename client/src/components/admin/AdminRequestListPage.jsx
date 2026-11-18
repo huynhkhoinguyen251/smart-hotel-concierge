@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { ADMIN_LIST_PAGE_SIZE } from '../../config/adminRequests.js';
 import useFetch from '../../hooks/useFetch.js';
-import { cleanParams, readId, readPage, toQueryString } from '../../utils/queryString.js';
+import useUrlFilters from '../../hooks/useUrlFilters.js';
+import { readId, toQueryString } from '../../utils/queryString.js';
 import Alert from '../ui/Alert.jsx';
 import EmptyState from '../ui/EmptyState.jsx';
-import ErrorState from '../ui/ErrorState.jsx';
+import LoadError from '../ui/LoadError.jsx';
 import FilterTabs from '../ui/FilterTabs.jsx';
 import PageTitle from '../ui/PageTitle.jsx';
 import Pagination from '../ui/Pagination.jsx';
@@ -34,19 +34,13 @@ export default function AdminRequestListPage({
   table,
   emptyNoun,
 }) {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const rawStatus = searchParams.get('status') ?? '';
-  const activeTab = statusTabs.find((tab) => tab.value === rawStatus) ?? statusTabs[0];
-  const status = activeTab.value;
   // Giá trị lạ trên địa chỉ trang thì coi như "All".
-  const filterValues = Object.fromEntries(
-    filters.map((filter) => {
-      const raw = searchParams.get(filter.name) ?? '';
-      return [filter.name, filter.options.some((option) => option.value === raw) ? raw : ''];
-    }),
-  );
-  const page = readPage(searchParams);
-  const userId = readId(searchParams, 'user_id');
+  const { values, page, updateUrl, goToPage } = useUrlFilters({
+    status: statusTabs,
+    ...Object.fromEntries(filters.map((filter) => [filter.name, filter.options])),
+    user_id: (params) => readId(params, 'user_id'),
+  });
+  const { status, user_id: userId, ...filterValues } = values;
   const [message, setMessage] = useState({ type: 'success', text: '' });
 
   const filterKey = filters.map((filter) => filterValues[filter.name]);
@@ -54,13 +48,6 @@ export default function AdminRequestListPage({
     () => load({ status, ...filterValues, user_id: userId, page, limit: ADMIN_LIST_PAGE_SIZE }),
     [basePath, status, ...filterKey, page, userId],
   );
-
-  const updateUrl = (changes) =>
-    setSearchParams(cleanParams({ status, ...filterValues, user_id: userId, ...changes }));
-  const goToPage = (nextPage) => {
-    updateUrl({ page: nextPage > 1 ? nextPage : '' });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
 
   const actionProps = {
     onSuccess: (_updated, text) => {
@@ -74,11 +61,7 @@ export default function AdminRequestListPage({
   const renderList = () => {
     if (list.loading) return <PageSpinner />;
     if (list.error) {
-      return list.error.status === 400 ? (
-        <Alert type="error">{list.error.message}</Alert>
-      ) : (
-        <ErrorState message={list.error.message} onRetry={list.retry} />
-      );
+      return <LoadError error={list.error} onRetry={list.retry} />;
     }
     if (list.data.items.length === 0) {
       const filtered = status || userId || Object.values(filterValues).some(Boolean);

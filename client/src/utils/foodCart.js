@@ -4,6 +4,7 @@ import {
   MAX_ORDER_LINES,
   MIN_ITEM_QUANTITY,
 } from '../config/food.js';
+import { multiplyPrice, sumPrices } from './price.js';
 
 // Giỏ hàng là mảng [{ menu_item_id, quantity }]. Chỉ lưu id và số lượng, không lưu giá:
 // giá luôn lấy từ thực đơn mới tải, và backend tự tính lại khi đặt.
@@ -11,7 +12,7 @@ import {
 
 const isPositiveInt = (value) => Number.isInteger(value) && value > 0;
 
-export const clampQuantity = (quantity) =>
+const clampQuantity = (quantity) =>
   Math.min(MAX_ITEM_QUANTITY, Math.max(MIN_ITEM_QUANTITY, Math.round(Number(quantity)) || MIN_ITEM_QUANTITY));
 
 export const getCartQuantity = (cart, menuItemId) =>
@@ -50,11 +51,6 @@ export const getCartLines = (cart, menuItems) => {
       return { ...line, menuItem, lineTotal: multiplyPrice(menuItem.price, line.quantity) };
     });
 };
-
-// Tính theo đồng xu (x100) để tránh sai số số thực. Giá từ backend có thể là chuỗi "75000.00".
-const toCents = (amount) => Math.round(Number(amount) * 100);
-export const multiplyPrice = (price, quantity) => (toCents(price) * quantity) / 100;
-export const sumPrices = (amounts) => amounts.reduce((sum, amount) => sum + toCents(amount), 0) / 100;
 
 export const getCartTotal = (lines) => sumPrices(lines.map((line) => line.lineTotal));
 

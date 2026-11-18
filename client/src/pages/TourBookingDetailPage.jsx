@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { cancelTourBooking, getTourBooking } from '../api/tourBookings.api.js';
 import ReviewPanel from '../components/reviews/ReviewPanel.jsx';
 import Alert from '../components/ui/Alert.jsx';
@@ -7,14 +7,12 @@ import Button from '../components/ui/Button.jsx';
 import Card from '../components/ui/Card.jsx';
 import ConfirmDialog from '../components/ui/ConfirmDialog.jsx';
 import DetailRow from '../components/ui/DetailRow.jsx';
-import ErrorState from '../components/ui/ErrorState.jsx';
-import NotFoundView from '../components/ui/NotFoundView.jsx';
-import { PageSpinner } from '../components/ui/Spinner.jsx';
+import DetailLoader from '../components/ui/DetailLoader.jsx';
 import StatusBadge from '../components/ui/StatusBadge.jsx';
 import StatusProgress from '../components/ui/StatusProgress.jsx';
 import { SERVICE_REQUEST_STEPS } from '../config/statuses.js';
 import { TOUR_BOOKING_CANCELLED_MESSAGE } from '../config/tourism.js';
-import useFetch from '../hooks/useFetch.js';
+import useCancelAction from '../hooks/useCancelAction.js';
 import useFlashMessage from '../hooks/useFlashMessage.js';
 import formatCurrency from '../utils/formatCurrency.js';
 import formatDate from '../utils/formatDate.js';
@@ -23,29 +21,16 @@ import { formatParticipants } from '../utils/tourismHelpers.js';
 // Nội dung đơn. Giữ trong state để cập nhật ngay sau khi hủy (API hủy trả lại cả đơn).
 function TourBookingDetails({ initialBooking, initialMessage }) {
   const [booking, setBooking] = useState(initialBooking);
-  const [success, setSuccess] = useState(initialMessage);
-  const [error, setError] = useState('');
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [cancelling, setCancelling] = useState(false);
 
   const { tour } = booking;
 
-  const handleCancel = async () => {
-    setCancelling(true);
-    try {
-      setBooking(await cancelTourBooking(booking.id));
-      setSuccess(TOUR_BOOKING_CANCELLED_MESSAGE);
-      setError('');
-    } catch (apiError) {
-      // Ví dụ 400: khách sạn vừa xác nhận đơn, không còn pending.
-      setSuccess('');
-      setError(apiError.message);
-    } finally {
-      setCancelling(false);
-      setDialogOpen(false);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
+  // Ví dụ 400: khách sạn vừa xác nhận đơn, không còn pending.
+  const { success, error, dialogProps, openDialog } = useCancelAction({
+    cancel: () => cancelTourBooking(booking.id),
+    onCancelled: setBooking,
+    successMessage: TOUR_BOOKING_CANCELLED_MESSAGE,
+    initialMessage,
+  });
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
@@ -124,7 +109,7 @@ function TourBookingDetails({ initialBooking, initialMessage }) {
               <p className="mt-2 text-sm text-slate-600">
                 You can cancel this booking until the hotel confirms it.
               </p>
-              <Button variant="danger" fullWidth className="mt-4" onClick={() => setDialogOpen(true)}>
+              <Button variant="danger" fullWidth className="mt-4" onClick={openDialog}>
                 Cancel booking
               </Button>
             </Card>
@@ -133,15 +118,12 @@ function TourBookingDetails({ initialBooking, initialMessage }) {
       </div>
 
       <ConfirmDialog
-        open={dialogOpen}
+        {...dialogProps}
         title="Cancel this tour booking?"
         message={`${tour.name} on ${formatDate(booking.tour_date)} will be cancelled.`}
         confirmLabel="Yes, cancel booking"
         cancelLabel="Keep booking"
         variant="danger"
-        loading={cancelling}
-        onConfirm={handleCancel}
-        onClose={() => setDialogOpen(false)}
       />
     </div>
   );
@@ -149,32 +131,24 @@ function TourBookingDetails({ initialBooking, initialMessage }) {
 
 // /my-trips/tours/:id (chỉ cho người đã đăng nhập).
 export default function TourBookingDetailPage() {
-  const { id } = useParams();
   // Thông báo từ trang đặt tour, chỉ hiện một lần.
   const flashMessage = useFlashMessage();
-  const request = useFetch(() => getTourBooking(id), [id]);
-
-  if (request.loading) return <PageSpinner />;
-  if (request.error) {
-    // 403 (đơn của người khác) hiện giống 404, không lộ đơn có tồn tại hay không.
-    if ([400, 403, 404].includes(request.error.status)) {
-      return (
-        <NotFoundView
-          title="Tour booking not found"
-          message="This tour booking does not exist or does not belong to you."
-          to="/my-trips"
-          linkLabel="Back to my trips"
-        />
-      );
-    }
-    return (
-      <div className="mx-auto max-w-5xl px-4 py-10">
-        <ErrorState message={request.error.message} onRetry={request.retry} />
-      </div>
-    );
-  }
-
+  // 403 (đơn của người khác) hiện giống 404, không lộ đơn có tồn tại hay không.
   return (
-    <TourBookingDetails key={request.data.id} initialBooking={request.data} initialMessage={flashMessage} />
+    <DetailLoader
+      load={getTourBooking}
+      notFoundStatuses={[400, 403, 404]}
+      notFound={{
+        title: 'Tour booking not found',
+        message: 'This tour booking does not exist or does not belong to you.',
+        to: '/my-trips',
+        linkLabel: 'Back to my trips',
+      }}
+      errorClassName="mx-auto max-w-5xl px-4 py-10"
+    >
+      {(data) => (
+        <TourBookingDetails key={data.id} initialBooking={data} initialMessage={flashMessage} />
+      )}
+    </DetailLoader>
   );
 }

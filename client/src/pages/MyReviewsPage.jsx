@@ -1,4 +1,4 @@
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { getMyReviews } from '../api/reviews.api.js';
 import EmptyState from '../components/ui/EmptyState.jsx';
 import ErrorState from '../components/ui/ErrorState.jsx';
@@ -8,8 +8,8 @@ import RatingStars from '../components/ui/RatingStars.jsx';
 import { PageSpinner } from '../components/ui/Spinner.jsx';
 import { getReviewType } from '../config/reviews.js';
 import useFetch from '../hooks/useFetch.js';
+import useUrlFilters from '../hooks/useUrlFilters.js';
 import formatDate from '../utils/formatDate.js';
-import { cleanParams, readPage } from '../utils/queryString.js';
 
 const PAGE_SIZE = 10;
 
@@ -47,14 +47,8 @@ function MyReviewCard({ review }) {
 
 // /my-reviews: đánh giá của tôi, mới nhất trước. Trang hiện tại nằm trên địa chỉ trang.
 export default function MyReviewsPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const page = readPage(searchParams);
+  const { page, goToPage } = useUrlFilters({});
   const list = useFetch(() => getMyReviews({ page, limit: PAGE_SIZE }), [page]);
-
-  const goToPage = (nextPage) => {
-    setSearchParams(cleanParams({ page: nextPage > 1 ? nextPage : '' }));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
 
   const renderList = () => {
     if (list.loading) return <PageSpinner />;

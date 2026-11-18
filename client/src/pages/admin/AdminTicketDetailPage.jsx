@@ -5,7 +5,7 @@ import {
   updateAdminTicketStatus,
 } from '../../api/adminTickets.api.js';
 import AdminDetailLayout, { AdminActionsCard, AdminGuestCard } from '../../components/admin/AdminDetailLayout.jsx';
-import AdminDetailLoader from '../../components/admin/AdminDetailLoader.jsx';
+import DetailLoader from '../../components/ui/DetailLoader.jsx';
 import AdminStatusActions from '../../components/admin/AdminStatusActions.jsx';
 import ChatMessage from '../../components/support/ChatMessage.jsx';
 import Alert from '../../components/ui/Alert.jsx';
@@ -160,7 +160,7 @@ function TicketDetails({ initialTicket }) {
 // /admin/tickets/:id
 export default function AdminTicketDetailPage() {
   return (
-    <AdminDetailLoader
+    <DetailLoader
       load={getAdminTicket}
       notFound={{
         title: 'Support request not found',
@@ -170,6 +170,6 @@ export default function AdminTicketDetailPage() {
       }}
     >
       {(data) => <TicketDetails key={data.id} initialTicket={data} />}
-    </AdminDetailLoader>
+    </DetailLoader>
   );
 }

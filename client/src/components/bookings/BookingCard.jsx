@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { formatGuests, formatNights } from '../../utils/bookingHelpers.js';
 import formatCurrency from '../../utils/formatCurrency.js';
 import formatDate from '../../utils/formatDate.js';
 import RoomImage from '../rooms/RoomImage.jsx';
@@ -7,8 +8,8 @@ import StatusBadge from '../ui/StatusBadge.jsx';
 // Một đơn đặt phòng trong danh sách "My bookings".
 export default function BookingCard({ booking }) {
   const { room } = booking;
-  const nightsLabel = `${booking.nights} ${booking.nights === 1 ? 'night' : 'nights'}`;
-  const guestsLabel = `${booking.guests} ${booking.guests === 1 ? 'guest' : 'guests'}`;
+  const nightsLabel = formatNights(booking.nights);
+  const guestsLabel = formatGuests(booking.guests);
 
   return (
     <article className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm sm:flex-row">

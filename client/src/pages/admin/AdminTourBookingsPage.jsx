@@ -2,7 +2,8 @@ import { getAdminTourBookings, updateAdminTourBookingStatus } from '../../api/ad
 import { GuestCell, MoneyCell, TitleCell } from '../../components/admin/AdminCells.jsx';
 import AdminRequestListPage from '../../components/admin/AdminRequestListPage.jsx';
 import AdminStatusActions from '../../components/admin/AdminStatusActions.jsx';
-import TourismTabs from '../../components/admin/TourismTabs.jsx';
+import AdminSubNav from '../../components/admin/AdminSubNav.jsx';
+import { TOURISM_SECTION_NAV } from '../../config/adminCatalog.js';
 import { getActions, TOUR_BOOKING_ADMIN_ACTIONS } from '../../config/adminRequests.js';
 import { SERVICE_REQUEST_STATUS_TABS } from '../../config/statuses.js';
 import formatDate from '../../utils/formatDate.js';
@@ -48,7 +49,7 @@ export default function AdminTourBookingsPage() {
     <AdminRequestListPage
       title="Tourism"
       subtitle="Local tour bookings and transport requests from guests."
-      header={<TourismTabs />}
+      header={<AdminSubNav {...TOURISM_SECTION_NAV} />}
       basePath="/admin/tourism"
       statusTabs={SERVICE_REQUEST_STATUS_TABS}
       load={getAdminTourBookings}

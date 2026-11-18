@@ -16,7 +16,9 @@ import { FOOD_ORDER_BOOKING_STATUS } from '../config/food.js';
 import { SERVICE_ELIGIBLE_BOOKING_STATUSES } from '../config/services.js';
 import { CANCELLABLE_BOOKING_STATUSES, EDITABLE_BOOKING_STATUS } from '../config/statuses.js';
 import useFetch from '../hooks/useFetch.js';
+import useCancelAction from '../hooks/useCancelAction.js';
 import useFlashMessage from '../hooks/useFlashMessage.js';
+import { formatNights } from '../utils/bookingHelpers.js';
 import { CHECK_IN_TIME, getFreeCancellationDeadline } from '../utils/cancellation.js';
 import formatCurrency from '../utils/formatCurrency.js';
 import formatDate from '../utils/formatDate.js';
@@ -50,11 +52,7 @@ function DetailRow({ label, children }) {
 // Nội dung đơn. Giữ đơn trong state để cập nhật ngay sau khi đổi ngày hoặc hủy.
 function BookingDetails({ initialBooking, initialMessage }) {
   const [booking, setBooking] = useState(initialBooking);
-  const [success, setSuccess] = useState(initialMessage);
-  const [error, setError] = useState('');
   const [editing, setEditing] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [cancelling, setCancelling] = useState(false);
 
   const { room } = booking;
   const canEdit = booking.status === EDITABLE_BOOKING_STATUS;
@@ -63,34 +61,23 @@ function BookingDetails({ initialBooking, initialMessage }) {
   // Đồ ăn chỉ giao khi đang ở (checked_in); trạng thái này cũng nằm trong canRequestService.
   const canOrderFood = booking.status === FOOD_ORDER_BOOKING_STATUS;
   const deadline = canTryCancel ? getFreeCancellationDeadline(booking.check_in) : null;
-  const nightsLabel = `${booking.nights} ${booking.nights === 1 ? 'night' : 'nights'}`;
+  const nightsLabel = formatNights(booking.nights);
 
-  const showMessage = (type, text) => {
-    setSuccess(type === 'success' ? text : '');
-    setError(type === 'error' ? text : '');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  // Lỗi khi hủy, ví dụ 400: quá hạn hủy online, cần liên hệ lễ tân.
+  const { success, error, showMessage, dialogProps, openDialog } = useCancelAction({
+    cancel: () => cancelBooking(booking.id),
+    onCancelled: (updated) => {
+      setBooking(updated);
+      setEditing(false);
+    },
+    successMessage: 'Your booking has been cancelled.',
+    initialMessage,
+  });
 
   const handleSaved = (updated) => {
     setBooking(updated);
     setEditing(false);
     showMessage('success', 'Your booking has been updated.');
-  };
-
-  const handleCancel = async () => {
-    setCancelling(true);
-    try {
-      const updated = await cancelBooking(booking.id);
-      setBooking(updated);
-      setEditing(false);
-      showMessage('success', 'Your booking has been cancelled.');
-    } catch (apiError) {
-      // Ví dụ 400: quá hạn hủy online, cần liên hệ lễ tân.
-      showMessage('error', apiError.message);
-    } finally {
-      setCancelling(false);
-      setDialogOpen(false);
-    }
   };
 
   return (
@@ -228,7 +215,7 @@ function BookingDetails({ initialBooking, initialMessage }) {
                   refused; please contact the reception desk if it is.
                 </p>
               )}
-              <Button variant="danger" fullWidth className="mt-4" onClick={() => setDialogOpen(true)}>
+              <Button variant="danger" fullWidth className="mt-4" onClick={openDialog}>
                 Cancel booking
               </Button>
             </Card>
@@ -237,15 +224,12 @@ function BookingDetails({ initialBooking, initialMessage }) {
       </div>
 
       <ConfirmDialog
-        open={dialogOpen}
+        {...dialogProps}
         title="Cancel this booking?"
         message={SERVICES_NOTE}
         confirmLabel="Yes, cancel booking"
         cancelLabel="Keep booking"
         variant="danger"
-        loading={cancelling}
-        onConfirm={handleCancel}
-        onClose={() => setDialogOpen(false)}
       >
         {deadline?.passed && <p className="text-amber-700">{LATE_CANCEL_NOTE}</p>}
       </ConfirmDialog>

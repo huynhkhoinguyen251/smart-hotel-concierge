@@ -1,14 +1,13 @@
 import { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { CATALOG_IN_USE_NOTE, CATALOG_PAGE_SIZE, SWITCH_OFF_NOTE } from '../../../config/adminCatalog.js';
 import useFetch from '../../../hooks/useFetch.js';
+import useUrlFilters from '../../../hooks/useUrlFilters.js';
 import { toCatalogPayload } from '../../../utils/catalogValidation.js';
-import { cleanParams, readPage } from '../../../utils/queryString.js';
 import Alert from '../../ui/Alert.jsx';
 import Button from '../../ui/Button.jsx';
 import ConfirmDialog from '../../ui/ConfirmDialog.jsx';
 import EmptyState from '../../ui/EmptyState.jsx';
-import ErrorState from '../../ui/ErrorState.jsx';
+import LoadError from '../../ui/LoadError.jsx';
 import Pagination from '../../ui/Pagination.jsx';
 import Select from '../../ui/Select.jsx';
 import { PageSpinner } from '../../ui/Spinner.jsx';
@@ -24,7 +23,6 @@ import CatalogItemFormModal from './CatalogItemFormModal.jsx';
 // - search: { name, label, placeholder, maxLength } tùy chọn (ô chữ + nút Search).
 // - columns: cột của AdminRequestTable; cột đầu là tiêu đề của thẻ.
 export default function CatalogListPage({ title, subtitle, subNav, note, catalog, filters = [], search, columns }) {
-  const [searchParams, setSearchParams] = useSearchParams();
   const { flag, flagLabels } = catalog;
 
   // Ô lọc bật/tắt luôn có, sau các ô lọc riêng của từng danh mục.
@@ -41,14 +39,12 @@ export default function CatalogListPage({ title, subtitle, subNav, note, catalog
     },
   ];
   // Giá trị lạ trên địa chỉ trang thì coi như "All".
-  const values = Object.fromEntries(
-    allFilters.map((filter) => {
-      const raw = searchParams.get(filter.name) ?? '';
-      return [filter.name, filter.options.some((option) => option.value === raw) ? raw : ''];
+  const { values, page, setSearchParams, updateUrl, goToPage } = useUrlFilters({
+    ...Object.fromEntries(allFilters.map((filter) => [filter.name, filter.options])),
+    ...(search && {
+      [search.name]: (params) => (params.get(search.name) ?? '').trim().slice(0, search.maxLength),
     }),
-  );
-  if (search) values[search.name] = (searchParams.get(search.name) ?? '').trim().slice(0, search.maxLength);
-  const page = readPage(searchParams);
+  });
 
   const [message, setMessage] = useState({ type: 'success', text: '' });
   const [editing, setEditing] = useState({ open: false, item: null });
@@ -63,12 +59,6 @@ export default function CatalogListPage({ title, subtitle, subNav, note, catalog
     () => catalog.api.list({ ...values, page, limit: CATALOG_PAGE_SIZE }),
     [catalog.noun, ...valueKey, page],
   );
-
-  const updateUrl = (changes) => setSearchParams(cleanParams({ ...values, ...changes }));
-  const goToPage = (nextPage) => {
-    updateUrl({ page: nextPage > 1 ? nextPage : '' });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
 
   const done = (text) => {
     setMessage({ type: 'success', text });
@@ -132,11 +122,7 @@ export default function CatalogListPage({ title, subtitle, subNav, note, catalog
   const renderList = () => {
     if (list.loading) return <PageSpinner />;
     if (list.error) {
-      return list.error.status === 400 ? (
-        <Alert type="error">{list.error.message}</Alert>
-      ) : (
-        <ErrorState message={list.error.message} onRetry={list.retry} />
-      );
+      return <LoadError error={list.error} onRetry={list.retry} />;
     }
     if (list.data.items.length === 0) {
       const filtered = Object.values(values).some(Boolean);

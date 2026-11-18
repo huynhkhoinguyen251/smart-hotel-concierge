@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ROOM_CATALOG_TABS } from '../../../config/adminCatalog.js';
+import { ROOM_CATALOG_NAV } from '../../../config/adminCatalog.js';
 import AdminSubNav from '../AdminSubNav.jsx';
 
 // Phần đầu chung của mục Rooms: tiêu đề, nút chính (ví dụ "Add room") và tab Rooms / Room types / Amenities.
@@ -21,7 +21,7 @@ export default function RoomCatalogHeader({ title, subtitle, action }) {
           </Link>
         )}
       </div>
-      <AdminSubNav tabs={ROOM_CATALOG_TABS} label="Room catalog" />
+      <AdminSubNav {...ROOM_CATALOG_NAV} />
     </>
   );
 }

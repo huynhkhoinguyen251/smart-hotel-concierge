@@ -1,59 +1,35 @@
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { cancelServiceBooking, getServiceBooking } from '../api/serviceBookings.api.js';
 import ReviewPanel from '../components/reviews/ReviewPanel.jsx';
 import Alert from '../components/ui/Alert.jsx';
 import Button from '../components/ui/Button.jsx';
 import Card from '../components/ui/Card.jsx';
 import ConfirmDialog from '../components/ui/ConfirmDialog.jsx';
-import ErrorState from '../components/ui/ErrorState.jsx';
-import NotFoundView from '../components/ui/NotFoundView.jsx';
-import { PageSpinner } from '../components/ui/Spinner.jsx';
+import DetailLoader from '../components/ui/DetailLoader.jsx';
+import DetailRow from '../components/ui/DetailRow.jsx';
 import StatusBadge from '../components/ui/StatusBadge.jsx';
 import { CANCELLABLE_SERVICE_REQUEST_STATUS } from '../config/statuses.js';
-import useFetch from '../hooks/useFetch.js';
+import useCancelAction from '../hooks/useCancelAction.js';
 import useFlashMessage from '../hooks/useFlashMessage.js';
 import formatCurrency from '../utils/formatCurrency.js';
 import formatDate from '../utils/formatDate.js';
 import { formatQuantity, getCategoryLabel } from '../utils/serviceHelpers.js';
 
-function DetailRow({ label, children }) {
-  return (
-    <div className="flex items-start justify-between gap-4 py-2.5">
-      <dt className="shrink-0 text-slate-600">{label}</dt>
-      <dd className="min-w-0 break-words text-right font-medium text-slate-900">{children}</dd>
-    </div>
-  );
-}
-
 // Nội dung yêu cầu. Giữ trong state để cập nhật ngay sau khi hủy.
 function RequestDetails({ initialRequest, initialMessage }) {
   const [request, setRequest] = useState(initialRequest);
-  const [success, setSuccess] = useState(initialMessage);
-  const [error, setError] = useState('');
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [cancelling, setCancelling] = useState(false);
 
   const { service, booking } = request;
   const canCancel = request.status === CANCELLABLE_SERVICE_REQUEST_STATUS;
 
-  const handleCancel = async () => {
-    setCancelling(true);
-    try {
-      const updated = await cancelServiceBooking(request.id);
-      setRequest(updated);
-      setSuccess('Your service request has been cancelled.');
-      setError('');
-    } catch (apiError) {
-      // Ví dụ 400: khách sạn vừa xác nhận yêu cầu, không còn pending.
-      setSuccess('');
-      setError(apiError.message);
-    } finally {
-      setCancelling(false);
-      setDialogOpen(false);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
+  // Ví dụ 400: khách sạn vừa xác nhận yêu cầu, không còn pending.
+  const { success, error, dialogProps, openDialog } = useCancelAction({
+    cancel: () => cancelServiceBooking(request.id),
+    onCancelled: setRequest,
+    successMessage: 'Your service request has been cancelled.',
+    initialMessage,
+  });
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
@@ -129,7 +105,7 @@ function RequestDetails({ initialRequest, initialMessage }) {
               <p className="mt-2 text-sm text-slate-600">
                 You can cancel this request until the hotel confirms it.
               </p>
-              <Button variant="danger" fullWidth className="mt-4" onClick={() => setDialogOpen(true)}>
+              <Button variant="danger" fullWidth className="mt-4" onClick={openDialog}>
                 Cancel request
               </Button>
             </Card>
@@ -138,15 +114,12 @@ function RequestDetails({ initialRequest, initialMessage }) {
       </div>
 
       <ConfirmDialog
-        open={dialogOpen}
+        {...dialogProps}
         title="Cancel this service request?"
         message={`${service.name} on ${formatDate(request.scheduled_at, { withTime: true })} will be cancelled.`}
         confirmLabel="Yes, cancel request"
         cancelLabel="Keep request"
         variant="danger"
-        loading={cancelling}
-        onConfirm={handleCancel}
-        onClose={() => setDialogOpen(false)}
       />
     </div>
   );
@@ -154,32 +127,24 @@ function RequestDetails({ initialRequest, initialMessage }) {
 
 // /my-services/:id (chỉ cho người đã đăng nhập).
 export default function ServiceRequestDetailPage() {
-  const { id } = useParams();
   // Thông báo từ trang đặt dịch vụ, chỉ hiện một lần.
   const flashMessage = useFlashMessage();
-  const request = useFetch(() => getServiceBooking(id), [id]);
-
-  if (request.loading) return <PageSpinner />;
-  if (request.error) {
-    // 403 (yêu cầu của người khác) hiện giống 404, không lộ yêu cầu có tồn tại hay không.
-    if ([400, 403, 404].includes(request.error.status)) {
-      return (
-        <NotFoundView
-          title="Service request not found"
-          message="This service request does not exist or does not belong to you."
-          to="/my-services"
-          linkLabel="Back to my service requests"
-        />
-      );
-    }
-    return (
-      <div className="mx-auto max-w-5xl px-4 py-10">
-        <ErrorState message={request.error.message} onRetry={request.retry} />
-      </div>
-    );
-  }
-
+  // 403 (yêu cầu của người khác) hiện giống 404, không lộ yêu cầu có tồn tại hay không.
   return (
-    <RequestDetails key={request.data.id} initialRequest={request.data} initialMessage={flashMessage} />
+    <DetailLoader
+      load={getServiceBooking}
+      notFoundStatuses={[400, 403, 404]}
+      notFound={{
+        title: 'Service request not found',
+        message: 'This service request does not exist or does not belong to you.',
+        to: '/my-services',
+        linkLabel: 'Back to my service requests',
+      }}
+      errorClassName="mx-auto max-w-5xl px-4 py-10"
+    >
+      {(data) => (
+        <RequestDetails key={data.id} initialRequest={data} initialMessage={flashMessage} />
+      )}
+    </DetailLoader>
   );
 }

@@ -1,10 +1,11 @@
 import { getAdminTransportBooking, updateAdminTransportBookingStatus } from '../../api/adminTourism.api.js';
 import AdminDetailLayout, { AdminActionsCard, AdminGuestCard } from '../../components/admin/AdminDetailLayout.jsx';
-import TourismTabs from '../../components/admin/TourismTabs.jsx';
-import AdminDetailLoader from '../../components/admin/AdminDetailLoader.jsx';
+import AdminSubNav from '../../components/admin/AdminSubNav.jsx';
+import DetailLoader from '../../components/ui/DetailLoader.jsx';
 import AdminStatusActions from '../../components/admin/AdminStatusActions.jsx';
 import Card from '../../components/ui/Card.jsx';
 import DetailRow from '../../components/ui/DetailRow.jsx';
+import { TOURISM_SECTION_NAV } from '../../config/adminCatalog.js';
 import { getActions, PLATE_REQUIRED_CATEGORIES, TRANSPORT_BOOKING_ADMIN_ACTIONS } from '../../config/adminRequests.js';
 import { SERVICE_REQUEST_STEPS } from '../../config/statuses.js';
 import useAdminItem from '../../hooks/useAdminItem.js';
@@ -34,7 +35,7 @@ function TransportDetails({ initialBooking }) {
 
   return (
     <AdminDetailLayout
-      subNav={<TourismTabs />}
+      subNav={<AdminSubNav {...TOURISM_SECTION_NAV} />}
       backTo="/admin/tourism/transport"
       backLabel="Back to transport requests"
       title={`Transport request #${booking.id}`}
@@ -109,7 +110,7 @@ function TransportDetails({ initialBooking }) {
 // /admin/tourism/transport/:id
 export default function AdminTransportBookingDetailPage() {
   return (
-    <AdminDetailLoader
+    <DetailLoader
       load={getAdminTransportBooking}
       notFound={{
         title: 'Transport request not found',
@@ -119,6 +120,6 @@ export default function AdminTransportBookingDetailPage() {
       }}
     >
       {(data) => <TransportDetails key={data.id} initialBooking={data} />}
-    </AdminDetailLoader>
+    </DetailLoader>
   );
 }

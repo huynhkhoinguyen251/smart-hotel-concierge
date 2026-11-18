@@ -1,12 +1,11 @@
 import { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { getAdminBookings } from '../../api/adminBookings.api.js';
 import AdminBookingList from '../../components/admin/AdminBookingList.jsx';
 import UserFilterChip from '../../components/admin/UserFilterChip.jsx';
 import Alert from '../../components/ui/Alert.jsx';
 import Button from '../../components/ui/Button.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
-import ErrorState from '../../components/ui/ErrorState.jsx';
+import LoadError from '../../components/ui/LoadError.jsx';
 import FilterTabs from '../../components/ui/FilterTabs.jsx';
 import Input from '../../components/ui/Input.jsx';
 import PageTitle from '../../components/ui/PageTitle.jsx';
@@ -15,8 +14,9 @@ import { PageSpinner } from '../../components/ui/Spinner.jsx';
 import { ADMIN_BOOKINGS_PAGE_SIZE } from '../../config/adminBookings.js';
 import { BOOKING_STATUS_TABS } from '../../config/statuses.js';
 import useFetch from '../../hooks/useFetch.js';
+import useUrlFilters from '../../hooks/useUrlFilters.js';
 import { isDateString } from '../../utils/dateHelpers.js';
-import { cleanParams, readId, readPage, toQueryString } from '../../utils/queryString.js';
+import { cleanParams, readId, toQueryString } from '../../utils/queryString.js';
 
 // Ngày lạ trên địa chỉ trang thì bỏ qua.
 const readDate = (searchParams, key) => {
@@ -83,14 +83,14 @@ function DateFilter({ from, to, onApply, onReset }) {
 // /admin/bookings: mọi đơn đặt phòng. Trạng thái, ngày nhận phòng, khách (user_id) và trang đều nằm
 // trên địa chỉ trang.
 export default function AdminBookingsPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const rawStatus = searchParams.get('status') ?? '';
-  const activeTab = BOOKING_STATUS_TABS.find((tab) => tab.value === rawStatus) ?? BOOKING_STATUS_TABS[0];
-  const status = activeTab.value;
-  const from = readDate(searchParams, 'check_in_from');
-  const to = readDate(searchParams, 'check_in_to');
-  const page = readPage(searchParams);
-  const userId = readId(searchParams, 'user_id');
+  // Giá trị lạ trên địa chỉ trang thì coi như "All".
+  const { values, page, setSearchParams, updateUrl, goToPage } = useUrlFilters({
+    status: BOOKING_STATUS_TABS,
+    check_in_from: (params) => readDate(params, 'check_in_from'),
+    check_in_to: (params) => readDate(params, 'check_in_to'),
+    user_id: (params) => readId(params, 'user_id'),
+  });
+  const { status, check_in_from: from, check_in_to: to, user_id: userId } = values;
   const [message, setMessage] = useState({ type: 'success', text: '' });
 
   const list = useFetch(
@@ -106,14 +106,6 @@ export default function AdminBookingsPage() {
     [status, from, to, page, userId],
   );
 
-  const updateUrl = (changes) => {
-    setSearchParams(cleanParams({ status, check_in_from: from, check_in_to: to, user_id: userId, ...changes }));
-  };
-  const goToPage = (nextPage) => {
-    updateUrl({ page: nextPage > 1 ? nextPage : '' });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   const actionProps = {
     onSuccess: (_updated, text) => {
       setMessage({ type: 'success', text });
@@ -125,11 +117,7 @@ export default function AdminBookingsPage() {
   const renderList = () => {
     if (list.loading) return <PageSpinner />;
     if (list.error) {
-      return list.error.status === 400 ? (
-        <Alert type="error">{list.error.message}</Alert>
-      ) : (
-        <ErrorState message={list.error.message} onRetry={list.retry} />
-      );
+      return <LoadError error={list.error} onRetry={list.retry} />;
     }
     if (list.data.bookings.length === 0) {
       const filtered = status || from || to || userId;

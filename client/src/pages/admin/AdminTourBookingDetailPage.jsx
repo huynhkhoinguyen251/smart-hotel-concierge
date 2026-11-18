@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom';
 import { getAdminTourBooking, updateAdminTourBookingStatus } from '../../api/adminTourism.api.js';
 import AdminDetailLayout, { AdminActionsCard, AdminGuestCard } from '../../components/admin/AdminDetailLayout.jsx';
-import TourismTabs from '../../components/admin/TourismTabs.jsx';
-import AdminDetailLoader from '../../components/admin/AdminDetailLoader.jsx';
+import AdminSubNav from '../../components/admin/AdminSubNav.jsx';
+import DetailLoader from '../../components/ui/DetailLoader.jsx';
 import AdminStatusActions from '../../components/admin/AdminStatusActions.jsx';
 import Card from '../../components/ui/Card.jsx';
 import DetailRow from '../../components/ui/DetailRow.jsx';
+import { TOURISM_SECTION_NAV } from '../../config/adminCatalog.js';
 import { getActions, TOUR_BOOKING_ADMIN_ACTIONS } from '../../config/adminRequests.js';
 import { SERVICE_REQUEST_STEPS } from '../../config/statuses.js';
 import useAdminItem from '../../hooks/useAdminItem.js';
@@ -20,7 +21,7 @@ function TourBookingDetails({ initialBooking }) {
 
   return (
     <AdminDetailLayout
-      subNav={<TourismTabs />}
+      subNav={<AdminSubNav {...TOURISM_SECTION_NAV} />}
       backTo="/admin/tourism"
       backLabel="Back to tour bookings"
       title={`Tour booking #${booking.id}`}
@@ -85,7 +86,7 @@ function TourBookingDetails({ initialBooking }) {
 // /admin/tourism/tours/:id
 export default function AdminTourBookingDetailPage() {
   return (
-    <AdminDetailLoader
+    <DetailLoader
       load={getAdminTourBooking}
       notFound={{
         title: 'Tour booking not found',
@@ -95,6 +96,6 @@ export default function AdminTourBookingDetailPage() {
       }}
     >
       {(data) => <TourBookingDetails key={data.id} initialBooking={data} />}
-    </AdminDetailLoader>
+    </DetailLoader>
   );
 }

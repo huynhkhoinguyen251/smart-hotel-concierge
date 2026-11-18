@@ -1,7 +1,7 @@
 // Nhãn và màu của các trạng thái, dùng cho StatusBadge.
 // Module sau (dịch vụ, đồ ăn, tour, hỗ trợ) chỉ cần thêm trạng thái mới vào đây.
 // tone là một khóa trong TONE_CLASSES của StatusBadge.
-export const STATUS_CONFIG = {
+const STATUS_CONFIG = {
   pending: { label: 'Pending', tone: 'amber' },
   confirmed: { label: 'Confirmed', tone: 'sky' },
   checked_in: { label: 'Checked in', tone: 'teal' },

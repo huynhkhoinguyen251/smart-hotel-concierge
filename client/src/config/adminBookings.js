@@ -6,8 +6,9 @@ export const BOOKING_STEPS = ['pending', 'confirmed', 'checked_in', 'checked_out
 const SERVICES_NOTE =
   'Pending and confirmed service requests of this booking will also be cancelled.';
 
-// Các thao tác admin được làm ở từng trạng thái (giống ALLOWED_TRANSITIONS của backend).
-// status: trạng thái mới gửi lên; variant: kiểu nút; title/message: nội dung hộp thoại xác nhận.
+// Các thao tác admin được làm ở từng trạng thái (giống ALLOWED_TRANSITIONS của backend), cùng dạng với
+// config/adminRequests.js để dùng chung AdminStatusActions. status: trạng thái mới gửi lên;
+// variant: kiểu nút; title/message: nội dung hộp thoại xác nhận; success: thông báo sau khi đổi.
 const ACTIONS = {
   confirm: {
     status: 'confirmed',
@@ -51,8 +52,6 @@ export const ADMIN_BOOKING_ACTIONS = {
   confirmed: [ACTIONS.checkIn, ACTIONS.cancel],
   checked_in: [ACTIONS.checkOut],
 };
-
-export const getAdminBookingActions = (status) => ADMIN_BOOKING_ACTIONS[status] ?? [];
 
 export const CHECK_IN_TOO_EARLY_NOTE = 'Check-in opens on the check-in date.';
 export const ADMIN_BOOKINGS_PAGE_SIZE = 10;

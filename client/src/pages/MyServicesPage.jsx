@@ -1,44 +1,32 @@
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { getMyServiceBookings } from '../api/serviceBookings.api.js';
 import ServiceRequestCard from '../components/services/ServiceRequestCard.jsx';
-import Alert from '../components/ui/Alert.jsx';
 import EmptyState from '../components/ui/EmptyState.jsx';
-import ErrorState from '../components/ui/ErrorState.jsx';
+import LoadError from '../components/ui/LoadError.jsx';
 import FilterTabs from '../components/ui/FilterTabs.jsx';
 import PageTitle from '../components/ui/PageTitle.jsx';
 import Pagination from '../components/ui/Pagination.jsx';
 import { PageSpinner } from '../components/ui/Spinner.jsx';
 import { SERVICE_REQUEST_STATUS_TABS } from '../config/statuses.js';
 import useFetch from '../hooks/useFetch.js';
-import { cleanParams, readPage, toQueryString } from '../utils/queryString.js';
+import useUrlFilters from '../hooks/useUrlFilters.js';
+import { toQueryString } from '../utils/queryString.js';
 
 const PAGE_SIZE = 10;
 
 // Yêu cầu dịch vụ của tôi. Tab trạng thái và trang hiện tại nằm trên địa chỉ trang.
 export default function MyServicesPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const rawStatus = searchParams.get('status') ?? '';
   // Giá trị lạ trên địa chỉ trang thì coi như "All".
-  const activeTab =
-    SERVICE_REQUEST_STATUS_TABS.find((tab) => tab.value === rawStatus) ?? SERVICE_REQUEST_STATUS_TABS[0];
-  const status = activeTab.value;
-  const page = readPage(searchParams);
+  const { values, selected, page, goToPage } = useUrlFilters({ status: SERVICE_REQUEST_STATUS_TABS });
+  const { status } = values;
+  const activeTab = selected.status;
 
   const list = useFetch(() => getMyServiceBookings({ status, page, limit: PAGE_SIZE }), [status, page]);
-
-  const goToPage = (nextPage) => {
-    setSearchParams(cleanParams({ status, page: nextPage > 1 ? nextPage : '' }));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
 
   const renderList = () => {
     if (list.loading) return <PageSpinner />;
     if (list.error) {
-      return list.error.status === 400 ? (
-        <Alert type="error">{list.error.message}</Alert>
-      ) : (
-        <ErrorState message={list.error.message} onRetry={list.retry} />
-      );
+      return <LoadError error={list.error} onRetry={list.retry} />;
     }
     if (list.data.serviceBookings.length === 0) {
       return (

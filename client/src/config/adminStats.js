@@ -12,7 +12,7 @@ export const REVENUE_SOURCES = [
 export const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 // Số năm cho ô chọn năm của biểu đồ doanh thu: năm nay và 2 năm trước.
-export const REVENUE_YEAR_COUNT = 3;
+const REVENUE_YEAR_COUNT = 3;
 
 export const getRevenueYears = (now = new Date()) => {
   const current = now.getFullYear();

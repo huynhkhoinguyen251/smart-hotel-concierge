@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { getAdminRooms } from '../../api/adminRooms.api.js';
 import { getRoomTypes } from '../../api/catalog.api.js';
 import AdminRequestTable from '../../components/admin/AdminRequestTable.jsx';
@@ -11,7 +10,7 @@ import RoomImage from '../../components/rooms/RoomImage.jsx';
 import Alert from '../../components/ui/Alert.jsx';
 import Button from '../../components/ui/Button.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
-import ErrorState from '../../components/ui/ErrorState.jsx';
+import LoadError from '../../components/ui/LoadError.jsx';
 import FilterTabs from '../../components/ui/FilterTabs.jsx';
 import Pagination from '../../components/ui/Pagination.jsx';
 import RatingStars from '../../components/ui/RatingStars.jsx';
@@ -21,8 +20,9 @@ import StatusBadge from '../../components/ui/StatusBadge.jsx';
 import { ADMIN_ROOMS_PAGE_SIZE, ROOM_SEARCH_MAX_LENGTH } from '../../config/adminCatalog.js';
 import { ROOM_STATUS_TABS } from '../../config/statuses.js';
 import useFetch from '../../hooks/useFetch.js';
+import useUrlFilters from '../../hooks/useUrlFilters.js';
 import useFlashMessage from '../../hooks/useFlashMessage.js';
-import { cleanParams, readPage, toQueryString } from '../../utils/queryString.js';
+import { cleanParams, toQueryString } from '../../utils/queryString.js';
 
 const ID_PATTERN = /^[1-9]\d*$/;
 
@@ -77,13 +77,12 @@ const COLUMNS = [
 // đều nằm trên địa chỉ trang. Mỗi dòng có ô đổi trạng thái nhanh và link sửa phòng.
 export default function AdminRoomsPage() {
   const flashMessage = useFlashMessage();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const rawStatus = searchParams.get('status') ?? '';
-  const status = (ROOM_STATUS_TABS.find((tab) => tab.value === rawStatus) ?? ROOM_STATUS_TABS[0]).value;
-  const rawType = searchParams.get('room_type_id') ?? '';
-  const roomTypeId = ID_PATTERN.test(rawType) ? rawType : '';
-  const search = (searchParams.get('search') ?? '').slice(0, ROOM_SEARCH_MAX_LENGTH);
-  const page = readPage(searchParams);
+  const { values: filters, page, setSearchParams, updateUrl, goToPage } = useUrlFilters({
+    status: ROOM_STATUS_TABS,
+    room_type_id: (params) => (ID_PATTERN.test(params.get('room_type_id') ?? '') ? params.get('room_type_id') : ''),
+    search: (params) => (params.get('search') ?? '').slice(0, ROOM_SEARCH_MAX_LENGTH),
+  });
+  const { status, room_type_id: roomTypeId, search } = filters;
   const [message, setMessage] = useState({ type: 'success', text: flashMessage });
 
   const roomTypes = useFetch(() => getRoomTypes(), ['room-types']);
@@ -91,13 +90,6 @@ export default function AdminRoomsPage() {
     () => getAdminRooms({ status, room_type_id: roomTypeId, search, page, limit: ADMIN_ROOMS_PAGE_SIZE }),
     [status, roomTypeId, search, page],
   );
-
-  const filters = { status, room_type_id: roomTypeId, search };
-  const updateUrl = (changes) => setSearchParams(cleanParams({ ...filters, ...changes }));
-  const goToPage = (nextPage) => {
-    updateUrl({ page: nextPage > 1 ? nextPage : '' });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
 
   const statusProps = {
     compact: true,
@@ -116,11 +108,7 @@ export default function AdminRoomsPage() {
   const renderList = () => {
     if (list.loading) return <PageSpinner />;
     if (list.error) {
-      return list.error.status === 400 ? (
-        <Alert type="error">{list.error.message}</Alert>
-      ) : (
-        <ErrorState message={list.error.message} onRetry={list.retry} />
-      );
+      return <LoadError error={list.error} onRetry={list.retry} />;
     }
     if (list.data.items.length === 0) {
       const filtered = status || roomTypeId || search;

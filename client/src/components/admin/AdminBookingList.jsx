@@ -2,10 +2,8 @@ import { Link } from 'react-router-dom';
 import formatCurrency from '../../utils/formatCurrency.js';
 import formatDate, { formatDateRange } from '../../utils/formatDate.js';
 import StatusBadge from '../ui/StatusBadge.jsx';
+import { formatGuests, formatNights } from '../../utils/bookingHelpers.js';
 import AdminBookingActions from './AdminBookingActions.jsx';
-
-const nightsText = (nights) => `${nights} ${nights === 1 ? 'night' : 'nights'}`;
-const guestsText = (guests) => `${guests} ${guests === 1 ? 'guest' : 'guests'}`;
 
 const VIEW_LINK =
   'rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50';
@@ -47,7 +45,7 @@ export default function AdminBookingList({ bookings, actionProps }) {
                 <td className="px-4 py-3 whitespace-nowrap">
                   <p className="text-slate-900">{formatDateRange(booking.check_in, booking.check_out)}</p>
                   <p className="text-xs text-slate-500">
-                    {nightsText(booking.nights)} · {guestsText(booking.guests)}
+                    {formatNights(booking.nights)} · {formatGuests(booking.guests)}
                   </p>
                 </td>
                 <td className="px-4 py-3 text-right font-semibold whitespace-nowrap text-slate-900">
@@ -85,8 +83,8 @@ export default function AdminBookingList({ bookings, actionProps }) {
               Room {booking.room.room_number} · {booking.room.room_type.name}
             </p>
             <p className="text-sm text-slate-700">
-              {formatDateRange(booking.check_in, booking.check_out)} · {nightsText(booking.nights)} ·{' '}
-              {guestsText(booking.guests)}
+              {formatDateRange(booking.check_in, booking.check_out)} · {formatNights(booking.nights)} ·{' '}
+              {formatGuests(booking.guests)}
             </p>
             <p className="mt-1 font-semibold text-teal-700">{formatCurrency(booking.total_price)}</p>
             <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">

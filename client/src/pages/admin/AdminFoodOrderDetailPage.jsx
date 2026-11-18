@@ -1,16 +1,18 @@
 import { Link } from 'react-router-dom';
 import { getAdminFoodOrder, updateAdminFoodOrderStatus } from '../../api/adminFoodOrders.api.js';
 import AdminDetailLayout, { AdminActionsCard, AdminGuestCard } from '../../components/admin/AdminDetailLayout.jsx';
-import FoodTabs from '../../components/admin/FoodTabs.jsx';
-import AdminDetailLoader from '../../components/admin/AdminDetailLoader.jsx';
+import AdminSubNav from '../../components/admin/AdminSubNav.jsx';
+import DetailLoader from '../../components/ui/DetailLoader.jsx';
 import AdminStatusActions from '../../components/admin/AdminStatusActions.jsx';
 import FoodOrderItems from '../../components/food/FoodOrderItems.jsx';
 import Card from '../../components/ui/Card.jsx';
 import DetailRow from '../../components/ui/DetailRow.jsx';
+import { FOOD_SECTION_NAV } from '../../config/adminCatalog.js';
 import { FOOD_ORDER_ADMIN_ACTIONS, getActions } from '../../config/adminRequests.js';
 import { FOOD_ORDER_STEPS } from '../../config/food.js';
 import useAdminItem from '../../hooks/useAdminItem.js';
-import { formatItemCount, sumPrices } from '../../utils/foodCart.js';
+import { formatItemCount } from '../../utils/foodCart.js';
+import { sumPrices } from '../../utils/price.js';
 import formatCurrency from '../../utils/formatCurrency.js';
 
 function FoodOrderDetails({ initialOrder }) {
@@ -22,7 +24,7 @@ function FoodOrderDetails({ initialOrder }) {
 
   return (
     <AdminDetailLayout
-      subNav={<FoodTabs />}
+      subNav={<AdminSubNav {...FOOD_SECTION_NAV} />}
       backTo="/admin/food-orders"
       backLabel="Back to food orders"
       title={`Food order #${order.id}`}
@@ -90,7 +92,7 @@ function FoodOrderDetails({ initialOrder }) {
 // /admin/food-orders/:id
 export default function AdminFoodOrderDetailPage() {
   return (
-    <AdminDetailLoader
+    <DetailLoader
       load={getAdminFoodOrder}
       notFound={{
         title: 'Food order not found',
@@ -100,6 +102,6 @@ export default function AdminFoodOrderDetailPage() {
       }}
     >
       {(data) => <FoodOrderDetails key={data.id} initialOrder={data} />}
-    </AdminDetailLoader>
+    </DetailLoader>
   );
 }

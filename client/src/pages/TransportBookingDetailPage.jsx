@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { cancelTransportBooking, getTransportBooking } from '../api/transportBookings.api.js';
 import ReviewPanel from '../components/reviews/ReviewPanel.jsx';
 import Alert from '../components/ui/Alert.jsx';
@@ -7,14 +7,12 @@ import Button from '../components/ui/Button.jsx';
 import Card from '../components/ui/Card.jsx';
 import ConfirmDialog from '../components/ui/ConfirmDialog.jsx';
 import DetailRow from '../components/ui/DetailRow.jsx';
-import ErrorState from '../components/ui/ErrorState.jsx';
-import NotFoundView from '../components/ui/NotFoundView.jsx';
-import { PageSpinner } from '../components/ui/Spinner.jsx';
+import DetailLoader from '../components/ui/DetailLoader.jsx';
 import StatusBadge from '../components/ui/StatusBadge.jsx';
 import StatusProgress from '../components/ui/StatusProgress.jsx';
 import { SERVICE_REQUEST_STEPS } from '../config/statuses.js';
 import { PLATE_PENDING_NOTE, TRANSPORT_BOOKING_CANCELLED_MESSAGE } from '../config/tourism.js';
-import useFetch from '../hooks/useFetch.js';
+import useCancelAction from '../hooks/useCancelAction.js';
 import useFlashMessage from '../hooks/useFlashMessage.js';
 import formatCurrency from '../utils/formatCurrency.js';
 import formatDate from '../utils/formatDate.js';
@@ -38,10 +36,6 @@ const getPlateText = (booking) => {
 // Nội dung đơn. Giữ trong state để cập nhật ngay sau khi hủy (API hủy trả lại cả đơn).
 function TransportBookingDetails({ initialBooking, initialMessage }) {
   const [booking, setBooking] = useState(initialBooking);
-  const [success, setSuccess] = useState(initialMessage);
-  const [error, setError] = useState('');
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [cancelling, setCancelling] = useState(false);
 
   const { service } = booking;
   const category = getTransportCategory(service.category);
@@ -54,22 +48,13 @@ function TransportBookingDetails({ initialBooking, initialMessage }) {
   // Không phải 3 loại vận chuyển (dữ liệu lạ) thì dùng nhãn chung.
   const fields = category?.fields ?? { start: 'Start time', end: 'End time', pickup: 'Pickup location', dropoff: 'Drop-off location' };
 
-  const handleCancel = async () => {
-    setCancelling(true);
-    try {
-      setBooking(await cancelTransportBooking(booking.id));
-      setSuccess(TRANSPORT_BOOKING_CANCELLED_MESSAGE);
-      setError('');
-    } catch (apiError) {
-      // Ví dụ 400: khách sạn vừa duyệt yêu cầu, không còn pending.
-      setSuccess('');
-      setError(apiError.message);
-    } finally {
-      setCancelling(false);
-      setDialogOpen(false);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
+  // Ví dụ 400: khách sạn vừa duyệt yêu cầu, không còn pending.
+  const { success, error, dialogProps, openDialog } = useCancelAction({
+    cancel: () => cancelTransportBooking(booking.id),
+    onCancelled: setBooking,
+    successMessage: TRANSPORT_BOOKING_CANCELLED_MESSAGE,
+    initialMessage,
+  });
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
@@ -159,7 +144,7 @@ function TransportBookingDetails({ initialBooking, initialMessage }) {
               <p className="mt-2 text-sm text-slate-600">
                 You can cancel this request until the hotel approves it.
               </p>
-              <Button variant="danger" fullWidth className="mt-4" onClick={() => setDialogOpen(true)}>
+              <Button variant="danger" fullWidth className="mt-4" onClick={openDialog}>
                 Cancel request
               </Button>
             </Card>
@@ -168,15 +153,12 @@ function TransportBookingDetails({ initialBooking, initialMessage }) {
       </div>
 
       <ConfirmDialog
-        open={dialogOpen}
+        {...dialogProps}
         title="Cancel this transport request?"
         message={`${service.name} on ${formatDate(booking.start_at, { withTime: true })} will be cancelled.`}
         confirmLabel="Yes, cancel request"
         cancelLabel="Keep request"
         variant="danger"
-        loading={cancelling}
-        onConfirm={handleCancel}
-        onClose={() => setDialogOpen(false)}
       />
     </div>
   );
@@ -184,36 +166,28 @@ function TransportBookingDetails({ initialBooking, initialMessage }) {
 
 // /my-trips/transport/:id (chỉ cho người đã đăng nhập).
 export default function TransportBookingDetailPage() {
-  const { id } = useParams();
   // Thông báo từ trang đặt vận chuyển, chỉ hiện một lần.
   const flashMessage = useFlashMessage();
-  const request = useFetch(() => getTransportBooking(id), [id]);
-
-  if (request.loading) return <PageSpinner />;
-  if (request.error) {
-    // 403 (đơn của người khác) hiện giống 404, không lộ đơn có tồn tại hay không.
-    if ([400, 403, 404].includes(request.error.status)) {
-      return (
-        <NotFoundView
-          title="Transport request not found"
-          message="This transport request does not exist or does not belong to you."
-          to="/my-trips?type=transport"
-          linkLabel="Back to my trips"
-        />
-      );
-    }
-    return (
-      <div className="mx-auto max-w-5xl px-4 py-10">
-        <ErrorState message={request.error.message} onRetry={request.retry} />
-      </div>
-    );
-  }
-
+  // 403 (đơn của người khác) hiện giống 404, không lộ đơn có tồn tại hay không.
   return (
-    <TransportBookingDetails
-      key={request.data.id}
-      initialBooking={request.data}
-      initialMessage={flashMessage}
-    />
+    <DetailLoader
+      load={getTransportBooking}
+      notFoundStatuses={[400, 403, 404]}
+      notFound={{
+        title: 'Transport request not found',
+        message: 'This transport request does not exist or does not belong to you.',
+        to: '/my-trips?type=transport',
+        linkLabel: 'Back to my trips',
+      }}
+      errorClassName="mx-auto max-w-5xl px-4 py-10"
+    >
+      {(data) => (
+        <TransportBookingDetails
+          key={data.id}
+          initialBooking={data}
+          initialMessage={flashMessage}
+        />
+      )}
+    </DetailLoader>
   );
 }

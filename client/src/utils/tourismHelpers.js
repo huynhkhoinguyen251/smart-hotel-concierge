@@ -18,7 +18,7 @@ import {
   toDateString,
   toDateTimeLocal,
 } from './dateHelpers.js';
-import { multiplyPrice } from './foodCart.js';
+import { multiplyPrice } from './price.js';
 
 // Các hàm thuần (không React) cho trang tour và vận chuyển. now truyền vào được để dễ kiểm thử.
 // Đây chỉ là kiểm tra ở trình duyệt; backend vẫn kiểm tra lại mọi thứ.

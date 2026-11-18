@@ -3,9 +3,10 @@ import {
   updateAdminServiceBookingStatus,
 } from '../../api/adminServiceBookings.api.js';
 import AdminRequestListPage from '../../components/admin/AdminRequestListPage.jsx';
-import ServiceTabs from '../../components/admin/ServiceTabs.jsx';
+import AdminSubNav from '../../components/admin/AdminSubNav.jsx';
 import AdminStatusActions from '../../components/admin/AdminStatusActions.jsx';
 import { GuestCell, MoneyCell, TitleCell } from '../../components/admin/AdminCells.jsx';
+import { SERVICE_SECTION_NAV } from '../../config/adminCatalog.js';
 import { getActions, SERVICE_REQUEST_ADMIN_ACTIONS } from '../../config/adminRequests.js';
 import { HOTEL_SERVICE_CATEGORIES, HOTEL_SERVICE_CATEGORY_KEYS } from '../../config/services.js';
 import { SERVICE_REQUEST_STATUS_TABS } from '../../config/statuses.js';
@@ -74,7 +75,7 @@ export default function AdminServiceRequestsPage() {
     <AdminRequestListPage
       title="Service requests"
       subtitle="Hotel service requests from guests, newest first."
-      header={<ServiceTabs />}
+      header={<AdminSubNav {...SERVICE_SECTION_NAV} />}
       basePath="/admin/services"
       statusTabs={SERVICE_REQUEST_STATUS_TABS}
       filters={[CATEGORY_FILTER]}

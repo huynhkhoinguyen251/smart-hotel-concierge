@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { deleteAdminRoom, getAdminRoom, updateAdminRoom } from '../../api/adminRooms.api.js';
 import { getRoomTypes } from '../../api/catalog.api.js';
-import AdminDetailLoader from '../../components/admin/AdminDetailLoader.jsx';
+import DetailLoader from '../../components/ui/DetailLoader.jsx';
 import RoomForm from '../../components/admin/rooms/RoomForm.jsx';
 import RoomImagesManager from '../../components/admin/rooms/RoomImagesManager.jsx';
 import RoomStatusControl from '../../components/admin/rooms/RoomStatusControl.jsx';
@@ -166,7 +166,7 @@ export default function AdminRoomEditPage() {
   // Thông báo từ trang thêm phòng, chỉ hiện một lần.
   const flashMessage = useFlashMessage();
   return (
-    <AdminDetailLoader
+    <DetailLoader
       load={getAdminRoom}
       notFound={{
         title: 'Room not found',
@@ -176,6 +176,6 @@ export default function AdminRoomEditPage() {
       }}
     >
       {(data) => <RoomEditor key={data.id} initialRoom={data} initialMessage={flashMessage} />}
-    </AdminDetailLoader>
+    </DetailLoader>
   );
 }

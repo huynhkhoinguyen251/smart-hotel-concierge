@@ -1,18 +1,16 @@
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { getAdminBooking } from '../../api/adminBookings.api.js';
 import AdminBookingActions from '../../components/admin/AdminBookingActions.jsx';
 import RoomImage from '../../components/rooms/RoomImage.jsx';
 import Alert from '../../components/ui/Alert.jsx';
 import Card from '../../components/ui/Card.jsx';
+import DetailLoader from '../../components/ui/DetailLoader.jsx';
 import DetailRow from '../../components/ui/DetailRow.jsx';
-import ErrorState from '../../components/ui/ErrorState.jsx';
-import NotFoundView from '../../components/ui/NotFoundView.jsx';
-import { PageSpinner } from '../../components/ui/Spinner.jsx';
 import StatusBadge from '../../components/ui/StatusBadge.jsx';
 import StatusProgress from '../../components/ui/StatusProgress.jsx';
-import { BOOKING_STEPS, getAdminBookingActions } from '../../config/adminBookings.js';
-import useFetch from '../../hooks/useFetch.js';
+import { ADMIN_BOOKING_ACTIONS, BOOKING_STEPS } from '../../config/adminBookings.js';
+import { getActions } from '../../config/adminRequests.js';
 import { CHECK_IN_TIME } from '../../utils/cancellation.js';
 import formatCurrency from '../../utils/formatCurrency.js';
 import formatDate from '../../utils/formatDate.js';
@@ -22,7 +20,7 @@ function BookingDetails({ initialBooking }) {
   const [booking, setBooking] = useState(initialBooking);
   const [message, setMessage] = useState({ type: 'success', text: '' });
   const { user, room } = booking;
-  const hasActions = getAdminBookingActions(booking.status).length > 0;
+  const hasActions = getActions(ADMIN_BOOKING_ACTIONS, booking.status).length > 0;
 
   const showMessage = (type, text) => {
     setMessage({ type, text });
@@ -142,23 +140,17 @@ function BookingDetails({ initialBooking }) {
 
 // /admin/bookings/:id (chỉ admin).
 export default function AdminBookingDetailPage() {
-  const { id } = useParams();
-  const request = useFetch(() => getAdminBooking(id), [id]);
-
-  if (request.loading) return <PageSpinner />;
-  if (request.error) {
-    if ([400, 404].includes(request.error.status)) {
-      return (
-        <NotFoundView
-          title="Booking not found"
-          message="This booking does not exist."
-          to="/admin/bookings"
-          linkLabel="Back to bookings"
-        />
-      );
-    }
-    return <ErrorState message={request.error.message} onRetry={request.retry} />;
-  }
-
-  return <BookingDetails key={request.data.id} initialBooking={request.data} />;
+  return (
+    <DetailLoader
+      load={getAdminBooking}
+      notFound={{
+        title: 'Booking not found',
+        message: 'This booking does not exist.',
+        to: '/admin/bookings',
+        linkLabel: 'Back to bookings',
+      }}
+    >
+      {(booking) => <BookingDetails key={booking.id} initialBooking={booking} />}
+    </DetailLoader>
+  );
 }

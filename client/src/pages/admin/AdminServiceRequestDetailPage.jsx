@@ -4,11 +4,12 @@ import {
   updateAdminServiceBookingStatus,
 } from '../../api/adminServiceBookings.api.js';
 import AdminDetailLayout, { AdminActionsCard, AdminGuestCard } from '../../components/admin/AdminDetailLayout.jsx';
-import ServiceTabs from '../../components/admin/ServiceTabs.jsx';
-import AdminDetailLoader from '../../components/admin/AdminDetailLoader.jsx';
+import AdminSubNav from '../../components/admin/AdminSubNav.jsx';
+import DetailLoader from '../../components/ui/DetailLoader.jsx';
 import AdminStatusActions from '../../components/admin/AdminStatusActions.jsx';
 import Card from '../../components/ui/Card.jsx';
 import DetailRow from '../../components/ui/DetailRow.jsx';
+import { SERVICE_SECTION_NAV } from '../../config/adminCatalog.js';
 import { getActions, SERVICE_REQUEST_ADMIN_ACTIONS } from '../../config/adminRequests.js';
 import { SERVICE_REQUEST_STEPS } from '../../config/statuses.js';
 import useAdminItem from '../../hooks/useAdminItem.js';
@@ -24,7 +25,7 @@ function ServiceRequestDetails({ initialRequest }) {
 
   return (
     <AdminDetailLayout
-      subNav={<ServiceTabs />}
+      subNav={<AdminSubNav {...SERVICE_SECTION_NAV} />}
       backTo="/admin/services"
       backLabel="Back to service requests"
       title={`Service request #${request.id}`}
@@ -99,7 +100,7 @@ function ServiceRequestDetails({ initialRequest }) {
 // /admin/services/:id
 export default function AdminServiceRequestDetailPage() {
   return (
-    <AdminDetailLoader
+    <DetailLoader
       load={getAdminServiceBooking}
       notFound={{
         title: 'Service request not found',
@@ -109,6 +110,6 @@ export default function AdminServiceRequestDetailPage() {
       }}
     >
       {(data) => <ServiceRequestDetails key={data.id} initialRequest={data} />}
-    </AdminDetailLoader>
+    </DetailLoader>
   );
 }

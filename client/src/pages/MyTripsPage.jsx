@@ -1,11 +1,10 @@
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { getMyTourBookings } from '../api/tourBookings.api.js';
 import { getMyTransportBookings } from '../api/transportBookings.api.js';
 import TourBookingCard from '../components/tourism/TourBookingCard.jsx';
 import TransportBookingCard from '../components/tourism/TransportBookingCard.jsx';
-import Alert from '../components/ui/Alert.jsx';
 import EmptyState from '../components/ui/EmptyState.jsx';
-import ErrorState from '../components/ui/ErrorState.jsx';
+import LoadError from '../components/ui/LoadError.jsx';
 import FilterTabs from '../components/ui/FilterTabs.jsx';
 import PageTitle from '../components/ui/PageTitle.jsx';
 import Pagination from '../components/ui/Pagination.jsx';
@@ -13,7 +12,8 @@ import { PageSpinner } from '../components/ui/Spinner.jsx';
 import { SERVICE_REQUEST_STATUS_TABS } from '../config/statuses.js';
 import { TRIP_TYPE_TABS } from '../config/tourism.js';
 import useFetch from '../hooks/useFetch.js';
-import { cleanParams, readPage, toQueryString } from '../utils/queryString.js';
+import useUrlFilters from '../hooks/useUrlFilters.js';
+import { toQueryString } from '../utils/queryString.js';
 
 const PAGE_SIZE = 10;
 
@@ -41,31 +41,21 @@ const TRIP_TYPES = {
 
 // Đơn tour và đơn vận chuyển của tôi. Loại, trạng thái và trang đều nằm trên địa chỉ trang.
 export default function MyTripsPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const type = searchParams.get('type') === 'transport' ? 'transport' : '';
-  const rawStatus = searchParams.get('status') ?? '';
-  // Giá trị lạ trên địa chỉ trang thì coi như "All".
-  const activeStatus =
-    SERVICE_REQUEST_STATUS_TABS.find((tab) => tab.value === rawStatus) ?? SERVICE_REQUEST_STATUS_TABS[0];
-  const status = activeStatus.value;
-  const page = readPage(searchParams);
+  // Giá trị lạ trên địa chỉ trang thì coi như "Tours" và "All".
+  const { values, selected, page, goToPage } = useUrlFilters({
+    type: TRIP_TYPE_TABS,
+    status: SERVICE_REQUEST_STATUS_TABS,
+  });
+  const { type, status } = values;
+  const activeStatus = selected.status;
   const config = TRIP_TYPES[type];
 
   const list = useFetch(() => config.load({ status, page, limit: PAGE_SIZE }), [type, status, page]);
 
-  const goToPage = (nextPage) => {
-    setSearchParams(cleanParams({ type, status, page: nextPage > 1 ? nextPage : '' }));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   const renderList = () => {
     if (list.loading) return <PageSpinner />;
     if (list.error) {
-      return list.error.status === 400 ? (
-        <Alert type="error">{list.error.message}</Alert>
-      ) : (
-        <ErrorState message={list.error.message} onRetry={list.retry} />
-      );
+      return <LoadError error={list.error} onRetry={list.retry} />;
     }
     const items = list.data[config.key];
     if (items.length === 0) {

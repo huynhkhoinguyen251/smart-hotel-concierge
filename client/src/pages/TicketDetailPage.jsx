@@ -1,13 +1,11 @@
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { getTicket, sendTicketMessage } from '../api/tickets.api.js';
 import ChatMessage from '../components/support/ChatMessage.jsx';
 import Alert from '../components/ui/Alert.jsx';
 import Button from '../components/ui/Button.jsx';
 import Card from '../components/ui/Card.jsx';
-import ErrorState from '../components/ui/ErrorState.jsx';
-import NotFoundView from '../components/ui/NotFoundView.jsx';
-import { PageSpinner } from '../components/ui/Spinner.jsx';
+import DetailLoader from '../components/ui/DetailLoader.jsx';
 import StatusBadge from '../components/ui/StatusBadge.jsx';
 import StatusProgress from '../components/ui/StatusProgress.jsx';
 import Textarea from '../components/ui/Textarea.jsx';
@@ -18,7 +16,6 @@ import {
   TICKET_RESOLVED_NOTE,
 } from '../config/support.js';
 import useAuth from '../hooks/useAuth.js';
-import useFetch from '../hooks/useFetch.js';
 import useFlashMessage from '../hooks/useFlashMessage.js';
 import formatDate from '../utils/formatDate.js';
 
@@ -158,32 +155,24 @@ function TicketConversation({ initialTicket, initialMessage }) {
 
 // /support/:id (chỉ cho người đã đăng nhập).
 export default function TicketDetailPage() {
-  const { id } = useParams();
   // Thông báo từ trang tạo yêu cầu, chỉ hiện một lần.
   const flashMessage = useFlashMessage();
-  const request = useFetch(() => getTicket(id), [id]);
-
-  if (request.loading) return <PageSpinner />;
-  if (request.error) {
-    // 403 (yêu cầu của người khác) hiện giống 404, không lộ yêu cầu có tồn tại hay không.
-    if ([400, 403, 404].includes(request.error.status)) {
-      return (
-        <NotFoundView
-          title="Support request not found"
-          message="This support request does not exist or does not belong to you."
-          to="/support"
-          linkLabel="Back to support"
-        />
-      );
-    }
-    return (
-      <div className="mx-auto max-w-3xl px-4 py-10">
-        <ErrorState message={request.error.message} onRetry={request.retry} />
-      </div>
-    );
-  }
-
+  // 403 (yêu cầu của người khác) hiện giống 404, không lộ yêu cầu có tồn tại hay không.
   return (
-    <TicketConversation key={request.data.id} initialTicket={request.data} initialMessage={flashMessage} />
+    <DetailLoader
+      load={getTicket}
+      notFoundStatuses={[400, 403, 404]}
+      notFound={{
+        title: 'Support request not found',
+        message: 'This support request does not exist or does not belong to you.',
+        to: '/support',
+        linkLabel: 'Back to support',
+      }}
+      errorClassName="mx-auto max-w-3xl px-4 py-10"
+    >
+      {(data) => (
+        <TicketConversation key={data.id} initialTicket={data} initialMessage={flashMessage} />
+      )}
+    </DetailLoader>
   );
 }

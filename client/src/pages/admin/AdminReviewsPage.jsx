@@ -1,9 +1,8 @@
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { getAdminReviews } from '../../api/adminReviews.api.js';
 import { getFeedbackStats } from '../../api/adminStats.api.js';
-import Alert from '../../components/ui/Alert.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
-import ErrorState from '../../components/ui/ErrorState.jsx';
+import LoadError from '../../components/ui/LoadError.jsx';
 import FilterTabs from '../../components/ui/FilterTabs.jsx';
 import Pagination from '../../components/ui/Pagination.jsx';
 import RatingStars from '../../components/ui/RatingStars.jsx';
@@ -18,8 +17,9 @@ import {
   REVIEW_TYPE_OPTIONS,
 } from '../../config/reviews.js';
 import useFetch from '../../hooks/useFetch.js';
+import useUrlFilters from '../../hooks/useUrlFilters.js';
 import formatDate from '../../utils/formatDate.js';
-import { cleanParams, readPage, toQueryString } from '../../utils/queryString.js';
+import { toQueryString } from '../../utils/queryString.js';
 
 const LINK = 'font-medium text-teal-700 hover:text-teal-800';
 
@@ -106,32 +106,22 @@ function ReviewCard({ review }) {
 
 // /admin/reviews: mọi đánh giá của khách, chỉ đọc. Số sao, loại và trang nằm trên địa chỉ trang.
 export default function AdminReviewsPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const rawRating = searchParams.get('rating') ?? '';
-  const rating = (REVIEW_RATING_TABS.find((tab) => tab.value === rawRating) ?? REVIEW_RATING_TABS[0]).value;
-  const rawType = searchParams.get('type') ?? '';
-  const type = REVIEW_TYPE_OPTIONS.some((option) => option.value === rawType) ? rawType : '';
-  const page = readPage(searchParams);
+  // Giá trị lạ trên địa chỉ trang thì coi như "All".
+  const { values, page, updateUrl, goToPage } = useUrlFilters({
+    rating: REVIEW_RATING_TABS,
+    type: REVIEW_TYPE_OPTIONS,
+  });
+  const { rating, type } = values;
 
   const list = useFetch(
     () => getAdminReviews({ rating, type, page, limit: ADMIN_REVIEWS_PAGE_SIZE }),
     ['admin-reviews', rating, type, page],
   );
 
-  const updateUrl = (changes) => setSearchParams(cleanParams({ rating, type, ...changes }));
-  const goToPage = (nextPage) => {
-    updateUrl({ page: nextPage > 1 ? nextPage : '' });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   const renderList = () => {
     if (list.loading) return <PageSpinner />;
     if (list.error) {
-      return list.error.status === 400 ? (
-        <Alert type="error">{list.error.message}</Alert>
-      ) : (
-        <ErrorState message={list.error.message} onRetry={list.retry} />
-      );
+      return <LoadError error={list.error} onRetry={list.retry} />;
     }
     if (list.data.items.length === 0) {
       const filtered = rating || type;

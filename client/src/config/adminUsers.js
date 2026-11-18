@@ -1,7 +1,7 @@
 // Quản lý người dùng (admin), mục 9 của docs/api.md. Giống server/src/config/users.js.
 
 // Giá trị role của backend: 'user' (khách) và 'admin'. badge: khóa trong STATUS_CONFIG.
-export const USER_ROLES = {
+const USER_ROLES = {
   user: { label: 'Guest', badge: 'guest' },
   admin: { label: 'Admin', badge: 'admin' },
 };

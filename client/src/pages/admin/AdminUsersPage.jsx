@@ -1,12 +1,10 @@
-import { useSearchParams } from 'react-router-dom';
 import { getAdminUsers } from '../../api/adminUsers.api.js';
 import AdminRequestTable from '../../components/admin/AdminRequestTable.jsx';
 import SearchBox from '../../components/admin/SearchBox.jsx';
 import YouBadge from '../../components/admin/YouBadge.jsx';
-import Alert from '../../components/ui/Alert.jsx';
 import Button from '../../components/ui/Button.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
-import ErrorState from '../../components/ui/ErrorState.jsx';
+import LoadError from '../../components/ui/LoadError.jsx';
 import FilterTabs from '../../components/ui/FilterTabs.jsx';
 import PageTitle from '../../components/ui/PageTitle.jsx';
 import Pagination from '../../components/ui/Pagination.jsx';
@@ -22,8 +20,9 @@ import {
 } from '../../config/adminUsers.js';
 import useAuth from '../../hooks/useAuth.js';
 import useFetch from '../../hooks/useFetch.js';
+import useUrlFilters from '../../hooks/useUrlFilters.js';
 import formatDate from '../../utils/formatDate.js';
-import { cleanParams, readPage, toQueryString } from '../../utils/queryString.js';
+import { cleanParams, toQueryString } from '../../utils/queryString.js';
 
 const makeColumns = (currentUserId) => [
   {
@@ -53,34 +52,23 @@ const makeColumns = (currentUserId) => [
 // trên địa chỉ trang.
 export default function AdminUsersPage() {
   const { user: currentUser } = useAuth();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const rawRole = searchParams.get('role') ?? '';
-  const role = (USER_ROLE_TABS.find((tab) => tab.value === rawRole) ?? USER_ROLE_TABS[0]).value;
-  const rawActive = searchParams.get('is_active') ?? '';
-  const isActive = USER_STATUS_OPTIONS.some((option) => option.value === rawActive) ? rawActive : '';
-  const search = (searchParams.get('search') ?? '').trim().slice(0, USER_SEARCH_MAX_LENGTH);
-  const page = readPage(searchParams);
+  // Giá trị lạ trên địa chỉ trang thì coi như "All".
+  const { values: filters, page, setSearchParams, updateUrl, goToPage } = useUrlFilters({
+    search: (params) => (params.get('search') ?? '').trim().slice(0, USER_SEARCH_MAX_LENGTH),
+    role: USER_ROLE_TABS,
+    is_active: USER_STATUS_OPTIONS,
+  });
+  const { search, role, is_active: isActive } = filters;
 
   const list = useFetch(
     () => getAdminUsers({ search, role, is_active: isActive, page, limit: ADMIN_USERS_PAGE_SIZE }),
     ['admin-users', search, role, isActive, page],
   );
 
-  const filters = { search, role, is_active: isActive };
-  const updateUrl = (changes) => setSearchParams(cleanParams({ ...filters, ...changes }));
-  const goToPage = (nextPage) => {
-    updateUrl({ page: nextPage > 1 ? nextPage : '' });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   const renderList = () => {
     if (list.loading) return <PageSpinner />;
     if (list.error) {
-      return list.error.status === 400 ? (
-        <Alert type="error">{list.error.message}</Alert>
-      ) : (
-        <ErrorState message={list.error.message} onRetry={list.retry} />
-      );
+      return <LoadError error={list.error} onRetry={list.retry} />;
     }
     if (list.data.items.length === 0) {
       const filtered = search || role || isActive;

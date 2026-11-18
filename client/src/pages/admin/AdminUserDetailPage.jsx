@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAdminUser, updateAdminUserRole, updateAdminUserStatus } from '../../api/adminUsers.api.js';
-import AdminDetailLoader from '../../components/admin/AdminDetailLoader.jsx';
+import DetailLoader from '../../components/ui/DetailLoader.jsx';
 import YouBadge from '../../components/admin/YouBadge.jsx';
 import Alert from '../../components/ui/Alert.jsx';
 import Button from '../../components/ui/Button.jsx';
@@ -202,7 +202,7 @@ function UserDetails({ initialUser }) {
 // /admin/users/:id: hồ sơ, khóa/mở khóa, đổi vai trò và link đến các đơn của khách.
 export default function AdminUserDetailPage() {
   return (
-    <AdminDetailLoader
+    <DetailLoader
       load={getAdminUser}
       notFound={{
         title: 'User not found',
@@ -212,6 +212,6 @@ export default function AdminUserDetailPage() {
       }}
     >
       {(user) => <UserDetails key={user.id} initialUser={user} />}
-    </AdminDetailLoader>
+    </DetailLoader>
   );
 }
