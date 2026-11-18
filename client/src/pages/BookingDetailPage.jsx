@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { cancelBooking, getBooking } from '../api/bookings.api.js';
 import EditBookingForm from '../components/bookings/EditBookingForm.jsx';
+import ReviewPanel from '../components/reviews/ReviewPanel.jsx';
 import RoomImage from '../components/rooms/RoomImage.jsx';
 import Alert from '../components/ui/Alert.jsx';
 import Button from '../components/ui/Button.jsx';
@@ -106,6 +107,10 @@ function BookingDetails({ initialBooking, initialMessage }) {
       </div>
       <p className="-mt-4 mb-6 text-sm text-slate-500">
         Booked on {formatDate(booking.created_at, { withTime: true })}
+        {' · '}
+        <Link to="/support/new" className="font-medium text-teal-700 hover:text-teal-800">
+          Need help? Contact reception
+        </Link>
       </p>
 
       <div className="mb-6 space-y-3" aria-live="polite">
@@ -179,6 +184,8 @@ function BookingDetails({ initialBooking, initialMessage }) {
               </div>
             </dl>
           </Card>
+
+          <ReviewPanel type={'room'} itemId={booking.id} status={booking.status} />
 
           {canRequestService && (
             <Card>

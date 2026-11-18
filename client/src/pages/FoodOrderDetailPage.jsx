@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { cancelFoodOrder, getFoodOrder } from '../api/foodOrders.api.js';
 import FoodOrderItems from '../components/food/FoodOrderItems.jsx';
+import ReviewPanel from '../components/reviews/ReviewPanel.jsx';
 import Alert from '../components/ui/Alert.jsx';
 import Button from '../components/ui/Button.jsx';
 import Card from '../components/ui/Card.jsx';
@@ -127,6 +128,8 @@ function OrderDetails({ initialOrder, initialMessage }) {
               </div>
             </dl>
           </Card>
+
+          <ReviewPanel type={'food_order'} itemId={order.id} status={order.status} />
 
           {canCancel && (
             <Card>

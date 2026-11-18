@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { cancelTransportBooking, getTransportBooking } from '../api/transportBookings.api.js';
+import ReviewPanel from '../components/reviews/ReviewPanel.jsx';
 import Alert from '../components/ui/Alert.jsx';
 import Button from '../components/ui/Button.jsx';
 import Card from '../components/ui/Card.jsx';
@@ -149,6 +150,8 @@ function TransportBookingDetails({ initialBooking, initialMessage }) {
               </div>
             </dl>
           </Card>
+
+          <ReviewPanel type={'transport'} itemId={booking.id} status={booking.status} />
 
           {booking.can_cancel && (
             <Card>

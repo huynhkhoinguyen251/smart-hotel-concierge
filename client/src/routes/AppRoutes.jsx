@@ -12,8 +12,11 @@ import HomePage from '../pages/HomePage.jsx';
 import LoginPage from '../pages/LoginPage.jsx';
 import MyBookingsPage from '../pages/MyBookingsPage.jsx';
 import MyFoodOrdersPage from '../pages/MyFoodOrdersPage.jsx';
+import MyReviewsPage from '../pages/MyReviewsPage.jsx';
 import MyServicesPage from '../pages/MyServicesPage.jsx';
+import MySupportPage from '../pages/MySupportPage.jsx';
 import MyTripsPage from '../pages/MyTripsPage.jsx';
+import NewTicketPage from '../pages/NewTicketPage.jsx';
 import NotFoundPage from '../pages/NotFoundPage.jsx';
 import ProfilePage from '../pages/ProfilePage.jsx';
 import RegisterPage from '../pages/RegisterPage.jsx';
@@ -22,6 +25,7 @@ import RoomsPage from '../pages/RoomsPage.jsx';
 import ServiceDetailPage from '../pages/ServiceDetailPage.jsx';
 import ServiceRequestDetailPage from '../pages/ServiceRequestDetailPage.jsx';
 import ServicesPage from '../pages/ServicesPage.jsx';
+import TicketDetailPage from '../pages/TicketDetailPage.jsx';
 import TourBookingDetailPage from '../pages/TourBookingDetailPage.jsx';
 import TourDetailPage from '../pages/TourDetailPage.jsx';
 import ToursPage from '../pages/ToursPage.jsx';
@@ -61,6 +65,10 @@ export default function AppRoutes() {
           <Route path="my-trips" element={<MyTripsPage />} />
           <Route path="my-trips/tours/:id" element={<TourBookingDetailPage />} />
           <Route path="my-trips/transport/:id" element={<TransportBookingDetailPage />} />
+          <Route path="my-reviews" element={<MyReviewsPage />} />
+          <Route path="support" element={<MySupportPage />} />
+          <Route path="support/new" element={<NewTicketPage />} />
+          <Route path="support/:id" element={<TicketDetailPage />} />
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />

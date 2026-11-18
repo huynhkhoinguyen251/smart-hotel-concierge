@@ -3,7 +3,7 @@ import { getStatusConfig } from '../../config/statuses.js';
 // Tiến trình trạng thái theo các bước (đơn đồ ăn, đơn tour, đơn vận chuyển...).
 // steps: các trạng thái theo thứ tự. Đơn bị hủy không nằm trên đường này, nên hiện cancelledMessage.
 // Điện thoại: các bước xếp dọc; màn hình rộng: xếp ngang.
-const COLUMNS = { 4: 'sm:grid-cols-4', 5: 'sm:grid-cols-5' };
+const COLUMNS = { 3: 'sm:grid-cols-3', 4:'sm:grid-cols-4', 5: 'sm:grid-cols-5' };
 
 export default function StatusProgress({ status, steps, cancelledMessage, label = 'Progress' }) {
   if (status === 'cancelled') {

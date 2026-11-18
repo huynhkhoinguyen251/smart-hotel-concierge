@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { cancelServiceBooking, getServiceBooking } from '../api/serviceBookings.api.js';
+import ReviewPanel from '../components/reviews/ReviewPanel.jsx';
 import Alert from '../components/ui/Alert.jsx';
 import Button from '../components/ui/Button.jsx';
 import Card from '../components/ui/Card.jsx';
@@ -119,6 +120,8 @@ function RequestDetails({ initialRequest, initialMessage }) {
               </div>
             </dl>
           </Card>
+
+          <ReviewPanel type={'service'} itemId={request.id} status={request.status} />
 
           {canCancel && (
             <Card>

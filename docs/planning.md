@@ -118,7 +118,7 @@ Test từng API bằng Postman ngay sau khi viết xong.
 - [x] Thiết kế Service Booking (danh sách dịch vụ, đặt dịch vụ theo đơn phòng, lịch sử và hủy yêu cầu)
 - [x] Thiết kế Food Ordering (thực đơn, giỏ hàng, đặt món giao đến phòng, lịch sử, chi tiết và hủy đơn, đánh giá đồ ăn)
 - [x] Thiết kế Tourism Service (tour địa phương, thuê xe máy, đón sân bay, xe đưa đón, lịch sử chuyến đi, hủy đơn)
-- [ ] Thiết kế Support Ticket
+- [x] Thiết kế Support Ticket
 - [x] Thiết kế User Profile
 - [ ] Thiết kế Admin Dashboard
 
@@ -132,7 +132,7 @@ Làm song song với Giai đoạn 2 và 3: mỗi chức năng đi lần lượt 
 - [x] Tích hợp Service Booking
 - [x] Tích hợp Food Ordering
 - [x] Tích hợp Tourism Service
-- [ ] Tích hợp Support Ticket và Review
+- [x] Tích hợp Support Ticket và Review
 - [ ] Hiển thị dữ liệu từ MySQL lên giao diện
 - [ ] Kiểm tra phân quyền User/Admin
 

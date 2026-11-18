@@ -13,6 +13,9 @@ export const STATUS_CONFIG = {
   delivering: { label: 'Delivering', tone: 'teal' },
   completed: { label: 'Completed', tone: 'emerald' },
   cancelled: { label: 'Cancelled', tone: 'red' },
+  // Yêu cầu hỗ trợ: open → in_progress → resolved.
+  open: { label: 'Open', tone: 'amber' },
+  resolved: { label: 'Resolved', tone: 'emerald' },
 };
 
 const toTabs = (statuses) => [
@@ -69,3 +72,7 @@ export const FOOD_ORDER_STATUS_TABS = toTabs([
 
 // Khách chỉ tự hủy được đơn đồ ăn còn pending.
 export const CANCELLABLE_FOOD_ORDER_STATUS = 'pending';
+
+// Các tab lọc và các bước của yêu cầu hỗ trợ. Chỉ admin đổi trạng thái.
+export const TICKET_STEPS = ['open', 'in_progress', 'resolved'];
+export const TICKET_STATUS_TABS = toTabs(TICKET_STEPS);

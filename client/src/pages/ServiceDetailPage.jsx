@@ -1,5 +1,7 @@
 import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
+import { getServiceReviews } from '../api/reviews.api.js';
 import { getService } from '../api/services.api.js';
+import ReviewSection from '../components/reviews/ReviewSection.jsx';
 import RoomImage from '../components/rooms/RoomImage.jsx';
 import ServiceRequestForm from '../components/services/ServiceRequestForm.jsx';
 import Alert from '../components/ui/Alert.jsx';
@@ -137,6 +139,14 @@ export default function ServiceDetailPage() {
           <BookingPanel service={service} bookingId={bookingId} />
         </Card>
       </div>
+
+      <ReviewSection
+        key={service.id}
+        title="Service reviews"
+        resourceKey={service.id}
+        loadPage={(params) => getServiceReviews(service.id, params)}
+        emptyMessage="Guests can review a service after their request is completed."
+      />
     </div>
   );
 }
