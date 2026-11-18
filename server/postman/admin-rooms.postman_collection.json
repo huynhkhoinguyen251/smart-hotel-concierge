@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Smart Hotel - Admin Rooms",
-    "description": "Tests the admin Room APIs and image upload. Run the requests in order with the Collection Runner or one by one. Requests 1 and 2 log in and save adminToken and userToken. Requests 6-16 create test data and save the new IDs in collection variables. Requests 19-21 delete that test data, so the whole collection can be run again. Before request 12, select an image file on your computer (see that request's description). If a previous run stopped half-way and room 501 still exists, request 8 returns 409; delete room 501 first, then run again.",
+    "description": "Tests the admin Room APIs and image upload. Run the requests in order with the Collection Runner or one by one. Requests 1 and 2 log in and save adminToken and userToken. Requests 6-16 create test data and save the new IDs in collection variables. Requests 21-23 delete that test data, so the whole collection can be run again. Before request 12, select an image file on your computer (see that request's description). If a previous run stopped half-way and room 501 still exists, request 8 returns 409; delete room 501 first, then run again.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -429,7 +429,61 @@
       }
     },
     {
-      "name": "17. Delete room 1 (409, has bookings)",
+      "name": "17. Get room 501 details as admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const room = pm.response.json().data;",
+              "pm.test('Same room, any status (maintenance)', () => { pm.expect(room.id).to.eql(Number(pm.collectionVariables.get('roomId'))); pm.expect(room.status).to.eql('maintenance'); });",
+              "pm.test('Same fields as GET /admin/rooms', () => { pm.expect(room.room_type).to.have.property('price_per_night'); pm.expect(room).to.have.property('avg_rating'); pm.expect(room).to.have.property('primary_image'); });",
+              "pm.test('One image left and it is primary', () => { pm.expect(room.images).to.have.lengthOf(1); pm.expect(room.images[0].is_primary).to.eql(true); });",
+              "pm.test('Amenities of the room type', () => pm.expect(room.amenities.map((a) => a.name)).to.include('Coffee machine'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'Room retrieved successfully'. The admin sees the room even though it is in maintenance. data has the same fields as an item of GET /admin/rooms, plus images (primary first; one is left after request 16) and amenities of its room type (Coffee machine, Free Wi-Fi, Bathtub).",
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/rooms/{{roomId}}"
+      }
+    },
+    {
+      "name": "18. Get a room that does not exist (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 404', () => pm.response.to.have.status(404));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql('Room not found'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 404 with message 'Room not found'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+        },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/admin/rooms/999999"
+      }
+    },
+    {
+      "name": "19. Delete room 1 (409, has bookings)",
       "event": [
         {
           "listen": "test",
@@ -450,7 +504,7 @@
       }
     },
     {
-      "name": "18. Delete room type Standard Room (409, has rooms)",
+      "name": "20. Delete room type Standard Room (409, has rooms)",
       "event": [
         {
           "listen": "test",
@@ -471,7 +525,7 @@
       }
     },
     {
-      "name": "19. Delete room 501 (cleanup)",
+      "name": "21. Delete room 501 (cleanup)",
       "event": [
         {
           "listen": "test",
@@ -489,7 +543,7 @@
       }
     },
     {
-      "name": "20. Delete room type Suite (cleanup)",
+      "name": "22. Delete room type Suite (cleanup)",
       "event": [
         {
           "listen": "test",
@@ -500,14 +554,14 @@
         }
       ],
       "request": {
-        "description": "Cleanup. Expected: 200, message 'Room type deleted successfully'. Suite has no rooms after request 19.",
+        "description": "Cleanup. Expected: 200, message 'Room type deleted successfully'. Suite has no rooms after request 21.",
         "method": "DELETE",
         "header": [],
         "url": "{{baseUrl}}/admin/room-types/{{roomTypeId}}"
       }
     },
     {
-      "name": "21. Delete amenity \"Coffee machine\" (cleanup)",
+      "name": "23. Delete amenity \"Coffee machine\" (cleanup)",
       "event": [
         {
           "listen": "test",

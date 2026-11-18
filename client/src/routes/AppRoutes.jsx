@@ -50,12 +50,19 @@ const AdminTransportBookingsPage = lazy(() => import('../pages/admin/AdminTransp
 const AdminTransportBookingDetailPage = lazy(() => import('../pages/admin/AdminTransportBookingDetailPage.jsx'));
 const AdminTicketsPage = lazy(() => import('../pages/admin/AdminTicketsPage.jsx'));
 const AdminTicketDetailPage = lazy(() => import('../pages/admin/AdminTicketDetailPage.jsx'));
+const AdminRoomsPage = lazy(() => import('../pages/admin/AdminRoomsPage.jsx'));
+const AdminRoomNewPage = lazy(() => import('../pages/admin/AdminRoomNewPage.jsx'));
+const AdminRoomEditPage = lazy(() => import('../pages/admin/AdminRoomEditPage.jsx'));
+const AdminRoomTypesPage = lazy(() => import('../pages/admin/AdminRoomTypesPage.jsx'));
+const AdminRoomTypeFormPage = lazy(() => import('../pages/admin/AdminRoomTypeFormPage.jsx'));
+const AdminAmenitiesPage = lazy(() => import('../pages/admin/AdminAmenitiesPage.jsx'));
 
 const withSuspense = (element) => <Suspense fallback={<PageSpinner />}>{element}</Suspense>;
 
 // Các trang admin đã làm; mọi mục sidebar còn lại tạm là "Coming soon".
 const ADMIN_BUILT = [
   '/admin',
+  '/admin/rooms',
   '/admin/bookings',
   '/admin/services',
   '/admin/food-orders',
@@ -104,6 +111,13 @@ export default function AppRoutes() {
       <Route path="admin" element={<AdminRoute />}>
         <Route element={<AdminLayout />}>
           <Route index element={withSuspense(<DashboardPage />)} />
+          <Route path="rooms" element={withSuspense(<AdminRoomsPage />)} />
+          <Route path="rooms/new" element={withSuspense(<AdminRoomNewPage />)} />
+          <Route path="rooms/types" element={withSuspense(<AdminRoomTypesPage />)} />
+          <Route path="rooms/types/new" element={withSuspense(<AdminRoomTypeFormPage />)} />
+          <Route path="rooms/types/:id" element={withSuspense(<AdminRoomTypeFormPage />)} />
+          <Route path="rooms/amenities" element={withSuspense(<AdminAmenitiesPage />)} />
+          <Route path="rooms/:id" element={withSuspense(<AdminRoomEditPage />)} />
           <Route path="bookings" element={withSuspense(<AdminBookingsPage />)} />
           <Route path="bookings/:id" element={withSuspense(<AdminBookingDetailPage />)} />
           <Route path="services" element={withSuspense(<AdminServiceRequestsPage />)} />

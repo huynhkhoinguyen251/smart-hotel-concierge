@@ -209,6 +209,7 @@ Bổ sung:
 | Method | Endpoint | Mô tả |
 |---|---|---|
 | GET | `/admin/rooms` | Tất cả phòng, kể cả phòng `maintenance`, `inactive` |
+| GET | `/admin/rooms/:id` | Chi tiết phòng ở mọi trạng thái, kèm `images` và `amenities` của loại phòng; `404` nếu không có |
 | POST | `/admin/rooms` | Thêm phòng |
 | PUT | `/admin/rooms/:id` | Sửa phòng |
 | PATCH | `/admin/rooms/:id/status` | Đổi `available`, `maintenance`, `inactive` |

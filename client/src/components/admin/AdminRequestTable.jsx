@@ -7,12 +7,21 @@ const VIEW_LINK =
 // Màn hình rộng (xl): bảng; nhỏ hơn: thẻ xếp dọc, nên ở 375px trang không bị cuộn ngang.
 // - columns: [{ key, header, render(item), align: 'right' }]. Cột đầu tiên là tiêu đề của thẻ.
 // - getViewPath(item), getItemLabel(item) (ví dụ "food order #8"), renderActions(item).
-export default function AdminRequestTable({ items, columns, caption, getViewPath, getItemLabel, renderActions }) {
+// - viewLabel: chữ của link mở chi tiết, mặc định "View" (trang phòng dùng "Edit").
+export default function AdminRequestTable({
+  items,
+  columns,
+  caption,
+  getViewPath,
+  getItemLabel,
+  renderActions,
+  viewLabel = 'View',
+}) {
   const [first, ...rest] = columns;
 
   const viewLink = (item) => (
-    <Link to={getViewPath(item)} className={VIEW_LINK} aria-label={`View ${getItemLabel(item)}`}>
-      View
+    <Link to={getViewPath(item)} className={VIEW_LINK} aria-label={`${viewLabel} ${getItemLabel(item)}`}>
+      {viewLabel}
     </Link>
   );
 

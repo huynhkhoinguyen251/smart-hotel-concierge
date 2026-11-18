@@ -13,6 +13,10 @@ export const STATUS_CONFIG = {
   delivering: { label: 'Delivering', tone: 'teal' },
   completed: { label: 'Completed', tone: 'emerald' },
   cancelled: { label: 'Cancelled', tone: 'red' },
+  // Trạng thái của phòng (admin quản lý). Khách chỉ thấy phòng available và maintenance.
+  available: { label: 'Available', tone: 'emerald' },
+  maintenance: { label: 'Maintenance', tone: 'amber' },
+  inactive: { label: 'Inactive', tone: 'slate' },
   // Yêu cầu hỗ trợ: open → in_progress → resolved.
   open: { label: 'Open', tone: 'amber' },
   resolved: { label: 'Resolved', tone: 'emerald' },
@@ -76,3 +80,7 @@ export const CANCELLABLE_FOOD_ORDER_STATUS = 'pending';
 // Các tab lọc và các bước của yêu cầu hỗ trợ. Chỉ admin đổi trạng thái.
 export const TICKET_STEPS = ['open', 'in_progress', 'resolved'];
 export const TICKET_STATUS_TABS = toTabs(TICKET_STEPS);
+
+// Trạng thái của phòng và các tab lọc ở trang quản lý phòng.
+export const ROOM_STATUSES = ['available', 'maintenance', 'inactive'];
+export const ROOM_STATUS_TABS = toTabs(ROOM_STATUSES);

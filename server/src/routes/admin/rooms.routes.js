@@ -13,6 +13,7 @@ import { roomIdValidator } from '../../validators/rooms.validator.js';
 const router = Router();
 
 router.get('/', listAdminRoomsValidator, validate, roomsController.getRooms);
+router.get('/:id', roomIdValidator, validate, roomsController.getRoom);
 router.post('/', createRoomValidator, validate, roomsController.createRoom);
 router.put('/:id', updateRoomValidator, validate, roomsController.updateRoom);
 router.delete('/:id', roomIdValidator, validate, roomsController.deleteRoom);

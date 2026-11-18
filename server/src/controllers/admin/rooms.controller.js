@@ -8,6 +8,12 @@ export const getRooms = async (req, res) => {
   sendPaginated(res, rooms, pagination);
 };
 
+export const getRoom = async (req, res) => {
+  const { id } = matchedData(req);
+  const room = await roomsService.getRoom(id);
+  sendSuccess(res, room, 'Room retrieved successfully');
+};
+
 export const createRoom = async (req, res) => {
   const room = await roomsService.createRoom(matchedData(req));
   sendSuccess(res, room, 'Room created successfully', 201);

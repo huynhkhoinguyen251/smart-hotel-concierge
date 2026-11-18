@@ -1,3 +1,5 @@
+import * as amenitiesModel from '../../models/amenities.model.js';
+import * as roomImagesModel from '../../models/roomImages.model.js';
 import * as roomsModel from '../../models/rooms.model.js';
 import * as roomTypesModel from '../../models/roomTypes.model.js';
 import AppError from '../../utils/AppError.js';
@@ -39,6 +41,24 @@ export const listRooms = async ({ page, limit, ...filters }) => {
   ]);
 
   return { rooms, pagination: { page: pagination.page, limit: pagination.limit, total } };
+};
+
+// Chi tiết phòng cho trang sửa phòng của admin: thấy mọi trạng thái, kể cả inactive.
+// Cùng dạng với một phần tử của GET /admin/rooms, kèm toàn bộ ảnh (ảnh chính đứng đầu)
+// và tiện nghi của loại phòng.
+export const getRoom = async (id) => {
+  const room = await findRoomOr404(id);
+
+  const [images, amenities] = await Promise.all([
+    roomImagesModel.findImagesByRoomId(room.id),
+    amenitiesModel.findAmenitiesByRoomTypeIds([room.room_type.id]),
+  ]);
+
+  return {
+    ...room,
+    images,
+    amenities: amenities.map(({ id: amenityId, name }) => ({ id: amenityId, name })),
+  };
 };
 
 export const createRoom = async ({ room_type_id, room_number, floor, status = 'available' }) => {
