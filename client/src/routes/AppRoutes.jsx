@@ -41,6 +41,9 @@ const DashboardPage = lazy(() => import('../pages/admin/DashboardPage.jsx'));
 const AdminBookingsPage = lazy(() => import('../pages/admin/AdminBookingsPage.jsx'));
 const AdminBookingDetailPage = lazy(() => import('../pages/admin/AdminBookingDetailPage.jsx'));
 const AdminServiceRequestsPage = lazy(() => import('../pages/admin/AdminServiceRequestsPage.jsx'));
+const AdminServiceCatalogPage = lazy(() => import('../pages/admin/AdminServiceCatalogPage.jsx'));
+const AdminMenuPage = lazy(() => import('../pages/admin/AdminMenuPage.jsx'));
+const AdminTourCatalogPage = lazy(() => import('../pages/admin/AdminTourCatalogPage.jsx'));
 const AdminServiceRequestDetailPage = lazy(() => import('../pages/admin/AdminServiceRequestDetailPage.jsx'));
 const AdminFoodOrdersPage = lazy(() => import('../pages/admin/AdminFoodOrdersPage.jsx'));
 const AdminFoodOrderDetailPage = lazy(() => import('../pages/admin/AdminFoodOrderDetailPage.jsx'));
@@ -121,10 +124,13 @@ export default function AppRoutes() {
           <Route path="bookings" element={withSuspense(<AdminBookingsPage />)} />
           <Route path="bookings/:id" element={withSuspense(<AdminBookingDetailPage />)} />
           <Route path="services" element={withSuspense(<AdminServiceRequestsPage />)} />
+          <Route path="services/catalog" element={withSuspense(<AdminServiceCatalogPage />)} />
           <Route path="services/:id" element={withSuspense(<AdminServiceRequestDetailPage />)} />
           <Route path="food-orders" element={withSuspense(<AdminFoodOrdersPage />)} />
+          <Route path="food-orders/menu" element={withSuspense(<AdminMenuPage />)} />
           <Route path="food-orders/:id" element={withSuspense(<AdminFoodOrderDetailPage />)} />
           <Route path="tourism" element={withSuspense(<AdminTourBookingsPage />)} />
+          <Route path="tourism/catalog" element={withSuspense(<AdminTourCatalogPage />)} />
           <Route path="tourism/tours/:id" element={withSuspense(<AdminTourBookingDetailPage />)} />
           <Route path="tourism/transport" element={withSuspense(<AdminTransportBookingsPage />)} />
           <Route path="tourism/transport/:id" element={withSuspense(<AdminTransportBookingDetailPage />)} />

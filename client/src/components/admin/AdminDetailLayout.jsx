@@ -39,7 +39,9 @@ export function AdminActionsCard({ children, emptyText }) {
 
 // Bố cục chung của trang chi tiết đơn (admin): link quay lại, tiêu đề + trạng thái, ngày tạo,
 // thông báo, thanh tiến trình, rồi hai cột: main (nội dung đơn) và side (khách, giá, thao tác).
+// subNav: tab phụ của mục (ví dụ Requests / Catalog), hiện trên cùng.
 export default function AdminDetailLayout({
+  subNav,
   backTo,
   backLabel,
   title,
@@ -55,6 +57,7 @@ export default function AdminDetailLayout({
 }) {
   return (
     <div className="mx-auto max-w-5xl">
+      {subNav}
       <Link to={backTo} className="text-sm font-medium text-teal-700 hover:text-teal-800">
         ← {backLabel}
       </Link>

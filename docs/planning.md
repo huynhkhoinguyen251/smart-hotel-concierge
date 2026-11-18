@@ -120,7 +120,7 @@ Test từng API bằng Postman ngay sau khi viết xong.
 - [x] Thiết kế Tourism Service (tour địa phương, thuê xe máy, đón sân bay, xe đưa đón, lịch sử chuyến đi, hủy đơn)
 - [x] Thiết kế Support Ticket
 - [x] Thiết kế User Profile
-- [ ] Thiết kế Admin Dashboard (xong bước 3a: thống kê có biểu đồ, quản lý đơn đặt phòng, xử lý yêu cầu dịch vụ, đồ ăn, tour, xe và trả lời hỗ trợ, quản lý phòng, loại phòng, tiện nghi và ảnh phòng; còn 3b danh mục dịch vụ, món ăn, tour và bước 4 đánh giá, người dùng)
+- [ ] Thiết kế Admin Dashboard (xong bước 3: thống kê có biểu đồ, quản lý đơn đặt phòng, xử lý yêu cầu dịch vụ, đồ ăn, tour, xe và trả lời hỗ trợ, quản lý phòng, loại phòng, tiện nghi và ảnh phòng, danh mục dịch vụ, món ăn, tour; còn bước 4 đánh giá, người dùng)
 
 ## Giai đoạn 4: Integration
 

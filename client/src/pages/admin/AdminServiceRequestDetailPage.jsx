@@ -4,6 +4,7 @@ import {
   updateAdminServiceBookingStatus,
 } from '../../api/adminServiceBookings.api.js';
 import AdminDetailLayout, { AdminActionsCard, AdminGuestCard } from '../../components/admin/AdminDetailLayout.jsx';
+import ServiceTabs from '../../components/admin/ServiceTabs.jsx';
 import AdminDetailLoader from '../../components/admin/AdminDetailLoader.jsx';
 import AdminStatusActions from '../../components/admin/AdminStatusActions.jsx';
 import Card from '../../components/ui/Card.jsx';
@@ -23,6 +24,7 @@ function ServiceRequestDetails({ initialRequest }) {
 
   return (
     <AdminDetailLayout
+      subNav={<ServiceTabs />}
       backTo="/admin/services"
       backLabel="Back to service requests"
       title={`Service request #${request.id}`}

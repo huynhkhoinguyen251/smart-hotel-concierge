@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { getAdminFoodOrder, updateAdminFoodOrderStatus } from '../../api/adminFoodOrders.api.js';
 import AdminDetailLayout, { AdminActionsCard, AdminGuestCard } from '../../components/admin/AdminDetailLayout.jsx';
+import FoodTabs from '../../components/admin/FoodTabs.jsx';
 import AdminDetailLoader from '../../components/admin/AdminDetailLoader.jsx';
 import AdminStatusActions from '../../components/admin/AdminStatusActions.jsx';
 import FoodOrderItems from '../../components/food/FoodOrderItems.jsx';
@@ -21,6 +22,7 @@ function FoodOrderDetails({ initialOrder }) {
 
   return (
     <AdminDetailLayout
+      subNav={<FoodTabs />}
       backTo="/admin/food-orders"
       backLabel="Back to food orders"
       title={`Food order #${order.id}`}

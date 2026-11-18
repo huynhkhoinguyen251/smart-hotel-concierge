@@ -111,3 +111,58 @@ export const validateImageUrl = (value) => {
 // 1536000 thành "1.5 MB".
 export const formatFileSize = (bytes) =>
   bytes >= 1024 * 1024 ? `${(bytes / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
+
+// ---- Form danh mục dịch vụ, thực đơn và tour (bước 11) ----
+// fields: [{ name, label, kind, required?, max?, options? }], kind là một trong
+// 'text' | 'textarea' | 'select' | 'price' | 'image'. Một danh sách fields dùng cho cả form,
+// kiểm tra dữ liệu và dữ liệu gửi lên, nên ba danh mục dùng chung một form.
+
+// Giá trị ban đầu của form: từ mục đang sửa (item), hoặc rỗng khi thêm mới.
+// flag: 'is_active' hoặc 'is_available'; mục mới mặc định đang bật.
+export const toCatalogForm = (item, fields, flag) => ({
+  ...Object.fromEntries(
+    fields.map((field) => {
+      const value = item?.[field.name];
+      return [field.name, value === null || value === undefined ? '' : String(value)];
+    }),
+  ),
+  [flag]: item ? Boolean(item[flag]) : true,
+});
+
+export const validateCatalogForm = (form, fields) => {
+  const errors = {};
+  fields.forEach((field) => {
+    const text = String(form[field.name] ?? '').trim();
+    let error = '';
+    if (field.kind === 'text') {
+      error = requiredText(text, field.label, field.max);
+    } else if (field.kind === 'textarea') {
+      if (text.length > field.max) error = `${field.label} must be at most ${field.max} characters`;
+    } else if (field.kind === 'select') {
+      if (!field.options.some((option) => option.value && option.value === text)) {
+        error = `Choose a ${field.label.toLowerCase()}`;
+      }
+    } else if (field.kind === 'price') {
+      if (!PRICE_PATTERN.test(text)) error = 'Enter a price of at least 0, with at most 2 decimal places';
+    } else if (field.kind === 'image') {
+      if (text) error = validateImageUrl(text);
+    }
+    if (error) errors[field.name] = error;
+  });
+  return errors;
+};
+
+// Dữ liệu gửi lên cho POST và PUT. PUT sửa toàn bộ, nên luôn gửi đủ mọi trường:
+// mô tả và ảnh rỗng gửi null (xóa), giá là số. values: form, hoặc một mục trong danh sách
+// (dùng khi bật/tắt nhanh: gửi lại đúng dữ liệu cũ, chỉ đổi flag).
+export const toCatalogPayload = (values, fields, flag, flagValue = values[flag]) => ({
+  ...Object.fromEntries(
+    fields.map((field) => {
+      const text = String(values[field.name] ?? '').trim();
+      if (field.kind === 'price') return [field.name, Number(text)];
+      if (field.kind === 'textarea' || field.kind === 'image') return [field.name, text || null];
+      return [field.name, text];
+    }),
+  ),
+  [flag]: Boolean(flagValue),
+});

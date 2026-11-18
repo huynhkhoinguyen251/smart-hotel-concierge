@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { getAdminTourBooking, updateAdminTourBookingStatus } from '../../api/adminTourism.api.js';
 import AdminDetailLayout, { AdminActionsCard, AdminGuestCard } from '../../components/admin/AdminDetailLayout.jsx';
+import TourismTabs from '../../components/admin/TourismTabs.jsx';
 import AdminDetailLoader from '../../components/admin/AdminDetailLoader.jsx';
 import AdminStatusActions from '../../components/admin/AdminStatusActions.jsx';
 import Card from '../../components/ui/Card.jsx';
@@ -19,6 +20,7 @@ function TourBookingDetails({ initialBooking }) {
 
   return (
     <AdminDetailLayout
+      subNav={<TourismTabs />}
       backTo="/admin/tourism"
       backLabel="Back to tour bookings"
       title={`Tour booking #${booking.id}`}

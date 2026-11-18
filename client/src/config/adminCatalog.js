@@ -41,3 +41,46 @@ export const ADMIN_ROOMS_PAGE_SIZE = 10;
 export const ROOM_HAS_BOOKINGS_NOTE = 'This room has bookings and cannot be deleted. Set it to inactive instead.';
 export const ROOM_TYPE_IN_USE_NOTE = 'Remove or move the rooms of this type first.';
 export const INACTIVE_ROOM_NOTE = 'Guests will no longer see or book this room.';
+
+// ---- Danh mục dịch vụ, thực đơn và tour (bước 11) ----
+// Giới hạn giống server/src/validators/admin/{services,menuItems,tours}.validator.js và common.rules.js.
+
+export const CATALOG_NAME_MAX_LENGTH = 150;
+export const CATALOG_DESCRIPTION_MAX_LENGTH = 5000;
+export const TOUR_LOCATION_MAX_LENGTH = 200;
+export const TOUR_DURATION_MAX_LENGTH = 50;
+export const CATALOG_PAGE_SIZE = 10;
+
+export const CATALOG_IN_USE_NOTE = 'This item already has orders and cannot be deleted. Switch it off instead.';
+export const SWITCH_OFF_NOTE = 'Guests will no longer see this item.';
+export const TRANSPORT_SERVICES_NOTE =
+  'Transport services (motorbike rental, airport pickup, shuttle) are booked from the Tours page by guests.';
+
+// Tab phụ của mục Services, Food Orders và Tourism. Trang chi tiết đơn cũng thuộc tab danh sách đơn.
+export const SERVICE_SECTION_TABS = [
+  {
+    to: '/admin/services',
+    label: 'Requests',
+    match: (pathname) => !pathname.startsWith('/admin/services/catalog'),
+  },
+  { to: '/admin/services/catalog', label: 'Catalog', match: (pathname) => pathname.startsWith('/admin/services/catalog') },
+];
+
+export const FOOD_SECTION_TABS = [
+  {
+    to: '/admin/food-orders',
+    label: 'Orders',
+    match: (pathname) => !pathname.startsWith('/admin/food-orders/menu'),
+  },
+  { to: '/admin/food-orders/menu', label: 'Menu', match: (pathname) => pathname.startsWith('/admin/food-orders/menu') },
+];
+
+export const TOURISM_SECTION_TABS = [
+  {
+    to: '/admin/tourism',
+    label: 'Tour bookings',
+    match: (pathname) => pathname === '/admin/tourism' || pathname.startsWith('/admin/tourism/tours/'),
+  },
+  { to: '/admin/tourism/transport', label: 'Transport', match: (pathname) => pathname.startsWith('/admin/tourism/transport') },
+  { to: '/admin/tourism/catalog', label: 'Tours', match: (pathname) => pathname.startsWith('/admin/tourism/catalog') },
+];

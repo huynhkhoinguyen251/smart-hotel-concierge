@@ -4,6 +4,7 @@ import { getAdminRooms } from '../../api/adminRooms.api.js';
 import { getRoomTypes } from '../../api/catalog.api.js';
 import AdminRequestTable from '../../components/admin/AdminRequestTable.jsx';
 import { MoneyCell } from '../../components/admin/AdminCells.jsx';
+import SearchBox from '../../components/admin/SearchBox.jsx';
 import RoomCatalogHeader from '../../components/admin/rooms/RoomCatalogHeader.jsx';
 import RoomStatusControl from '../../components/admin/rooms/RoomStatusControl.jsx';
 import RoomImage from '../../components/rooms/RoomImage.jsx';
@@ -12,7 +13,6 @@ import Button from '../../components/ui/Button.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
 import ErrorState from '../../components/ui/ErrorState.jsx';
 import FilterTabs from '../../components/ui/FilterTabs.jsx';
-import Input from '../../components/ui/Input.jsx';
 import Pagination from '../../components/ui/Pagination.jsx';
 import RatingStars from '../../components/ui/RatingStars.jsx';
 import Select from '../../components/ui/Select.jsx';
@@ -72,35 +72,6 @@ const COLUMNS = [
       ),
   },
 ];
-
-// Ô tìm theo số phòng. Giá trị đang gõ giữ trong state; bấm Search mới đưa lên địa chỉ trang.
-// Trang cha gắn key theo giá trị trên địa chỉ trang, nên Back/Forward cũng cập nhật ô nhập.
-function SearchBox({ value, onSearch }) {
-  const [text, setText] = useState(value);
-  return (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        onSearch(text.trim());
-      }}
-      role="search"
-      className="flex items-end gap-2"
-    >
-      <Input
-        label="Room number"
-        type="search"
-        value={text}
-        maxLength={ROOM_SEARCH_MAX_LENGTH}
-        onChange={(event) => setText(event.target.value)}
-        placeholder="For example: 30"
-        className="w-full sm:w-44"
-      />
-      <Button type="submit" variant="secondary">
-        Search
-      </Button>
-    </form>
-  );
-}
 
 // /admin/rooms: mọi phòng, kể cả maintenance và inactive. Trạng thái, loại phòng, từ khóa và trang
 // đều nằm trên địa chỉ trang. Mỗi dòng có ô đổi trạng thái nhanh và link sửa phòng.
@@ -204,7 +175,14 @@ export default function AdminRoomsPage() {
           onChange={(event) => updateUrl({ room_type_id: event.target.value, page: '' })}
           options={typeOptions}
         />
-        <SearchBox key={search} value={search} onSearch={(value) => updateUrl({ search: value, page: '' })} />
+        <SearchBox
+          key={search}
+          label="Room number"
+          value={search}
+          maxLength={ROOM_SEARCH_MAX_LENGTH}
+          placeholder="For example: 30"
+          onSearch={(value) => updateUrl({ search: value, page: '' })}
+        />
         {(roomTypeId || search) && (
           <Button variant="secondary" onClick={() => setSearchParams(cleanParams({ status }))}>
             Reset

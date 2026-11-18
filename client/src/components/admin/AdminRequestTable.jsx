@@ -8,6 +8,7 @@ const VIEW_LINK =
 // - columns: [{ key, header, render(item), align: 'right' }]. Cột đầu tiên là tiêu đề của thẻ.
 // - getViewPath(item), getItemLabel(item) (ví dụ "food order #8"), renderActions(item).
 // - viewLabel: chữ của link mở chi tiết, mặc định "View" (trang phòng dùng "Edit").
+// - Không có getViewPath thì không có link (trang danh mục mở form sửa bằng nút trong renderActions).
 export default function AdminRequestTable({
   items,
   columns,
@@ -59,7 +60,7 @@ export default function AdminRequestTable({
                 ))}
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap items-center gap-2">
-                    {viewLink(item)}
+                    {getViewPath && viewLink(item)}
                     {renderActions(item)}
                   </div>
                 </td>
@@ -82,7 +83,7 @@ export default function AdminRequestTable({
               ))}
             </dl>
             <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
-              {viewLink(item)}
+              {getViewPath && viewLink(item)}
               {renderActions(item)}
             </div>
           </li>

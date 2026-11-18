@@ -1,5 +1,6 @@
 import { getAdminTransportBooking, updateAdminTransportBookingStatus } from '../../api/adminTourism.api.js';
 import AdminDetailLayout, { AdminActionsCard, AdminGuestCard } from '../../components/admin/AdminDetailLayout.jsx';
+import TourismTabs from '../../components/admin/TourismTabs.jsx';
 import AdminDetailLoader from '../../components/admin/AdminDetailLoader.jsx';
 import AdminStatusActions from '../../components/admin/AdminStatusActions.jsx';
 import Card from '../../components/ui/Card.jsx';
@@ -33,6 +34,7 @@ function TransportDetails({ initialBooking }) {
 
   return (
     <AdminDetailLayout
+      subNav={<TourismTabs />}
       backTo="/admin/tourism/transport"
       backLabel="Back to transport requests"
       title={`Transport request #${booking.id}`}

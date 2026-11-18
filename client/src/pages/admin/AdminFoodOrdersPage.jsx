@@ -1,6 +1,7 @@
 import { getAdminFoodOrders, updateAdminFoodOrderStatus } from '../../api/adminFoodOrders.api.js';
 import { GuestCell, MoneyCell, TitleCell } from '../../components/admin/AdminCells.jsx';
 import AdminRequestListPage from '../../components/admin/AdminRequestListPage.jsx';
+import FoodTabs from '../../components/admin/FoodTabs.jsx';
 import AdminStatusActions from '../../components/admin/AdminStatusActions.jsx';
 import { FOOD_ORDER_ADMIN_ACTIONS, getActions } from '../../config/adminRequests.js';
 import { FOOD_ORDER_STATUS_TABS } from '../../config/statuses.js';
@@ -53,6 +54,7 @@ export default function AdminFoodOrdersPage() {
     <AdminRequestListPage
       title="Food orders"
       subtitle="Food and drink orders for room delivery, newest first."
+      header={<FoodTabs />}
       basePath="/admin/food-orders"
       statusTabs={FOOD_ORDER_STATUS_TABS}
       load={getAdminFoodOrders}
