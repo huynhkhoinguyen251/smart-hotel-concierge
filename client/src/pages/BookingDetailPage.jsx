@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { cancelBooking, getBooking } from '../api/bookings.api.js';
 import EditBookingForm from '../components/bookings/EditBookingForm.jsx';
+import PaymentPanel from '../components/payments/PaymentPanel.jsx';
 import ReviewPanel from '../components/reviews/ReviewPanel.jsx';
 import RoomImage from '../components/rooms/RoomImage.jsx';
 import Alert from '../components/ui/Alert.jsx';
@@ -74,6 +75,16 @@ function BookingDetails({ initialBooking, initialMessage }) {
     initialMessage,
   });
 
+  // Tải lại đơn sau khi thanh toán hoặc hết hạn (thanh toán có thể đổi cả trạng thái đơn).
+  const reloadAfterPayment = async (message) => {
+    try {
+      setBooking(await getBooking(booking.id));
+    } catch {
+      // Lỗi mạng: giữ dữ liệu đang có; khách có thể tải lại trang.
+    }
+    if (message) showMessage('success', message);
+  };
+
   const handleSaved = (updated) => {
     setBooking(updated);
     setEditing(false);
@@ -103,6 +114,15 @@ function BookingDetails({ initialBooking, initialMessage }) {
       <div className="mb-6 space-y-3" aria-live="polite">
         <Alert type="success">{success}</Alert>
         <Alert type="error">{error}</Alert>
+      </div>
+
+      <div className="mb-6 empty:hidden">
+        <PaymentPanel
+          type="room"
+          order={booking}
+          onPaid={reloadAfterPayment}
+          onExpired={() => reloadAfterPayment('')}
+        />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px] lg:items-start">

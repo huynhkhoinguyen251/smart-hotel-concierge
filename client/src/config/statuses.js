@@ -24,6 +24,10 @@ const STATUS_CONFIG = {
   guest: { label: 'Guest', tone: 'sky' },
   admin: { label: 'Admin', tone: 'violet' },
   locked: { label: 'Locked', tone: 'red' },
+  // Thanh toán QR giả lập (mục 11 của docs/api.md).
+  unpaid: { label: 'Unpaid', tone: 'amber' },
+  paid: { label: 'Paid', tone: 'emerald' },
+  refunded: { label: 'Refunded', tone: 'slate' },
   // Yêu cầu hỗ trợ: open → in_progress → resolved.
   open: { label: 'Open', tone: 'amber' },
   resolved: { label: 'Resolved', tone: 'emerald' },

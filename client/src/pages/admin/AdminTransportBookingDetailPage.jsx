@@ -19,6 +19,8 @@ import {
   getTransportLabel,
 } from '../../utils/tourismHelpers.js';
 import { getPlateField } from '../../utils/vehiclePlate.js';
+import { getConfirmDisabledReason } from '../../utils/paymentHelpers.js';
+import PaymentInfoCard from '../../components/payments/PaymentInfoCard.jsx';
 
 const GENERIC_FIELDS = { start: 'Start time', end: 'End time', pickup: 'Pick-up location', dropoff: 'Drop-off location' };
 
@@ -90,11 +92,13 @@ function TransportDetails({ initialBooking }) {
               </div>
             </dl>
           </Card>
+          <PaymentInfoCard order={booking} />
           <AdminActionsCard emptyText="No more actions for this request.">
             {actions.length > 0 && (
               <AdminStatusActions
                 actions={actions}
                 update={(action, plate) => updateAdminTransportBookingStatus(booking.id, action.status, plate)}
+                getDisabledReason={getConfirmDisabledReason(booking)}
                 getExtraField={getPlateField(service.category)}
                 itemLabel={`transport request #${booking.id}`}
                 {...actionProps}

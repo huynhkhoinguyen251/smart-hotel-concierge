@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { cancelFoodOrder, getFoodOrder } from '../api/foodOrders.api.js';
 import FoodOrderItems from '../components/food/FoodOrderItems.jsx';
+import PaymentPanel from '../components/payments/PaymentPanel.jsx';
 import ReviewPanel from '../components/reviews/ReviewPanel.jsx';
 import Alert from '../components/ui/Alert.jsx';
 import Button from '../components/ui/Button.jsx';
@@ -30,12 +31,22 @@ function OrderDetails({ initialOrder, initialMessage }) {
   const discount = Number(order.discount_amount) || 0;
 
   // Ví dụ 400: khách sạn vừa xác nhận đơn, không còn pending.
-  const { success, error, dialogProps, openDialog } = useCancelAction({
+  const { success, error, showMessage, dialogProps, openDialog } = useCancelAction({
     cancel: () => cancelFoodOrder(order.id),
     onCancelled: setOrder,
     successMessage: FOOD_ORDER_CANCELLED_MESSAGE,
     initialMessage,
   });
+
+  // Tải lại đơn sau khi thanh toán hoặc hết hạn (thanh toán có thể đổi cả trạng thái đơn).
+  const reloadAfterPayment = async (message) => {
+    try {
+      setOrder(await getFoodOrder(order.id));
+    } catch {
+      // Lỗi mạng: giữ dữ liệu đang có; khách có thể tải lại trang.
+    }
+    if (message) showMessage('success', message);
+  };
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
@@ -53,6 +64,15 @@ function OrderDetails({ initialOrder, initialMessage }) {
       <div className="mb-6 space-y-3" aria-live="polite">
         <Alert type="success">{success}</Alert>
         <Alert type="error">{error}</Alert>
+      </div>
+
+      <div className="mb-6 empty:hidden">
+        <PaymentPanel
+          type="food_order"
+          order={order}
+          onPaid={reloadAfterPayment}
+          onExpired={() => reloadAfterPayment('')}
+        />
       </div>
 
       <Card className="mb-6">

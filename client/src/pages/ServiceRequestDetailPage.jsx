@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { cancelServiceBooking, getServiceBooking } from '../api/serviceBookings.api.js';
+import PaymentPanel from '../components/payments/PaymentPanel.jsx';
 import ReviewPanel from '../components/reviews/ReviewPanel.jsx';
 import Alert from '../components/ui/Alert.jsx';
 import Button from '../components/ui/Button.jsx';
@@ -24,12 +25,22 @@ function RequestDetails({ initialRequest, initialMessage }) {
   const canCancel = request.status === CANCELLABLE_SERVICE_REQUEST_STATUS;
 
   // Ví dụ 400: khách sạn vừa xác nhận yêu cầu, không còn pending.
-  const { success, error, dialogProps, openDialog } = useCancelAction({
+  const { success, error, showMessage, dialogProps, openDialog } = useCancelAction({
     cancel: () => cancelServiceBooking(request.id),
     onCancelled: setRequest,
     successMessage: 'Your service request has been cancelled.',
     initialMessage,
   });
+
+  // Tải lại đơn sau khi thanh toán hoặc hết hạn (thanh toán có thể đổi cả trạng thái đơn).
+  const reloadAfterPayment = async (message) => {
+    try {
+      setRequest(await getServiceBooking(request.id));
+    } catch {
+      // Lỗi mạng: giữ dữ liệu đang có; khách có thể tải lại trang.
+    }
+    if (message) showMessage('success', message);
+  };
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
@@ -50,6 +61,15 @@ function RequestDetails({ initialRequest, initialMessage }) {
       <div className="mb-6 space-y-3" aria-live="polite">
         <Alert type="success">{success}</Alert>
         <Alert type="error">{error}</Alert>
+      </div>
+
+      <div className="mb-6 empty:hidden">
+        <PaymentPanel
+          type="service"
+          order={request}
+          onPaid={reloadAfterPayment}
+          onExpired={() => reloadAfterPayment('')}
+        />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px] lg:items-start">

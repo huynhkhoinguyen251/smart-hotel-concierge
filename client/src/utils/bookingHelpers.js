@@ -1,3 +1,5 @@
+import { PAYMENT_HOLD_MINUTES } from '../config/payments.js';
+
 // Số khách từ địa chỉ trang hoặc form, giới hạn trong 1..capacity, trả về chuỗi cho Select.
 export const clampGuests = (value, capacity) => {
   const count = Number(value);
@@ -13,7 +15,8 @@ export const staysOverlap = (a, b) => a.check_in < b.check_out && a.check_out > 
 export const formatNights = (nights) => `${nights} ${nights === 1 ? 'night' : 'nights'}`;
 export const formatGuests = (guests) => `${guests} ${guests === 1 ? 'guest' : 'guests'}`;
 
-export const BOOKING_CREATED_MESSAGE = 'Your booking is pending confirmation by the hotel.';
+// Đơn mới cần thanh toán QR trong thời gian giữ đơn (mục 11 của docs/api.md).
+export const BOOKING_CREATED_MESSAGE = `Your booking has been created. Please pay within ${PAYMENT_HOLD_MINUTES} minutes to confirm it.`;
 
 // Tài khoản admin không được đặt phòng (backend trả 403), nên giao diện ẩn nút đặt.
 export const ADMIN_BOOKING_NOTE = 'Admin accounts cannot book rooms.';

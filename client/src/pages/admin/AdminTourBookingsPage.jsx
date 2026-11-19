@@ -8,6 +8,8 @@ import { getActions, TOUR_BOOKING_ADMIN_ACTIONS } from '../../config/adminReques
 import { SERVICE_REQUEST_STATUS_TABS } from '../../config/statuses.js';
 import formatDate from '../../utils/formatDate.js';
 import { formatParticipants } from '../../utils/tourismHelpers.js';
+import { getConfirmDisabledReason } from '../../utils/paymentHelpers.js';
+import { PaymentBadge } from '../../components/payments/PaymentInfoCard.jsx';
 
 const itemLabel = (booking) => `tour booking #${booking.id}`;
 
@@ -41,6 +43,7 @@ const COLUMNS = [
     ),
   },
   { key: 'total', header: 'Total', align: 'right', render: (booking) => <MoneyCell amount={booking.total_price} /> },
+  { key: 'payment', header: 'Payment', render: (booking) => <PaymentBadge payment={booking.payment} /> },
 ];
 
 // /admin/tourism: đơn tour của khách (tab "Tour bookings").
@@ -63,6 +66,7 @@ export default function AdminTourBookingsPage() {
           <AdminStatusActions
             actions={getActions(TOUR_BOOKING_ADMIN_ACTIONS, booking.status)}
             update={(action) => updateAdminTourBookingStatus(booking.id, action.status)}
+            getDisabledReason={getConfirmDisabledReason(booking)}
             itemLabel={itemLabel(booking)}
             {...actionProps}
           />

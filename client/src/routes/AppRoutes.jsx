@@ -9,8 +9,10 @@ import FoodMenuPage from '../pages/FoodMenuPage.jsx';
 import FoodOrderDetailPage from '../pages/FoodOrderDetailPage.jsx';
 import HomePage from '../pages/HomePage.jsx';
 import LoginPage from '../pages/LoginPage.jsx';
+import InvoicePage from '../pages/InvoicePage.jsx';
 import MyBookingsPage from '../pages/MyBookingsPage.jsx';
 import MyFoodOrdersPage from '../pages/MyFoodOrdersPage.jsx';
+import MyPaymentsPage from '../pages/MyPaymentsPage.jsx';
 import MyReviewsPage from '../pages/MyReviewsPage.jsx';
 import MyServicesPage from '../pages/MyServicesPage.jsx';
 import MySupportPage from '../pages/MySupportPage.jsx';
@@ -51,6 +53,7 @@ const AdminTransportBookingsPage = lazy(() => import('../pages/admin/AdminTransp
 const AdminTransportBookingDetailPage = lazy(() => import('../pages/admin/AdminTransportBookingDetailPage.jsx'));
 const AdminTicketsPage = lazy(() => import('../pages/admin/AdminTicketsPage.jsx'));
 const AdminTicketDetailPage = lazy(() => import('../pages/admin/AdminTicketDetailPage.jsx'));
+const AdminPaymentsPage = lazy(() => import('../pages/admin/AdminPaymentsPage.jsx'));
 const AdminReviewsPage = lazy(() => import('../pages/admin/AdminReviewsPage.jsx'));
 const AdminUsersPage = lazy(() => import('../pages/admin/AdminUsersPage.jsx'));
 const AdminUserDetailPage = lazy(() => import('../pages/admin/AdminUserDetailPage.jsx'));
@@ -91,6 +94,8 @@ export default function AppRoutes() {
           <Route path="my-trips" element={<MyTripsPage />} />
           <Route path="my-trips/tours/:id" element={<TourBookingDetailPage />} />
           <Route path="my-trips/transport/:id" element={<TransportBookingDetailPage />} />
+          <Route path="my-payments" element={<MyPaymentsPage />} />
+          <Route path="payments/:id/invoice" element={<InvoicePage />} />
           <Route path="my-reviews" element={<MyReviewsPage />} />
           <Route path="support" element={<MySupportPage />} />
           <Route path="support/new" element={<NewTicketPage />} />
@@ -125,6 +130,7 @@ export default function AppRoutes() {
           <Route path="tourism/transport/:id" element={withSuspense(<AdminTransportBookingDetailPage />)} />
           <Route path="tickets" element={withSuspense(<AdminTicketsPage />)} />
           <Route path="tickets/:id" element={withSuspense(<AdminTicketDetailPage />)} />
+          <Route path="payments" element={withSuspense(<AdminPaymentsPage />)} />
           <Route path="reviews" element={withSuspense(<AdminReviewsPage />)} />
           <Route path="users" element={withSuspense(<AdminUsersPage />)} />
           <Route path="users/:id" element={withSuspense(<AdminUserDetailPage />)} />

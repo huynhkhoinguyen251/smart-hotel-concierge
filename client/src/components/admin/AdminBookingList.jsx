@@ -4,6 +4,7 @@ import formatDate, { formatDateRange } from '../../utils/formatDate.js';
 import StatusBadge from '../ui/StatusBadge.jsx';
 import { formatGuests, formatNights } from '../../utils/bookingHelpers.js';
 import AdminBookingActions from './AdminBookingActions.jsx';
+import { PaymentBadge } from '../payments/PaymentInfoCard.jsx';
 
 const VIEW_LINK =
   'rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50';
@@ -52,7 +53,10 @@ export default function AdminBookingList({ bookings, actionProps }) {
                   {formatCurrency(booking.total_price)}
                 </td>
                 <td className="px-4 py-3">
-                  <StatusBadge status={booking.status} />
+                  <div className="flex flex-col items-start gap-1">
+                    <StatusBadge status={booking.status} />
+                    <PaymentBadge payment={booking.payment} />
+                  </div>
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap items-center gap-2">
@@ -86,7 +90,9 @@ export default function AdminBookingList({ bookings, actionProps }) {
               {formatDateRange(booking.check_in, booking.check_out)} · {formatNights(booking.nights)} ·{' '}
               {formatGuests(booking.guests)}
             </p>
-            <p className="mt-1 font-semibold text-teal-700">{formatCurrency(booking.total_price)}</p>
+            <p className="mt-1 flex flex-wrap items-center gap-2 font-semibold text-teal-700">
+              {formatCurrency(booking.total_price)} <PaymentBadge payment={booking.payment} />
+            </p>
             <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
               <Link to={`/admin/bookings/${booking.id}`} className={VIEW_LINK} aria-label={`View booking #${booking.id}`}>
                 View

@@ -3,6 +3,7 @@ import formatCurrency from '../../utils/formatCurrency.js';
 import formatDate from '../../utils/formatDate.js';
 import { formatQuantity, getCategoryLabel } from '../../utils/serviceHelpers.js';
 import StatusBadge from '../ui/StatusBadge.jsx';
+import AwaitingPaymentNote from '../payments/AwaitingPaymentNote.jsx';
 
 // Một yêu cầu dịch vụ trong danh sách "My service requests".
 export default function ServiceRequestCard({ request }) {
@@ -15,6 +16,7 @@ export default function ServiceRequestCard({ request }) {
           <h3 className="text-lg font-semibold text-slate-900">{service.name}</h3>
           <StatusBadge status={request.status} />
         </div>
+        <AwaitingPaymentNote order={request} to={`/my-services/${request.id}`} />
         <p className="mt-0.5 text-sm text-slate-500">
           {getCategoryLabel(service.category)} · Room {booking.room.room_number} · Request #
           {request.id}

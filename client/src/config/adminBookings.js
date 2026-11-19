@@ -10,14 +10,6 @@ const SERVICES_NOTE =
 // config/adminRequests.js để dùng chung AdminStatusActions. status: trạng thái mới gửi lên;
 // variant: kiểu nút; title/message: nội dung hộp thoại xác nhận; success: thông báo sau khi đổi.
 const ACTIONS = {
-  confirm: {
-    status: 'confirmed',
-    label: 'Confirm',
-    variant: 'primary',
-    title: 'Confirm this booking?',
-    message: 'The guest will see the booking as confirmed.',
-    success: 'The booking has been confirmed.',
-  },
   checkIn: {
     status: 'checked_in',
     label: 'Check in',
@@ -44,11 +36,9 @@ const ACTIONS = {
   },
 };
 
-// LƯU Ý: khi làm thanh toán QR (docs/api.md mục 11), đơn tự chuyển confirmed sau khi thanh toán,
-// admin không duyệt nữa. Lúc đó bỏ ACTIONS.confirm khỏi pending (chỉ còn cancel, hiện "Waiting for payment"),
-// sửa ALLOWED_TRANSITIONS ở server/src/services/admin/bookings.service.js và cập nhật Mục 5 của proposal.md.
+// Đơn pending tự chuyển confirmed khi khách thanh toán QR (mục 11 của docs/api.md), nên admin chỉ hủy được.
 export const ADMIN_BOOKING_ACTIONS = {
-  pending: [ACTIONS.confirm, ACTIONS.cancel],
+  pending: [ACTIONS.cancel],
   confirmed: [ACTIONS.checkIn, ACTIONS.cancel],
   checked_in: [ACTIONS.checkOut],
 };

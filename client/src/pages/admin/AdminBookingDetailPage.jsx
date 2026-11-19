@@ -14,6 +14,7 @@ import { getActions } from '../../config/adminRequests.js';
 import { CHECK_IN_TIME } from '../../utils/cancellation.js';
 import formatCurrency from '../../utils/formatCurrency.js';
 import formatDate from '../../utils/formatDate.js';
+import PaymentInfoCard from '../../components/payments/PaymentInfoCard.jsx';
 
 // Nội dung đơn. Giữ trong state để cập nhật ngay sau khi đổi trạng thái (API trả lại cả đơn).
 function BookingDetails({ initialBooking }) {
@@ -113,6 +114,8 @@ function BookingDetails({ initialBooking }) {
               {user?.phone && <DetailRow label="Phone">{user.phone}</DetailRow>}
             </dl>
           </Card>
+
+          <PaymentInfoCard order={booking} />
 
           <Card>
             <h2 className="mb-3 text-lg font-semibold text-slate-900">Actions</h2>

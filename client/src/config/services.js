@@ -2,6 +2,8 @@
 // airport_pickup, shuttle) không nằm ở đây; chúng thuộc trang Tours.
 // unit: đơn vị số lượng (số ít, số nhiều); priceUnit: chữ hiện sau giá;
 // bookingStatuses: trạng thái đơn đặt phòng cần có để đặt (backend kiểm tra lại).
+import { PAYMENT_HOLD_MINUTES } from './payments.js';
+
 export const HOTEL_SERVICE_CATEGORIES = {
   breakfast: {
     label: 'Breakfast',
@@ -59,6 +61,5 @@ export const SERVICE_NOTE_MAX_LENGTH = 1000;
 // Giờ kết thúc thời gian lưu trú trong ngày check-out.
 export const STAY_END_TIME = '23:59';
 
-export const SERVICE_REQUEST_CREATED_MESSAGE =
-  'Your request has been sent. The hotel will confirm it soon.';
+export const SERVICE_REQUEST_CREATED_MESSAGE = `Your request has been created. Please pay within ${PAYMENT_HOLD_MINUTES} minutes to send it to reception.`;
 export const ADMIN_SERVICE_NOTE = 'Admin accounts cannot book services.';

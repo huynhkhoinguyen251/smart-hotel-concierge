@@ -3,6 +3,7 @@ import formatCurrency from '../../utils/formatCurrency.js';
 import formatDate from '../../utils/formatDate.js';
 import { formatItemCount } from '../../utils/foodCart.js';
 import StatusBadge from '../ui/StatusBadge.jsx';
+import AwaitingPaymentNote from '../payments/AwaitingPaymentNote.jsx';
 
 // Một đơn trong danh sách "My food orders".
 export default function FoodOrderCard({ order }) {
@@ -13,6 +14,7 @@ export default function FoodOrderCard({ order }) {
           <h3 className="text-lg font-semibold text-slate-900">Order #{order.id}</h3>
           <StatusBadge status={order.status} />
         </div>
+        <AwaitingPaymentNote order={order} to={`/my-food-orders/${order.id}`} />
         <p className="mt-0.5 text-sm text-slate-500">
           Room {order.booking.room.room_number} · {formatItemCount(order.item_count)}
         </p>

@@ -10,6 +10,8 @@ import { TRANSPORT_CATEGORIES, TRANSPORT_CATEGORY_KEYS } from '../../config/tour
 import formatDate from '../../utils/formatDate.js';
 import { formatTransportQuantity, getTransportLabel } from '../../utils/tourismHelpers.js';
 import { getPlateField } from '../../utils/vehiclePlate.js';
+import { getConfirmDisabledReason } from '../../utils/paymentHelpers.js';
+import { PaymentBadge } from '../../components/payments/PaymentInfoCard.jsx';
 
 const CATEGORY_FILTER = {
   name: 'category',
@@ -70,6 +72,7 @@ const COLUMNS = [
     ),
   },
   { key: 'total', header: 'Total', align: 'right', render: (booking) => <MoneyCell amount={booking.total_price} /> },
+  { key: 'payment', header: 'Payment', render: (booking) => <PaymentBadge payment={booking.payment} /> },
 ];
 
 // /admin/tourism/transport: đơn vận chuyển của khách (tab "Transport").
@@ -93,6 +96,7 @@ export default function AdminTransportBookingsPage() {
           <AdminStatusActions
             actions={getActions(TRANSPORT_BOOKING_ADMIN_ACTIONS, booking.status)}
             update={(action, plate) => updateAdminTransportBookingStatus(booking.id, action.status, plate)}
+            getDisabledReason={getConfirmDisabledReason(booking)}
             getExtraField={getPlateField(booking.service.category)}
             itemLabel={itemLabel(booking)}
             {...actionProps}

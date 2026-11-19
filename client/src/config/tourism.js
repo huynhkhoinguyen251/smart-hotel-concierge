@@ -1,5 +1,6 @@
 // Du lịch: tour địa phương và vận chuyển (Mục 5 của proposal.md, mục 6 của docs/api.md).
 // Giới hạn giống backend (server/src/config/tourism.js); backend vẫn kiểm tra lại.
+import { PAYMENT_HOLD_MINUTES } from './payments.js';
 
 // 3 loại vận chuyển, đặt qua POST /transport-bookings.
 // quantity: null = không có ô số lượng (thuê xe máy luôn 1 xe); unit: đơn vị (số ít, số nhiều).
@@ -74,10 +75,8 @@ export const TRIP_TYPE_TABS = [
   { value: 'transport', label: 'Transport' },
 ];
 
-export const TOUR_BOOKING_CREATED_MESSAGE =
-  'Your tour booking has been sent. The hotel will confirm it soon.';
-export const TRANSPORT_BOOKING_CREATED_MESSAGE =
-  'Your request has been sent. The hotel will confirm it soon.';
+export const TOUR_BOOKING_CREATED_MESSAGE = `Your tour booking has been created. Please pay within ${PAYMENT_HOLD_MINUTES} minutes to send it to reception.`;
+export const TRANSPORT_BOOKING_CREATED_MESSAGE = `Your transport request has been created. Please pay within ${PAYMENT_HOLD_MINUTES} minutes to send it to reception.`;
 export const TOUR_BOOKING_CANCELLED_MESSAGE = 'Your tour booking has been cancelled.';
 export const TRANSPORT_BOOKING_CANCELLED_MESSAGE = 'Your transport request has been cancelled.';
 export const ADMIN_TOUR_NOTE = 'Admin accounts cannot book tours.';

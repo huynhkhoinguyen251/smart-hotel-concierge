@@ -1,4 +1,5 @@
 // Đồ ăn và đồ uống (Mục 5 của proposal.md). Giới hạn giống backend (server/src/config/food.js).
+import { PAYMENT_HOLD_MINUTES } from './payments.js';
 
 // 3 loại món trong thực đơn và nhãn hiển thị.
 export const MENU_CATEGORIES = {
@@ -32,7 +33,7 @@ export const FOOD_ORDER_BOOKING_STATUS = 'checked_in';
 // Khóa localStorage của giỏ hàng.
 export const CART_STORAGE_KEY = 'shc_food_cart';
 
-export const FOOD_ORDER_CREATED_MESSAGE = 'Your order has been placed.';
+export const FOOD_ORDER_CREATED_MESSAGE = `Your order has been created. Please pay within ${PAYMENT_HOLD_MINUTES} minutes to send it to the kitchen.`;
 export const FOOD_ORDER_CANCELLED_MESSAGE = 'Your order has been cancelled.';
 export const ADMIN_FOOD_NOTE = 'Admin accounts cannot order food.';
 export const NO_CHECKED_IN_BOOKING_NOTE = 'Food delivery to your room is available after you check in.';

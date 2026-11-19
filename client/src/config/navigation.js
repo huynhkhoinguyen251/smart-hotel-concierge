@@ -14,6 +14,7 @@ export const GUEST_ACCOUNT_NAV = [
   { to: '/my-services', label: 'My service requests' },
   { to: '/my-food-orders', label: 'My food orders' },
   { to: '/my-trips', label: 'My trips' },
+  { to: '/my-payments', label: 'My payments' },
   { to: '/my-reviews', label: 'My reviews' },
   { to: '/support', label: 'Support' },
 ];
@@ -23,6 +24,7 @@ export const ADMIN_NAV = [
   { to: '/admin', label: 'Dashboard', end: true },
   { to: '/admin/rooms', label: 'Rooms' },
   { to: '/admin/bookings', label: 'Bookings' },
+  { to: '/admin/payments', label: 'Payments' },
   { to: '/admin/services', label: 'Services' },
   { to: '/admin/food-orders', label: 'Food Orders' },
   { to: '/admin/tourism', label: 'Tourism' },

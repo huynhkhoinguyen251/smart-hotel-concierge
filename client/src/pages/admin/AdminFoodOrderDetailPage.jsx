@@ -14,6 +14,8 @@ import useAdminItem from '../../hooks/useAdminItem.js';
 import { formatItemCount } from '../../utils/foodCart.js';
 import { sumPrices } from '../../utils/price.js';
 import formatCurrency from '../../utils/formatCurrency.js';
+import { getConfirmDisabledReason } from '../../utils/paymentHelpers.js';
+import PaymentInfoCard from '../../components/payments/PaymentInfoCard.jsx';
 
 function FoodOrderDetails({ initialOrder }) {
   const { item: order, message, actionProps } = useAdminItem(initialOrder);
@@ -73,11 +75,13 @@ function FoodOrderDetails({ initialOrder }) {
               </div>
             </dl>
           </Card>
+          <PaymentInfoCard order={order} />
           <AdminActionsCard emptyText="No more actions for this order.">
             {actions.length > 0 && (
               <AdminStatusActions
                 actions={actions}
                 update={(action) => updateAdminFoodOrderStatus(order.id, action.status)}
+                getDisabledReason={getConfirmDisabledReason(order)}
                 itemLabel={`food order #${order.id}`}
                 {...actionProps}
               />

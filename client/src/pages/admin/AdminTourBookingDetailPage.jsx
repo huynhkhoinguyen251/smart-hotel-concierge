@@ -13,6 +13,8 @@ import useAdminItem from '../../hooks/useAdminItem.js';
 import formatCurrency from '../../utils/formatCurrency.js';
 import formatDate from '../../utils/formatDate.js';
 import { formatParticipants } from '../../utils/tourismHelpers.js';
+import { getConfirmDisabledReason } from '../../utils/paymentHelpers.js';
+import PaymentInfoCard from '../../components/payments/PaymentInfoCard.jsx';
 
 function TourBookingDetails({ initialBooking }) {
   const { item: booking, message, actionProps } = useAdminItem(initialBooking);
@@ -67,11 +69,13 @@ function TourBookingDetails({ initialBooking }) {
               </div>
             </dl>
           </Card>
+          <PaymentInfoCard order={booking} />
           <AdminActionsCard emptyText="No more actions for this booking.">
             {actions.length > 0 && (
               <AdminStatusActions
                 actions={actions}
                 update={(action) => updateAdminTourBookingStatus(booking.id, action.status)}
+                getDisabledReason={getConfirmDisabledReason(booking)}
                 itemLabel={`tour booking #${booking.id}`}
                 {...actionProps}
               />

@@ -12,6 +12,8 @@ import { HOTEL_SERVICE_CATEGORIES, HOTEL_SERVICE_CATEGORY_KEYS } from '../../con
 import { SERVICE_REQUEST_STATUS_TABS } from '../../config/statuses.js';
 import formatDate from '../../utils/formatDate.js';
 import { formatQuantity, getCategoryLabel } from '../../utils/serviceHelpers.js';
+import { getConfirmDisabledReason } from '../../utils/paymentHelpers.js';
+import { PaymentBadge } from '../../components/payments/PaymentInfoCard.jsx';
 
 const CATEGORY_FILTER = {
   name: 'category',
@@ -67,6 +69,7 @@ const COLUMNS = [
     ),
   },
   { key: 'total', header: 'Total', align: 'right', render: (request) => <MoneyCell amount={request.total_price} /> },
+  { key: 'payment', header: 'Payment', render: (request) => <PaymentBadge payment={request.payment} /> },
 ];
 
 // /admin/services: yêu cầu dịch vụ khách sạn của khách.
@@ -90,6 +93,7 @@ export default function AdminServiceRequestsPage() {
           <AdminStatusActions
             actions={getActions(SERVICE_REQUEST_ADMIN_ACTIONS, request.status)}
             update={(action) => updateAdminServiceBookingStatus(request.id, action.status)}
+            getDisabledReason={getConfirmDisabledReason(request)}
             itemLabel={itemLabel(request)}
             {...actionProps}
           />

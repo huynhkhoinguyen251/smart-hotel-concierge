@@ -3,6 +3,7 @@ import formatCurrency from '../../utils/formatCurrency.js';
 import formatDate from '../../utils/formatDate.js';
 import { formatParticipants } from '../../utils/tourismHelpers.js';
 import StatusBadge from '../ui/StatusBadge.jsx';
+import AwaitingPaymentNote from '../payments/AwaitingPaymentNote.jsx';
 
 // Một đơn tour trong trang "My trips".
 export default function TourBookingCard({ booking }) {
@@ -15,6 +16,7 @@ export default function TourBookingCard({ booking }) {
           <h3 className="text-lg font-semibold break-words text-slate-900">{tour.name}</h3>
           <StatusBadge status={booking.status} />
         </div>
+        <AwaitingPaymentNote order={booking} to={`/my-trips/tours/${booking.id}`} />
         <p className="mt-0.5 text-sm text-slate-500">
           {tour.location} · {tour.duration} · Booking #{booking.id}
         </p>

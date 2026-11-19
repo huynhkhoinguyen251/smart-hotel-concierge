@@ -65,7 +65,7 @@ export default function DashboardPage() {
         <StatCard
           label="Pending bookings"
           request={overview}
-          getValue={(data) => ({ value: data.bookings.by_status.pending ?? 0, detail: 'Waiting for confirmation' })}
+          getValue={(data) => ({ value: data.bookings.by_status.pending ?? 0, detail: 'Waiting for payment' })}
           link={{ to: '/admin/bookings?status=pending', label: 'Review pending bookings' }}
         />
         <StatCard

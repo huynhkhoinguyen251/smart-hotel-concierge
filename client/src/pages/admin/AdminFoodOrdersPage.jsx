@@ -8,6 +8,8 @@ import { FOOD_ORDER_ADMIN_ACTIONS, getActions } from '../../config/adminRequests
 import { FOOD_ORDER_STATUS_TABS } from '../../config/statuses.js';
 import { formatItemCount } from '../../utils/foodCart.js';
 import formatDate from '../../utils/formatDate.js';
+import { getConfirmDisabledReason } from '../../utils/paymentHelpers.js';
+import { PaymentBadge } from '../../components/payments/PaymentInfoCard.jsx';
 
 const itemLabel = (order) => `food order #${order.id}`;
 
@@ -47,6 +49,7 @@ const COLUMNS = [
     ),
   },
   { key: 'total', header: 'Total', align: 'right', render: (order) => <MoneyCell amount={order.total_price} /> },
+  { key: 'payment', header: 'Payment', render: (order) => <PaymentBadge payment={order.payment} /> },
 ];
 
 // /admin/food-orders: đơn đồ ăn của khách.
@@ -69,6 +72,7 @@ export default function AdminFoodOrdersPage() {
           <AdminStatusActions
             actions={getActions(FOOD_ORDER_ADMIN_ACTIONS, order.status)}
             update={(action) => updateAdminFoodOrderStatus(order.id, action.status)}
+            getDisabledReason={getConfirmDisabledReason(order)}
             itemLabel={itemLabel(order)}
             {...actionProps}
           />

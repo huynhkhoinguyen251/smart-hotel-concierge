@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { cancelTransportBooking, getTransportBooking } from '../api/transportBookings.api.js';
+import PaymentPanel from '../components/payments/PaymentPanel.jsx';
 import ReviewPanel from '../components/reviews/ReviewPanel.jsx';
 import Alert from '../components/ui/Alert.jsx';
 import Button from '../components/ui/Button.jsx';
@@ -49,12 +50,22 @@ function TransportBookingDetails({ initialBooking, initialMessage }) {
   const fields = category?.fields ?? { start: 'Start time', end: 'End time', pickup: 'Pickup location', dropoff: 'Drop-off location' };
 
   // Ví dụ 400: khách sạn vừa duyệt yêu cầu, không còn pending.
-  const { success, error, dialogProps, openDialog } = useCancelAction({
+  const { success, error, showMessage, dialogProps, openDialog } = useCancelAction({
     cancel: () => cancelTransportBooking(booking.id),
     onCancelled: setBooking,
     successMessage: TRANSPORT_BOOKING_CANCELLED_MESSAGE,
     initialMessage,
   });
+
+  // Tải lại đơn sau khi thanh toán hoặc hết hạn (thanh toán có thể đổi cả trạng thái đơn).
+  const reloadAfterPayment = async (message) => {
+    try {
+      setBooking(await getTransportBooking(booking.id));
+    } catch {
+      // Lỗi mạng: giữ dữ liệu đang có; khách có thể tải lại trang.
+    }
+    if (message) showMessage('success', message);
+  };
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
@@ -75,6 +86,15 @@ function TransportBookingDetails({ initialBooking, initialMessage }) {
       <div className="mb-6 space-y-3" aria-live="polite">
         <Alert type="success">{success}</Alert>
         <Alert type="error">{error}</Alert>
+      </div>
+
+      <div className="mb-6 empty:hidden">
+        <PaymentPanel
+          type="transport"
+          order={booking}
+          onPaid={reloadAfterPayment}
+          onExpired={() => reloadAfterPayment('')}
+        />
       </div>
 
       <Card className="mb-6">

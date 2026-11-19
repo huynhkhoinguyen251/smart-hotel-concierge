@@ -16,6 +16,8 @@ import useAdminItem from '../../hooks/useAdminItem.js';
 import formatCurrency from '../../utils/formatCurrency.js';
 import formatDate from '../../utils/formatDate.js';
 import { formatQuantity, getCategoryLabel } from '../../utils/serviceHelpers.js';
+import { getConfirmDisabledReason } from '../../utils/paymentHelpers.js';
+import PaymentInfoCard from '../../components/payments/PaymentInfoCard.jsx';
 
 function ServiceRequestDetails({ initialRequest }) {
   const { item: request, message, actionProps } = useAdminItem(initialRequest);
@@ -81,11 +83,13 @@ function ServiceRequestDetails({ initialRequest }) {
               </div>
             </dl>
           </Card>
+          <PaymentInfoCard order={request} />
           <AdminActionsCard emptyText="No more actions for this request.">
             {actions.length > 0 && (
               <AdminStatusActions
                 actions={actions}
                 update={(action) => updateAdminServiceBookingStatus(request.id, action.status)}
+                getDisabledReason={getConfirmDisabledReason(request)}
                 itemLabel={label}
                 {...actionProps}
               />
