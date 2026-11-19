@@ -5,11 +5,13 @@ import {
 } from '../config/booking.js';
 import { withTransaction } from '../config/db.js';
 import * as bookingsModel from '../models/bookings.model.js';
+import * as paymentsModel from '../models/payments.model.js';
 import * as roomsModel from '../models/rooms.model.js';
 import * as serviceBookingsModel from '../models/serviceBookings.model.js';
 import AppError from '../utils/AppError.js';
 import { countNights, toLocalDateTime } from '../utils/date.js';
 import { getPagination } from '../utils/pagination.js';
+import { toPaymentSummary } from './paymentSummary.service.js';
 
 export const BOOKING_NOT_FOUND = 'Booking not found';
 const ROOM_NOT_FOUND = 'Room not found';
@@ -27,6 +29,7 @@ export const canUserCancel = ({ status, check_in }, now = new Date()) =>
   toLocalDateTime(check_in, CHECK_IN_HOUR) - now >= CANCEL_DEADLINE_HOURS * MS_PER_HOUR;
 
 // Dữ liệu trả về của một đơn. Đơn trong API admin có thêm user.
+// payment: thanh toán QR của đơn (null với đơn cũ), xem paymentSummary.service.js.
 export const toBookingResponse = (booking, { withUser = false } = {}) => ({
   id: booking.id,
   status: booking.status,
@@ -41,6 +44,7 @@ export const toBookingResponse = (booking, { withUser = false } = {}) => ({
   room: booking.room,
   can_edit: booking.status === 'pending',
   can_cancel: canUserCancel(booking),
+  payment: toPaymentSummary(booking.payment, booking),
   ...(withUser && { user: booking.user }),
 });
 
@@ -65,9 +69,13 @@ const lockOwnBooking = async (userId, bookingId, conn) => {
 };
 
 // Hủy đơn và các yêu cầu dịch vụ còn pending hoặc confirmed của đơn, trong transaction đang mở.
+// Thanh toán đã trả của đơn và của các yêu cầu bị hủy theo chuyển refunded; thanh toán chưa trả
+// giữ nguyên unpaid. Hoàn tiền yêu cầu dịch vụ trước, khi trạng thái của chúng chưa bị đổi.
 export const cancelBookingWithServices = async (bookingId, conn) => {
-  await bookingsModel.updateBookingStatus(bookingId, 'cancelled', conn);
+  await paymentsModel.refundActiveServicePaymentsOfBooking(bookingId, conn);
   await serviceBookingsModel.cancelActiveServiceBookings(bookingId, conn);
+  await paymentsModel.refundPaidPayment('booking_id', bookingId, conn);
+  await bookingsModel.updateBookingStatus(bookingId, 'cancelled', conn);
 };
 
 export const createBooking = async (userId, { room_id, check_in, check_out, guests }) => {
@@ -93,7 +101,8 @@ export const createBooking = async (userId, { room_id, check_in, check_out, gues
 
     // Giá lấy từ database, không tin giá do frontend gửi lên.
     const pricePerNight = room.room_type.price_per_night;
-    return bookingsModel.createBooking(
+    const totalPrice = calculateTotal(countNights(check_in, check_out), pricePerNight);
+    const id = await bookingsModel.createBooking(
       {
         user_id: userId,
         room_id,
@@ -101,10 +110,16 @@ export const createBooking = async (userId, { room_id, check_in, check_out, gues
         check_out,
         guests,
         price_per_night: pricePerNight,
-        total_price: calculateTotal(countNights(check_in, check_out), pricePerNight),
+        total_price: totalPrice,
       },
       conn,
     );
+    // Thanh toán QR chưa trả, tạo cùng transaction. Đơn giữ pending đến khi khách thanh toán.
+    await paymentsModel.createPayment(
+      { user_id: userId, column: 'booking_id', target_id: id, amount: totalPrice },
+      conn,
+    );
+    return id;
   });
 
   return toBookingResponse(await findBookingOr404(bookingId));
@@ -162,16 +177,14 @@ export const updateMyBooking = async (userId, id, { check_in, check_out, guests 
       throw new AppError(409, ROOM_BOOKED);
     }
 
+    const totalPrice = calculateTotal(countNights(newCheckIn, newCheckOut), booking.price_per_night);
     await bookingsModel.updateBookingStay(
       booking.id,
-      {
-        check_in: newCheckIn,
-        check_out: newCheckOut,
-        guests: newGuests,
-        total_price: calculateTotal(countNights(newCheckIn, newCheckOut), booking.price_per_night),
-      },
+      { check_in: newCheckIn, check_out: newCheckOut, guests: newGuests, total_price: totalPrice },
       conn,
     );
+    // Số tiền cần trả theo tổng mới. Hạn thanh toán vẫn tính từ lúc đặt, không được gia hạn.
+    await paymentsModel.updateUnpaidAmount('booking_id', booking.id, totalPrice, conn);
   });
 
   return toBookingResponse(await findBookingOr404(id));

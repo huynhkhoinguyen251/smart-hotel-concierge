@@ -82,7 +82,7 @@
         }
       ],
       "request": {
-        "description": "Expected: 200, total 9. Room 302 is excluded because it has a pending booking from 24 Dec to 27 Dec. The cancelled booking for room 302 (25 Dec - 28 Dec) is not counted.",
+        "description": "Expected: 200, total 9. Room 302 is excluded because it has a confirmed booking from 24 Dec to 27 Dec. The cancelled booking for room 302 (25 Dec - 28 Dec) is not counted.",
         "method": "GET",
         "header": [],
         "url": "{{baseUrl}}/rooms?check_in=2026-12-24&check_out=2026-12-27"
@@ -219,7 +219,7 @@
         }
       ],
       "request": {
-        "description": "Expected: 200, available true, reason null, nights 2, estimated_total 3600000. The cancelled booking (25 Dec - 28 Dec) does not block the room, and the pending booking that checks out on 27 Dec does not overlap with a check-in on 28 Dec.",
+        "description": "Expected: 200, available true, reason null, nights 2, estimated_total 3600000. The cancelled booking (25 Dec - 28 Dec) does not block the room, and the confirmed booking that checks out on 27 Dec does not overlap with a check-in on 28 Dec.",
         "method": "GET",
         "header": [],
         "url": "{{baseUrl}}/rooms/9/availability?check_in=2026-12-28&check_out=2026-12-30"

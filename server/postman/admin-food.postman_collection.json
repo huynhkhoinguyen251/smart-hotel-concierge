@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Smart Hotel - Admin Food and Drink",
-    "description": "Tests the 4 admin menu item APIs and the 3 admin food order APIs. Run the requests in order (Collection Runner). The test menu item is deleted at the end of the CRUD steps, and each run adds one completed food order on seed booking 3, so the collection can be run again while booking 3 is checked in (until 6 Dec 2026).",
+    "description": "Tests the 4 admin menu item APIs and the 3 admin food order APIs. Run the requests in order (Collection Runner). The test menu item is deleted at the end of the CRUD steps, and each run adds one completed food order on seed booking 3, so the collection can be run again while booking 3 is checked in (until 6 Dec 2026). Request 17b pays the test order by QR before the admin confirms it.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -640,6 +640,51 @@
         "body": {
           "mode": "raw",
           "raw": "{\n  \"status\": \"delivering\"\n}"
+        }
+      }
+    },
+    {
+      "name": "17b. An pays the order by QR",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Paid with invoice, order pending', () => {",
+              "  pm.expect(data.status).to.eql('paid');",
+              "  pm.expect(data.invoice_number).to.match(/^INV-\\d{8}-\\d{6}$/);",
+              "  pm.expect(data.order_status).to.eql('pending');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Simulated QR payment (\"I have paid\") for the food order. The admin can only confirm paid orders (Option A). Expected: 200, message 'Payment completed successfully', status paid, an invoice_number, order_status pending.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/payments",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"method\": \"e_wallet\",\n  \"food_order_id\": {{orderId}}\n}"
         }
       }
     },

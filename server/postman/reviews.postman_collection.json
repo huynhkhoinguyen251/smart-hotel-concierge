@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Smart Hotel - Reviews",
-    "description": "Tests the 2 user review APIs and the 4 public review lists. Run the requests in order (Collection Runner). Each run creates a new tour booking, completes it as the admin and reviews it, so the collection can be run again. Service booking 2 and transport booking 1 are never used, so they stay unreviewed for the demo.",
+    "description": "Tests the 2 user review APIs and the 4 public review lists. Run the requests in order (Collection Runner). Each run creates a new tour booking, completes it as the admin and reviews it, so the collection can be run again. Service booking 2 and transport booking 1 are never used, so they stay unreviewed for the demo. Request 3b pays the tour booking by QR before the admin confirms it.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -135,6 +135,51 @@
         "body": {
           "mode": "raw",
           "raw": "{\n  \"tour_id\": 4,\n  \"tour_date\": \"2026-12-20\",\n  \"participants\": 1\n}"
+        }
+      }
+    },
+    {
+      "name": "3b. An pays the tour booking by QR",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Paid with invoice, order pending', () => {",
+              "  pm.expect(data.status).to.eql('paid');",
+              "  pm.expect(data.invoice_number).to.match(/^INV-\\d{8}-\\d{6}$/);",
+              "  pm.expect(data.order_status).to.eql('pending');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Simulated QR payment (\"I have paid\") for the tour booking. The admin can only confirm paid orders (Option A). Expected: 200, message 'Payment completed successfully', status paid, an invoice_number, order_status pending.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/payments",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"method\": \"e_wallet\",\n  \"tour_booking_id\": {{tourBookingId}}\n}"
         }
       }
     },

@@ -127,6 +127,8 @@ INSERT INTO tours (id, name, description, location, duration, price, image_url, 
 -- ============================================================
 -- Đặt phòng: total_price = số đêm x price_per_night - discount_amount
 -- Đơn 8 (đã hủy) trùng ngày với đơn 7 ở phòng 302 để minh họa: đơn đã hủy không giữ phòng.
+-- Seed không có đơn pending: đơn pending chưa thanh toán sẽ tự hủy sau 15 phút (mục 11 của docs/api.md),
+-- nên đơn chờ thanh toán dùng cho demo được tạo trực tiếp trên web.
 -- ============================================================
 
 INSERT INTO bookings (id, user_id, room_id, voucher_id, check_in, check_out, guests, price_per_night, discount_amount, total_price, status) VALUES
@@ -136,7 +138,7 @@ INSERT INTO bookings (id, user_id, room_id, voucher_id, check_in, check_out, gue
 (4, 4, 11, NULL, '2026-11-06', '2026-11-09', 4, 2500000.00, 0.00, 7500000.00, 'checked_in'),
 (5, 3, 6, NULL, '2026-12-10', '2026-12-13', 2, 1200000.00, 0.00, 3600000.00, 'confirmed'),
 (6, 4, 2, 1, '2026-12-20', '2026-12-22', 2, 800000.00, 160000.00, 1440000.00, 'confirmed'),
-(7, 2, 9, NULL, '2026-12-24', '2026-12-27', 2, 1800000.00, 0.00, 5400000.00, 'pending'),
+(7, 2, 9, NULL, '2026-12-24', '2026-12-27', 2, 1800000.00, 0.00, 5400000.00, 'confirmed'),
 (8, 3, 9, NULL, '2026-12-25', '2026-12-28', 2, 1800000.00, 0.00, 5400000.00, 'cancelled'),
 (9, 2, 12, 3, '2026-12-30', '2027-01-02', 4, 2500000.00, 1125000.00, 6375000.00, 'confirmed');
 
@@ -151,8 +153,8 @@ INSERT INTO service_bookings (id, booking_id, service_id, scheduled_at, quantity
 (3, 3, 4, '2026-11-07 09:00:00', 2, 60000.00, 120000.00, NULL, 'in_progress'),
 (4, 4, 5, '2026-11-08 10:00:00', 1, 100000.00, 100000.00, 'Please bring extra bath towels.', 'confirmed'),
 (5, 4, 3, '2026-11-08 16:00:00', 2, 500000.00, 1000000.00, NULL, 'confirmed'),
-(6, 5, 2, '2026-12-11 18:30:00', 2, 450000.00, 900000.00, 'A table near the window, please.', 'pending'),
-(7, 6, 3, '2026-12-21 15:00:00', 1, 500000.00, 500000.00, NULL, 'pending'),
+(6, 5, 2, '2026-12-11 18:30:00', 2, 450000.00, 900000.00, 'A table near the window, please.', 'confirmed'),
+(7, 6, 3, '2026-12-21 15:00:00', 1, 500000.00, 500000.00, NULL, 'confirmed'),
 (8, 9, 1, '2026-12-31 07:30:00', 4, 150000.00, 600000.00, NULL, 'cancelled');
 
 -- ============================================================
@@ -165,7 +167,7 @@ INSERT INTO food_orders (id, booking_id, voucher_id, discount_amount, total_pric
 (2, 4, NULL, 0.00, 390000.00, 'Less spicy, please.', 'completed'),
 (3, 3, NULL, 0.00, 145000.00, NULL, 'preparing'),
 (4, 4, NULL, 0.00, 170000.00, 'Please deliver before 8 AM.', 'delivering'),
-(5, 3, NULL, 0.00, 30000.00, 'No sugar.', 'pending'),
+(5, 3, NULL, 0.00, 30000.00, 'No sugar.', 'confirmed'),
 (6, 4, NULL, 0.00, 75000.00, NULL, 'cancelled'),
 (7, 4, NULL, 0.00, 80000.00, NULL, 'confirmed');
 
@@ -191,7 +193,7 @@ INSERT INTO food_order_items (id, food_order_id, menu_item_id, quantity, unit_pr
 INSERT INTO tour_bookings (id, user_id, tour_id, tour_date, participants, unit_price, total_price, note, status) VALUES
 (1, 2, 2, '2026-11-03', 2, 650000.00, 1300000.00, NULL, 'completed'),
 (2, 3, 1, '2026-12-11', 2, 1250000.00, 2500000.00, 'We need a child seat.', 'confirmed'),
-(3, 4, 3, '2026-12-21', 1, 750000.00, 750000.00, NULL, 'pending'),
+(3, 4, 3, '2026-12-21', 1, 750000.00, 750000.00, NULL, 'confirmed'),
 (4, 2, 4, '2027-01-05', 3, 450000.00, 1350000.00, 'Cancelled due to a change in my work schedule.', 'cancelled'),
 (5, 4, 4, '2026-11-07', 4, 450000.00, 1800000.00, NULL, 'in_progress');
 
@@ -200,8 +202,8 @@ INSERT INTO transport_bookings (id, user_id, service_id, start_at, end_at, picku
 (2, 3, 6, '2026-11-03 08:00:00', '2026-11-04 08:00:00', 'Hotel', 'Hotel', NULL, '43B1-234.56', 1, 150000.00, 150000.00, NULL, 'completed'),
 (3, 4, 6, '2026-11-07 08:00:00', '2026-11-08 08:00:00', 'Hotel', 'Hotel', NULL, '43B1-345.67', 1, 150000.00, 150000.00, NULL, 'in_progress'),
 (4, 3, 6, '2026-12-10 08:00:00', '2026-12-11 08:00:00', 'Hotel', 'Hotel', NULL, '43B1-456.78', 1, 150000.00, 150000.00, 'Please include a raincoat.', 'confirmed'),
-(5, 4, 6, '2026-12-20 08:00:00', '2026-12-21 08:00:00', 'Hotel', 'Hotel', NULL, NULL, 1, 150000.00, 150000.00, NULL, 'pending'),
-(6, 3, 8, '2026-12-12 09:00:00', NULL, 'Hotel', 'Han Market', NULL, NULL, 2, 80000.00, 160000.00, NULL, 'pending'),
+(5, 4, 6, '2026-12-20 08:00:00', '2026-12-21 08:00:00', 'Hotel', 'Hotel', NULL, '43B1-567.89', 1, 150000.00, 150000.00, NULL, 'confirmed'),
+(6, 3, 8, '2026-12-12 09:00:00', NULL, 'Hotel', 'Han Market', NULL, NULL, 2, 80000.00, 160000.00, NULL, 'confirmed'),
 (7, 2, 6, '2026-12-24 08:00:00', '2026-12-25 08:00:00', 'Hotel', 'Hotel', NULL, NULL, 1, 150000.00, 150000.00, 'No longer needed.', 'cancelled');
 
 -- ============================================================
@@ -234,36 +236,66 @@ INSERT INTO reviews (id, user_id, booking_id, service_booking_id, food_order_id,
 (6, 3, NULL, NULL, NULL, NULL, 2, 4, 'The bike ran well and the paperwork was quick.');
 
 -- ============================================================
--- Thanh toán giả lập và hóa đơn: amount bằng total_price của đơn
--- Chỉ thanh toán có trạng thái paid mới có hóa đơn trong file này.
+-- Thanh toán QR giả lập và hóa đơn (Phương án A, mục 11 của docs/api.md)
+-- Mỗi đơn confirmed, checked_in, checked_out, in_progress, preparing, delivering, completed
+-- có một thanh toán paid: method e_wallet, amount = total_price, trả 2 phút sau khi đặt.
+-- Đơn đặt phòng 8 đã trả rồi bị hủy nên thanh toán là refunded. Các đơn cancelled khác chưa
+-- từng thanh toán nên không có thanh toán (payment = null trong API).
+-- id thanh toán theo thứ tự: đơn đặt phòng, yêu cầu dịch vụ, đơn đồ ăn, đơn tour, đơn vận chuyển.
+-- Mỗi thanh toán đã trả (kể cả đã hoàn tiền) có một hóa đơn INV-YYYYMMDD-<id 6 chữ số>.
 -- ============================================================
 
-INSERT INTO payments (id, user_id, booking_id, service_booking_id, food_order_id, tour_booking_id, transport_booking_id, amount, method, status, paid_at) VALUES
-(1, 2, 1, NULL, NULL, NULL, NULL, 2400000.00, 'card', 'paid', '2026-11-04 10:00:00'),
-(2, 3, 2, NULL, NULL, NULL, NULL, 3240000.00, 'e_wallet', 'paid', '2026-11-05 11:00:00'),
-(3, 2, 3, NULL, NULL, NULL, NULL, 54000000.00, 'card', 'paid', '2026-11-06 08:00:00'),
-(4, 3, 5, NULL, NULL, NULL, NULL, 3600000.00, 'e_wallet', 'unpaid', NULL),
-(5, 2, NULL, 1, NULL, NULL, NULL, 300000.00, 'cash', 'paid', '2026-11-06 08:30:00'),
-(6, 2, NULL, NULL, 1, NULL, NULL, 170000.00, 'cash', 'paid', '2026-11-06 19:00:00'),
-(7, 2, NULL, NULL, NULL, 1, NULL, 1300000.00, 'card', 'paid', '2026-11-02 20:00:00'),
-(8, 3, NULL, NULL, NULL, NULL, 2, 150000.00, 'cash', 'paid', '2026-11-04 08:30:00'),
-(9, 3, 8, NULL, NULL, NULL, NULL, 5400000.00, 'card', 'refunded', '2026-11-06 15:00:00');
+-- Một câu INSERT duy nhất để id thanh toán liên tục (mỗi câu INSERT ... SELECT giữ trước một khoảng id).
+-- Yêu cầu dịch vụ và đơn đồ ăn: người trả là chủ đơn đặt phòng.
+INSERT INTO payments
+  (user_id, booking_id, service_booking_id, food_order_id, tour_booking_id, transport_booking_id,
+   amount, method, status, paid_at)
+SELECT user_id, booking_id, service_booking_id, food_order_id, tour_booking_id, transport_booking_id,
+       amount, 'e_wallet', status, paid_at
+FROM (
+  SELECT 1 AS kind, id AS order_id, user_id, id AS booking_id, NULL AS service_booking_id,
+         NULL AS food_order_id, NULL AS tour_booking_id, NULL AS transport_booking_id,
+         total_price AS amount, IF(status = 'cancelled', 'refunded', 'paid') AS status,
+         created_at + INTERVAL 2 MINUTE AS paid_at
+  FROM bookings
+  WHERE status IN ('confirmed', 'checked_in', 'checked_out', 'in_progress', 'preparing', 'delivering', 'completed') OR id = 8
+  UNION ALL
+  SELECT 2, sb.id, b.user_id, NULL, sb.id, NULL, NULL, NULL, sb.total_price, 'paid',
+         sb.created_at + INTERVAL 2 MINUTE
+  FROM service_bookings sb
+  JOIN bookings b ON b.id = sb.booking_id
+  WHERE sb.status IN ('confirmed', 'checked_in', 'checked_out', 'in_progress', 'preparing', 'delivering', 'completed')
+  UNION ALL
+  SELECT 3, fo.id, b.user_id, NULL, NULL, fo.id, NULL, NULL, fo.total_price, 'paid',
+         fo.created_at + INTERVAL 2 MINUTE
+  FROM food_orders fo
+  JOIN bookings b ON b.id = fo.booking_id
+  WHERE fo.status IN ('confirmed', 'checked_in', 'checked_out', 'in_progress', 'preparing', 'delivering', 'completed')
+  UNION ALL
+  SELECT 4, id, user_id, NULL, NULL, NULL, id, NULL, total_price, 'paid',
+         created_at + INTERVAL 2 MINUTE
+  FROM tour_bookings
+  WHERE status IN ('confirmed', 'checked_in', 'checked_out', 'in_progress', 'preparing', 'delivering', 'completed')
+  UNION ALL
+  SELECT 5, id, user_id, NULL, NULL, NULL, NULL, id, total_price, 'paid',
+         created_at + INTERVAL 2 MINUTE
+  FROM transport_bookings
+  WHERE status IN ('confirmed', 'checked_in', 'checked_out', 'in_progress', 'preparing', 'delivering', 'completed')
+) AS paid_orders
+ORDER BY kind, order_id;
 
-INSERT INTO invoices (id, payment_id, invoice_number, issued_at) VALUES
-(1, 1, 'INV-202611-0001', '2026-11-04 10:00:00'),
-(2, 2, 'INV-202611-0002', '2026-11-05 11:00:00'),
-(3, 3, 'INV-202611-0003', '2026-11-06 08:00:00'),
-(4, 5, 'INV-202611-0004', '2026-11-06 08:30:00'),
-(5, 6, 'INV-202611-0005', '2026-11-06 19:00:00'),
-(6, 7, 'INV-202611-0006', '2026-11-02 20:00:00'),
-(7, 8, 'INV-202611-0007', '2026-11-04 08:30:00');
+INSERT INTO invoices (payment_id, invoice_number, issued_at)
+SELECT id, CONCAT('INV-', DATE_FORMAT(paid_at, '%Y%m%d'), '-', LPAD(id, 6, '0')), paid_at
+FROM payments
+WHERE status IN ('paid', 'refunded')
+ORDER BY id;
 
 -- ============================================================
 -- Thông báo trong ứng dụng
 -- ============================================================
 
 INSERT INTO notifications (id, user_id, title, message, type, is_read) VALUES
-(1, 2, 'Booking awaiting confirmation', 'Your booking for room 302 from 24 Dec to 27 Dec is awaiting hotel confirmation.', 'booking', 0),
+(1, 2, 'Booking confirmed', 'Your payment was received. Your booking for room 302 from 24 Dec to 27 Dec is confirmed.', 'booking', 0),
 (2, 3, 'Booking confirmed', 'Your booking for room 202 from 10 Dec to 13 Dec has been confirmed.', 'booking', 1),
 (3, 4, 'Service confirmed', 'Your massage request at 16:00 on 8 Nov has been confirmed.', 'service', 0),
 (4, 2, 'Food order being prepared', 'The kitchen is preparing your food order #3.', 'food_order', 0),

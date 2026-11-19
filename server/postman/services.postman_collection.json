@@ -230,7 +230,7 @@
       }
     },
     {
-      "name": "8. Book breakfast on pending booking 7 (400)",
+      "name": "8. Book breakfast on checked-out booking 1 (400)",
       "event": [
         {
           "listen": "test",
@@ -238,13 +238,13 @@
             "type": "text/javascript",
             "exec": [
               "pm.test('Returns 400', () => pm.response.to.have.status(400));",
-              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"The breakfast service requires a booking with status confirmed or checked_in; this booking is pending\"));"
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"The breakfast service requires a booking with status confirmed or checked_in; this booking is checked_out\"));"
             ]
           }
         }
       ],
       "request": {
-        "description": "Booking 7 belongs to An but is still pending. Breakfast needs a confirmed or checked-in booking. Expected: 400 with message 'The breakfast service requires a booking with status confirmed or checked_in; this booking is pending'.",
+        "description": "Booking 1 belongs to An and is checked out. Breakfast needs a confirmed or checked-in booking. Expected: 400 with message 'The breakfast service requires a booking with status confirmed or checked_in; this booking is checked_out'.",
         "auth": {
           "type": "bearer",
           "bearer": [
@@ -265,7 +265,7 @@
         "url": "{{baseUrl}}/service-bookings",
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"booking_id\": 7,\n  \"service_id\": 1,\n  \"scheduled_at\": \"2026-12-25 07:30\",\n  \"quantity\": 2\n}"
+          "raw": "{\n  \"booking_id\": 1,\n  \"service_id\": 1,\n  \"scheduled_at\": \"2026-12-25 07:30\",\n  \"quantity\": 2\n}"
         }
       }
     },

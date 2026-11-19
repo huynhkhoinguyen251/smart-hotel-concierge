@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Smart Hotel - Bookings",
-    "description": "Tests the 5 user booking APIs and the 3 admin booking APIs. Run the requests in order (Collection Runner). Every test booking ends as cancelled, and cancelled bookings do not block rooms, so the collection can be run again. The fixed dates in February 2027 only work until then; after that, change them to future dates.",
+    "description": "Tests the 5 user booking APIs and the 3 admin booking APIs. Run the requests in order (Collection Runner). Every test booking ends as cancelled, and cancelled bookings do not block rooms, so the collection can be run again. The fixed dates in February 2027 only work until then; after that, change them to future dates. Request 13b pays the test booking by QR, which confirms it; cancelling it then refunds the payment.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -162,13 +162,18 @@
               "  pm.expect(data.total_price).to.eql(2400000);",
               "  pm.expect(data.can_edit).to.eql(true);",
               "});",
+              "pm.test('Unpaid QR payment for the total, 15 minutes to pay', () => {",
+              "  pm.expect(data.payment.status).to.eql('unpaid');",
+              "  pm.expect(data.payment.amount).to.eql(2400000);",
+              "  pm.expect(data.payment.seconds_left).to.be.within(1, 900);",
+              "});",
               "pm.collectionVariables.set('bookingId', data.id);"
             ]
           }
         }
       ],
       "request": {
-        "description": "Expected: 201, message 'Booking created successfully'. status pending, nights 3, price_per_night 800000 (taken from the database), total_price 2400000, discount_amount 0, can_edit true, can_cancel true. The id is saved to bookingId.",
+        "description": "Expected: 201, message 'Booking created successfully'. status pending, nights 3, price_per_night 800000 (taken from the database), total_price 2400000, discount_amount 0, can_edit true, can_cancel true. The id is saved to bookingId. It also has a payment object: status unpaid, method e_wallet, amount 2400000, expires_at 15 minutes after created_at and seconds_left.",
         "auth": {
           "type": "bearer",
           "bearer": [
@@ -469,13 +474,14 @@
               "pm.test('4 nights, total 3200000', () => {",
               "  pm.expect(data.nights).to.eql(4);",
               "  pm.expect(data.total_price).to.eql(3200000);",
-              "});"
+              "});",
+              "pm.test('Unpaid amount follows the new total', () => pm.expect(data.payment.amount).to.eql(3200000));"
             ]
           }
         }
       ],
       "request": {
-        "description": "Expected: 200, message 'Booking updated successfully'. nights 4, price_per_night stays 800000, total_price 3200000. The overlap check skips this booking itself, so moving to overlapping dates of the same booking is allowed.",
+        "description": "Expected: 200, message 'Booking updated successfully'. nights 4, price_per_night stays 800000, total_price 3200000. The overlap check skips this booking itself, so moving to overlapping dates of the same booking is allowed. The unpaid payment amount becomes 3200000 too; the payment deadline is not extended.",
         "auth": {
           "type": "bearer",
           "bearer": [
@@ -501,25 +507,21 @@
       }
     },
     {
-      "name": "13. Admin confirms the booking",
+      "name": "13. Admin tries to confirm the pending booking (400)",
       "event": [
         {
           "listen": "test",
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
-              "const data = pm.response.json().data;",
-              "pm.test('Confirmed, with user', () => {",
-              "  pm.expect(data.status).to.eql('confirmed');",
-              "  pm.expect(data.user.full_name).to.eql('Tran Thi An');",
-              "});"
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql('Bookings are confirmed automatically when the guest pays.'));"
             ]
           }
         }
       ],
       "request": {
-        "description": "Expected: 200, message 'Booking status updated successfully', status confirmed. The response includes user (Tran Thi An).",
+        "description": "Room bookings are confirmed by the QR payment, not by the admin. Expected: 400 with message 'Bookings are confirmed automatically when the guest pays.'",
         "auth": {
           "type": "bearer",
           "bearer": [
@@ -541,6 +543,51 @@
         "body": {
           "mode": "raw",
           "raw": "{\n  \"status\": \"confirmed\"\n}"
+        }
+      }
+    },
+    {
+      "name": "13b. An pays the booking by QR (booking becomes confirmed)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Paid with invoice, order confirmed', () => {",
+              "  pm.expect(data.status).to.eql('paid');",
+              "  pm.expect(data.invoice_number).to.match(/^INV-\\d{8}-\\d{6}$/);",
+              "  pm.expect(data.order_status).to.eql('confirmed');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Simulated QR payment (\"I have paid\") for the booking. The admin can only confirm paid orders (Option A). Expected: 200, message 'Payment completed successfully', status paid, an invoice_number, order_status confirmed.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/payments",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"method\": \"e_wallet\",\n  \"booking_id\": {{bookingId}}\n}"
         }
       }
     },
@@ -857,14 +904,13 @@
             "exec": [
               "pm.test('Returns 200', () => pm.response.to.have.status(200));",
               "const data = pm.response.json().data;",
-              "pm.test('All pending', () => data.forEach((booking) => pm.expect(booking.status).to.eql('pending')));",
-              "pm.test('Contains booking 7', () => pm.expect(data.map((booking) => booking.id)).to.include(7));"
+              "pm.test('All pending', () => data.forEach((booking) => pm.expect(booking.status).to.eql('pending')));"
             ]
           }
         }
       ],
       "request": {
-        "description": "Expected: 200. Every booking has status pending and includes user. Seed booking 7 (room 302, 24 Dec - 27 Dec, Tran Thi An) is in the list.",
+        "description": "Expected: 200. Every booking has status pending and includes user. The seed has no pending bookings (unpaid bookings expire after 15 minutes), so the list may be empty.",
         "auth": {
           "type": "bearer",
           "bearer": [

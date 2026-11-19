@@ -1,6 +1,8 @@
 import { withTransaction } from '../../config/db.js';
+import { ORDER_NOT_PAID } from '../../config/payments.js';
 import { SERVICE_REQUEST_TRANSITIONS } from '../../config/services.js';
 import { PLATE_REQUIRED_CATEGORIES } from '../../config/tourism.js';
+import * as paymentsModel from '../../models/payments.model.js';
 import * as transportBookingsModel from '../../models/transportBookings.model.js';
 import AppError from '../../utils/AppError.js';
 import { getPagination } from '../../utils/pagination.js';
@@ -61,11 +63,27 @@ export const updateTransportBookingStatus = async (id, { status, vehicle_plate }
       throw new AppError(400, 'A licence plate is required to approve a motorbike rental');
     }
 
+    // Phương án A: chỉ duyệt khi khách đã thanh toán QR.
+    if (status === 'confirmed') {
+      const paymentStatus = await paymentsModel.findPaymentStatusByTarget(
+        'transport_booking_id',
+        transportBooking.id,
+        conn,
+      );
+      if (paymentStatus !== 'paid') {
+        throw new AppError(400, ORDER_NOT_PAID);
+      }
+    }
+
     await transportBookingsModel.updateTransportBookingStatus(
       transportBooking.id,
       { status, vehicle_plate },
       conn,
     );
+    if (status === 'cancelled') {
+      // Hủy đơn đã thanh toán thì hoàn tiền.
+      await paymentsModel.refundPaidPayment('transport_booking_id', transportBooking.id, conn);
+    }
   });
 
   return getTransportBooking(id);

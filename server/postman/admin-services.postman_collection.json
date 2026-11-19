@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Smart Hotel - Admin Hotel Services",
-    "description": "Tests the 4 admin service APIs and the 3 admin service request APIs. Run the requests in order (Collection Runner). The test service is deleted at the end of the CRUD steps, and each run adds one completed service request, so the collection can be run again.",
+    "description": "Tests the 4 admin service APIs and the 3 admin service request APIs. Run the requests in order (Collection Runner). The test service is deleted at the end of the CRUD steps, and each run adds one completed service request, so the collection can be run again. Request 18b pays the test request by QR before the admin confirms it.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -664,6 +664,51 @@
         "body": {
           "mode": "raw",
           "raw": "{\n  \"status\": \"completed\"\n}"
+        }
+      }
+    },
+    {
+      "name": "18b. An pays the request by QR",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Paid with invoice, order pending', () => {",
+              "  pm.expect(data.status).to.eql('paid');",
+              "  pm.expect(data.invoice_number).to.match(/^INV-\\d{8}-\\d{6}$/);",
+              "  pm.expect(data.order_status).to.eql('pending');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Simulated QR payment (\"I have paid\") for the service request. The admin can only confirm paid orders (Option A). Expected: 200, message 'Payment completed successfully', status paid, an invoice_number, order_status pending.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/payments",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"method\": \"e_wallet\",\n  \"service_booking_id\": {{requestId}}\n}"
         }
       }
     },

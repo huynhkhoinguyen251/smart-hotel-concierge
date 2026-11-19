@@ -19,6 +19,8 @@ Open the new `.env` file and fill in these two values. Do not commit this file.
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
+Optional: `PAYMENT_HOLD_MINUTES` sets how many minutes a guest has to pay a new order (default 15). To test payment expiry quickly, set it to `1` and restart the server. Remove it again afterwards.
+
 ## 2. Install dependencies
 
 ```powershell

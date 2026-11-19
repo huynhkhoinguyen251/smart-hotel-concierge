@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import * as serviceBookingsController from '../../controllers/admin/serviceBookings.controller.js';
+import expireUnpaidOrders from '../../middlewares/expireUnpaidOrders.js';
 import validate from '../../middlewares/validate.js';
 import {
   listAdminServiceBookingsValidator,
@@ -13,12 +14,14 @@ router.get(
   '/',
   listAdminServiceBookingsValidator,
   validate,
+  expireUnpaidOrders,
   serviceBookingsController.getServiceBookings,
 );
 router.get(
   '/:id',
   serviceBookingIdValidator,
   validate,
+  expireUnpaidOrders,
   serviceBookingsController.getServiceBooking,
 );
 router.patch(

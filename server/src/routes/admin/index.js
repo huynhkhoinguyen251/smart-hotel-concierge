@@ -5,6 +5,7 @@ import amenitiesRoutes from './amenities.routes.js';
 import bookingsRoutes from './bookings.routes.js';
 import foodOrdersRoutes from './foodOrders.routes.js';
 import menuItemsRoutes from './menuItems.routes.js';
+import paymentsRoutes from './payments.routes.js';
 import reviewsRoutes from './reviews.routes.js';
 import roomImagesRoutes from './roomImages.routes.js';
 import roomsRoutes from './rooms.routes.js';
@@ -40,6 +41,7 @@ router.use('/transport-bookings', transportBookingsRoutes);
 router.use('/tickets', ticketsRoutes);
 router.use('/reviews', reviewsRoutes);
 router.use('/users', usersRoutes);
+router.use('/payments', paymentsRoutes);
 router.use('/stats', statsRoutes);
 
 export default router;

@@ -1,5 +1,7 @@
 import { withTransaction } from '../../config/db.js';
+import { ORDER_NOT_PAID } from '../../config/payments.js';
 import { SERVICE_REQUEST_TRANSITIONS } from '../../config/services.js';
+import * as paymentsModel from '../../models/payments.model.js';
 import * as tourBookingsModel from '../../models/tourBookings.model.js';
 import AppError from '../../utils/AppError.js';
 import { getPagination } from '../../utils/pagination.js';
@@ -41,7 +43,23 @@ export const updateTourBookingStatus = async (id, status) => {
       throw new AppError(400, `Cannot change status from ${tourBooking.status} to ${status}`);
     }
 
+    // Phương án A: chỉ duyệt khi khách đã thanh toán QR.
+    if (status === 'confirmed') {
+      const paymentStatus = await paymentsModel.findPaymentStatusByTarget(
+        'tour_booking_id',
+        tourBooking.id,
+        conn,
+      );
+      if (paymentStatus !== 'paid') {
+        throw new AppError(400, ORDER_NOT_PAID);
+      }
+    }
+
     await tourBookingsModel.updateTourBookingStatus(tourBooking.id, status, conn);
+    if (status === 'cancelled') {
+      // Hủy đơn đã thanh toán thì hoàn tiền.
+      await paymentsModel.refundPaidPayment('tour_booking_id', tourBooking.id, conn);
+    }
   });
 
   return getTourBooking(id);

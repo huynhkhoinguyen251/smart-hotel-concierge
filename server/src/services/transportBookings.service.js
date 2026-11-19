@@ -7,12 +7,14 @@ import {
   TRANSPORT_CATEGORIES,
   TRANSPORT_QUANTITY_LIMITS,
 } from '../config/tourism.js';
+import * as paymentsModel from '../models/payments.model.js';
 import * as servicesModel from '../models/services.model.js';
 import * as transportBookingsModel from '../models/transportBookings.model.js';
 import AppError from '../utils/AppError.js';
 import { addDays, formatLocalDate, parseLocalDateTime } from '../utils/date.js';
 import { multiplyPrice } from '../utils/money.js';
 import { getPagination } from '../utils/pagination.js';
+import { toPaymentSummary } from './paymentSummary.service.js';
 import { SERVICE_NOT_FOUND } from './services.service.js';
 
 export const TRANSPORT_BOOKING_NOT_FOUND = 'Transport booking not found';
@@ -39,6 +41,7 @@ export const toTransportBookingResponse = (transportBooking, { withUser = false 
   created_at: transportBooking.created_at,
   service: transportBooking.service,
   can_cancel: transportBooking.status === USER_CANCELLABLE_SERVICE_STATUS,
+  payment: toPaymentSummary(transportBooking.payment, transportBooking),
   ...(withUser && { user: transportBooking.user }),
 });
 
@@ -160,7 +163,7 @@ export const createTransportBooking = async (userId, data) => {
     // Giá lấy từ database. vehicle_plate không bao giờ lấy từ user; admin nhập khi duyệt.
     const priced = PRICE_BY_CATEGORY[service.category](data, service.price);
 
-    return transportBookingsModel.createTransportBooking(
+    const transportBookingId = await transportBookingsModel.createTransportBooking(
       {
         user_id: userId,
         service_id: service.id,
@@ -176,6 +179,17 @@ export const createTransportBooking = async (userId, data) => {
       },
       conn,
     );
+    // Thanh toán QR chưa trả, tạo cùng transaction. Đơn giữ pending; admin duyệt sau khi khách trả.
+    await paymentsModel.createPayment(
+      {
+        user_id: userId,
+        column: 'transport_booking_id',
+        target_id: transportBookingId,
+        amount: priced.total_price,
+      },
+      conn,
+    );
+    return transportBookingId;
   });
 
   return toTransportBookingResponse(await findTransportBookingOr404(id));
@@ -227,6 +241,8 @@ export const cancelMyTransportBooking = async (userId, id) => {
       { status: 'cancelled' },
       conn,
     );
+    // Đã thanh toán thì hoàn tiền; chưa thanh toán thì giữ unpaid.
+    await paymentsModel.refundPaidPayment('transport_booking_id', transportBooking.id, conn);
   });
 
   return toTransportBookingResponse(await findTransportBookingOr404(id));

@@ -57,3 +57,19 @@ export const parseLocalDateTime = (value) => {
   const [, date, hour, minute] = value.match(DATE_TIME_PATTERN);
   return toLocalDateTime(date, Number(hour), Number(minute));
 };
+
+const DATE_TIME_SECONDS_PATTERN = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/;
+
+// Cộng số phút vào chuỗi 'YYYY-MM-DD HH:mm:ss' (giờ địa phương do database trả về) và trả
+// cùng dạng. Tính trên giờ UTC "giả" nên không phụ thuộc múi giờ của server.
+export const addMinutesToDateTime = (value, minutes) => {
+  const match = typeof value === 'string' && value.match(DATE_TIME_SECONDS_PATTERN);
+  if (!match) {
+    return null;
+  }
+  const [, year, month, day, hour, minute, second] = match.map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day, hour, minute + minutes, second));
+  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())} ${pad(
+    date.getUTCHours(),
+  )}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())}`;
+};

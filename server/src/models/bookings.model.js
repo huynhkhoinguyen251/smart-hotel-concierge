@@ -1,17 +1,23 @@
 import pool from '../config/db.js';
 import { primaryImageSubquery } from './roomImages.model.js';
 import { buildSetClause } from './sqlHelpers.js';
+import { paymentSummarySql, toPaymentSummaryRow } from './payments.model.js';
+
+// Thanh toán QR của đơn (null với đơn cũ), xem payments.model.js.
+const PAYMENT_SQL = paymentSummarySql('booking_id', 'b');
 
 const BOOKING_SELECT = `
   SELECT b.id, b.user_id, b.room_id, b.status, b.check_in, b.check_out, b.guests,
          b.price_per_night, b.discount_amount, b.total_price, b.created_at,
          r.room_number, rt.id AS room_type_id, rt.name AS room_type_name,
          ${primaryImageSubquery('r.id')} AS primary_image,
-         u.full_name AS user_full_name, u.email AS user_email
+         u.full_name AS user_full_name, u.email AS user_email,
+         ${PAYMENT_SQL.columns}
   FROM bookings b
   JOIN rooms r ON r.id = b.room_id
   JOIN room_types rt ON rt.id = r.room_type_id
-  JOIN users u ON u.id = b.user_id`;
+  JOIN users u ON u.id = b.user_id
+  ${PAYMENT_SQL.joins}`;
 
 // Đơn mới nhất trước; id là thứ tự phụ khi created_at bằng nhau.
 const NEWEST_FIRST = 'b.created_at DESC, b.id DESC';
@@ -35,6 +41,7 @@ const toBooking = (row) => ({
     primary_image: row.primary_image ?? null,
   },
   user: { id: row.user_id, full_name: row.user_full_name, email: row.user_email },
+  payment: toPaymentSummaryRow(row),
 });
 
 const buildFilters = ({ user_id, status, room_id, check_in_from, check_in_to }) => {

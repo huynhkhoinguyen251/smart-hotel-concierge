@@ -91,13 +91,15 @@ Tham số của `GET /rooms`: `check_in`, `check_out`, `guests`, `room_type_id`,
 
 | Method | Endpoint | Quyền | Mô tả |
 |---|---|---|---|
-| POST | `/bookings` | User | Đặt phòng; `room_id`, `check_in`, `check_out`, `guests` |
+| POST | `/bookings` | User | Đặt phòng; `room_id`, `check_in`, `check_out`, `guests`. Đơn `pending`, kèm thanh toán QR `unpaid` (mục 11) |
 | GET | `/bookings` | User | Lịch sử đặt phòng của tôi |
 | GET | `/bookings/:id` | User | Chi tiết đơn |
-| PUT | `/bookings/:id` | User | Đổi ngày khi đơn còn `pending`; kiểm tra lại phòng trống |
-| PATCH | `/bookings/:id/cancel` | User | Hủy khi đơn `pending` hoặc `confirmed`, và còn ít nhất 24 giờ trước 14:00 ngày check-in; tự hủy các yêu cầu dịch vụ `pending`, `confirmed` của đơn |
+| PUT | `/bookings/:id` | User | Đổi ngày khi đơn còn `pending`; kiểm tra lại phòng trống; số tiền thanh toán chưa trả đổi theo tổng mới, hạn thanh toán không được gia hạn |
+| PATCH | `/bookings/:id/cancel` | User | Hủy khi đơn `pending` hoặc `confirmed`, và còn ít nhất 24 giờ trước 14:00 ngày check-in; tự hủy các yêu cầu dịch vụ `pending`, `confirmed` của đơn; thanh toán đã trả của đơn và của các yêu cầu đó chuyển `refunded` |
 
-Lưu ý: `POST /bookings` và `PUT /bookings/:id` phải kiểm tra phòng trống và ghi dữ liệu trong cùng một transaction. Số khách không được vượt `capacity` của loại phòng.
+Lưu ý: `POST /bookings` và `PUT /bookings/:id` phải kiểm tra phòng trống và ghi dữ liệu trong cùng một transaction. Số khách không được vượt `capacity` của loại phòng. Đơn chuyển `confirmed` khi khách thanh toán QR (`POST /payments`), không do admin duyệt.
+
+Mọi đơn trong các API trên (danh sách và chi tiết) có thêm object `payment` (xem mục 11); đơn tạo trước khi có thanh toán QR có `payment = null`.
 
 ### 4. Dịch vụ khách sạn
 
@@ -105,12 +107,12 @@ Lưu ý: `POST /bookings` và `PUT /bookings/:id` phải kiểm tra phòng trố
 |---|---|---|---|
 | GET | `/services` | Public | Danh sách dịch vụ đang hoạt động; lọc bằng `category` |
 | GET | `/services/:id` | Public | Chi tiết dịch vụ |
-| POST | `/service-bookings` | User | Đặt dịch vụ; `booking_id`, `service_id`, `scheduled_at`, `quantity`, `note` |
+| POST | `/service-bookings` | User | Đặt dịch vụ; `booking_id`, `service_id`, `scheduled_at`, `quantity`, `note`. Kèm thanh toán QR `unpaid` |
 | GET | `/service-bookings` | User | Yêu cầu dịch vụ của tôi |
 | GET | `/service-bookings/:id` | User | Chi tiết yêu cầu |
-| PATCH | `/service-bookings/:id/cancel` | User | Hủy khi còn `pending` |
+| PATCH | `/service-bookings/:id/cancel` | User | Hủy khi còn `pending`; đã thanh toán thì chuyển `refunded` |
 
-Lưu ý: `booking_id` phải thuộc người dùng và đúng trạng thái theo Mục 5 của proposal. API này chỉ nhận `breakfast`, `buffet`, `massage`, `laundry`, `housekeeping`. `scheduled_at` phải ở tương lai và nằm trong thời gian lưu trú: từ 14:00 ngày nhận phòng đến hết ngày trả phòng.
+Lưu ý: `booking_id` phải thuộc người dùng và đúng trạng thái theo Mục 5 của proposal. API này chỉ nhận `breakfast`, `buffet`, `massage`, `laundry`, `housekeeping`. `scheduled_at` phải ở tương lai và nằm trong thời gian lưu trú: từ 14:00 ngày nhận phòng đến hết ngày trả phòng. Yêu cầu vẫn `pending` sau khi thanh toán; admin chỉ duyệt được khi đã thanh toán. Mọi đơn trong các API trên (danh sách và chi tiết) có thêm object `payment` (xem mục 11); đơn tạo trước khi có thanh toán QR có `payment = null`.
 
 ### 5. Đồ ăn và đồ uống
 
@@ -118,12 +120,12 @@ Lưu ý: `booking_id` phải thuộc người dùng và đúng trạng thái the
 |---|---|---|---|
 | GET | `/menu-items` | Public | Thực đơn; lọc bằng `category` |
 | GET | `/menu-items/:id` | Public | Chi tiết món |
-| POST | `/food-orders` | User | Đặt món; `booking_id`, `items` (`menu_item_id`, `quantity`), `note` |
+| POST | `/food-orders` | User | Đặt món; `booking_id`, `items` (`menu_item_id`, `quantity`), `note`. Kèm thanh toán QR `unpaid` |
 | GET | `/food-orders` | User | Đơn đồ ăn của tôi |
 | GET | `/food-orders/:id` | User | Chi tiết đơn và các món |
-| PATCH | `/food-orders/:id/cancel` | User | Hủy khi còn `pending` |
+| PATCH | `/food-orders/:id/cancel` | User | Hủy khi còn `pending`; đã thanh toán thì chuyển `refunded` |
 
-Lưu ý: `booking_id` phải là đơn `checked_in` của người dùng. Món có `is_available = false` không đặt được. Đơn và các món được lưu trong cùng một transaction.
+Lưu ý: `booking_id` phải là đơn `checked_in` của người dùng. Món có `is_available = false` không đặt được. Đơn, các món và thanh toán QR được lưu trong cùng một transaction. Đơn vẫn `pending` sau khi thanh toán; admin chỉ duyệt được khi đã thanh toán. Mọi đơn trong các API trên (danh sách và chi tiết) có thêm object `payment` (xem mục 11); đơn tạo trước khi có thanh toán QR có `payment = null`.
 
 ### 6. Du lịch
 
@@ -131,14 +133,14 @@ Lưu ý: `booking_id` phải là đơn `checked_in` của người dùng. Món c
 |---|---|---|---|
 | GET | `/tours` | Public | Danh sách tour đang hoạt động |
 | GET | `/tours/:id` | Public | Chi tiết tour |
-| POST | `/tour-bookings` | User | Đặt tour; `tour_id`, `tour_date`, `participants`, `note` |
+| POST | `/tour-bookings` | User | Đặt tour; `tour_id`, `tour_date`, `participants`, `note`. Kèm thanh toán QR `unpaid` |
 | GET | `/tour-bookings` | User | Đơn tour của tôi |
 | GET | `/tour-bookings/:id` | User | Chi tiết đơn |
-| PATCH | `/tour-bookings/:id/cancel` | User | Hủy khi còn `pending` |
-| POST | `/transport-bookings` | User | Thuê xe máy, đón sân bay hoặc xe đưa đón |
+| PATCH | `/tour-bookings/:id/cancel` | User | Hủy khi còn `pending`; đã thanh toán thì chuyển `refunded` |
+| POST | `/transport-bookings` | User | Thuê xe máy, đón sân bay hoặc xe đưa đón. Kèm thanh toán QR `unpaid` |
 | GET | `/transport-bookings` | User | Đơn vận chuyển của tôi; có `vehicle_plate` khi đã được nhập |
 | GET | `/transport-bookings/:id` | User | Chi tiết đơn |
-| PATCH | `/transport-bookings/:id/cancel` | User | Hủy khi còn `pending` |
+| PATCH | `/transport-bookings/:id/cancel` | User | Hủy khi còn `pending`; đã thanh toán thì chuyển `refunded` |
 
 Dữ liệu của `POST /transport-bookings`: `service_id`, `start_at`, `end_at`, `pickup_location`, `dropoff_location`, `flight_number`, `quantity`, `note`. API này chỉ nhận `motorbike_rental`, `airport_pickup`, `shuttle`. Khi thuê xe máy, `quantity` phải bằng 1 và phải có `end_at`.
 
@@ -151,7 +153,9 @@ Cách tính tiền và giới hạn:
 | `shuttle` | Số người, 1–20 | Giá × số người | Không gửi `end_at` |
 | Tour | `participants` 1–20 | Giá × số người | `tour_date` |
 
-`start_at` và `tour_date` phải ở tương lai và không quá 1 năm. `pickup_location` và `dropoff_location` bắt buộc với cả 3 loại vận chuyển. Admin nhập `vehicle_plate` khi duyệt (`confirmed`): bắt buộc với thuê xe máy, không bắt buộc với đón sân bay và xe đưa đón.
+`start_at` và `tour_date` phải ở tương lai và không quá 1 năm. `pickup_location` và `dropoff_location` bắt buộc với cả 3 loại vận chuyển. Admin nhập `vehicle_plate` khi duyệt (`confirmed`): bắt buộc với thuê xe máy, không bắt buộc với đón sân bay và xe đưa đón. Admin chỉ duyệt được đơn đã thanh toán QR.
+
+Mọi đơn trong các API trên (danh sách và chi tiết) có thêm object `payment` (xem mục 11); đơn tạo trước khi có thanh toán QR có `payment = null`.
 
 ### 7. Hỗ trợ
 
@@ -230,7 +234,7 @@ Bổ sung:
 |---|---|---|
 | GET | `/admin/bookings` | Tất cả đơn; lọc bằng `status`, `room_id`, `user_id`, ngày |
 | GET | `/admin/bookings/:id` | Chi tiết đơn |
-| PATCH | `/admin/bookings/:id/status` | Đổi trạng thái theo luồng; hủy được cả khi còn dưới 24 giờ |
+| PATCH | `/admin/bookings/:id/status` | Đổi trạng thái theo luồng; hủy được cả khi còn dưới 24 giờ. Không đổi `pending` → `confirmed` được (trả `400`): đơn tự `confirmed` khi khách thanh toán |
 
 **Danh mục dịch vụ, thực đơn và tour**
 
@@ -253,7 +257,7 @@ Không xóa được dữ liệu đã có đơn (trả `409`); khi đó dùng AP
 
 **Các yêu cầu từ khách**
 
-Trạng thái đổi theo luồng ở Mục 5 của proposal. Admin hủy được khi đơn còn `pending` hoặc `confirmed`.
+Trạng thái đổi theo luồng ở Mục 5 của proposal. Admin hủy được khi đơn còn `pending` hoặc `confirmed`; hủy đơn đã thanh toán thì thanh toán chuyển `refunded`. Admin chỉ duyệt (`confirmed`) được đơn đã thanh toán QR, nếu chưa thì trả `400` "This order has not been paid yet." (Phương án A, mục 11).
 
 | Method | Endpoint | Mô tả |
 |---|---|---|
@@ -275,6 +279,8 @@ Trạng thái đổi theo luồng ở Mục 5 của proposal. Admin hủy đư�
 | PATCH | `/admin/tickets/:id/status` | Đổi trạng thái |
 
 Lưu ý: khi duyệt thuê xe máy (`confirmed`) mà thiếu `vehicle_plate` thì trả `400`.
+
+Danh sách và chi tiết của 5 loại đơn trong API admin có object `payment` giống API của khách (mục 11). Thanh toán của admin xem ở `GET /admin/payments` (mục 11).
 
 **Đánh giá và thống kê**
 
@@ -322,26 +328,68 @@ Thông báo được backend tự tạo khi trạng thái đơn thay đổi, nê
 
 | Method | Endpoint | Quyền | Mô tả |
 |---|---|---|---|
-| POST | `/payments` | User | Thanh toán giả lập; `method` và đúng một khóa đến đơn |
-| GET | `/payments` | User | Thanh toán của tôi |
-| GET | `/payments/:id` | User | Chi tiết thanh toán |
-| GET | `/payments/:id/invoice` | User | Hóa đơn của thanh toán |
-| GET | `/admin/payments` | Admin | Tất cả thanh toán; lọc bằng `status` |
-| PATCH | `/admin/payments/:id/refund` | Admin | Đánh dấu đã hoàn tiền |
+| POST | `/payments` | User | "I have paid": thanh toán QR giả lập; `method` (`e_wallet`) và đúng một khóa đến đơn |
+| GET | `/payments` | User | Thanh toán của tôi, mới nhất trước, có phân trang |
+| GET | `/payments/:id` | User | Chi tiết thanh toán của tôi |
+| GET | `/payments/:id/invoice` | User | Hóa đơn của thanh toán của tôi; `404` nếu chưa thanh toán |
+| GET | `/admin/payments` | Admin | Tất cả thanh toán; lọc bằng `status`, `type`; có phân trang |
+| PATCH | `/admin/payments/:id/refund` | Admin | Đánh dấu đã hoàn tiền; chỉ khi thanh toán `paid` và đơn đã `cancelled` |
 
-Lưu ý: số tiền do backend lấy từ đơn. Hóa đơn được tạo tự động khi thanh toán thành công. Không xử lý tiền thật.
+Lưu ý: số tiền do backend lấy từ đơn. Hóa đơn được tạo tự động khi thanh toán thành công. Không xử lý tiền thật, không kết nối ngân hàng.
 
-Bổ sung cho thanh toán đơn đặt phòng bằng QR (thống nhất ngày 13/11/2026, sửa ngày 14/11/2026; làm sau khi xong phần Core):
+Thanh toán QR cho cả 5 loại đơn (Phương án A, chủ dự án duyệt ngày 19/11/2026; thay cho phương án chỉ áp dụng cho đơn đặt phòng thống nhất ngày 13/11 và 14/11/2026):
 
-- Đặt phòng xong thì hiện trang thanh toán có mã QR giả lập và đồng hồ đếm ngược 15 phút. Khách bấm "I have paid" để mô phỏng việc quét QR và trả tiền. Không kết nối ngân hàng thật.
-- Trong 15 phút này, đơn là `pending` và thanh toán là `unpaid`. Khách vẫn đổi được ngày và số khách (`PUT /bookings/:id` như hiện tại). Khách thoát ra vẫn thanh toán tiếp được từ chi tiết đơn trong "My bookings", nếu còn hạn.
-- Hạn giữ đơn: 15 phút từ lúc đặt. Đổi ngày hoặc số khách không làm gia hạn.
-- Quá 15 phút mà chưa thanh toán thì đơn tự chuyển `cancelled` và phòng được mở lại. Render gói Free ngủ khi không có người dùng, nên backend kiểm tra và hủy đơn quá hạn mỗi khi có yêu cầu liên quan (xem đơn, danh sách đơn, tìm phòng, kiểm tra phòng trống, đặt phòng, thanh toán), không dựa vào bộ đếm giờ chạy nền. Thanh toán gửi lên sau khi hết hạn bị từ chối.
-- Thanh toán thành công thì trong cùng một transaction: thanh toán chuyển `paid`, hóa đơn được tạo, và đơn **tự chuyển `confirmed`**. Admin không cần duyệt đơn đặt phòng nữa; admin vẫn check-in, check-out và hủy đơn như cũ.
-- Đơn `confirmed` không đổi ngày được (giống hiện tại). Hủy đơn đã thanh toán (theo quy tắc 24 giờ) thì thanh toán chuyển `refunded`.
-- Trước khi làm phần thanh toán, đơn vẫn `pending` và admin duyệt như hiện tại.
-- Luồng trạng thái đặt phòng ở Mục 5 của `proposal.md` cần cập nhật khi làm phần này: `pending` → `confirmed` do thanh toán, không phải do admin.
-- QR được lưu với `method = e_wallet`, nên không cần đổi cấu trúc database. Tạo mã QR cần thư viện `qrcode`; phải hỏi lại trước khi cài.
+- **Tạo đơn:** `POST /bookings`, `/service-bookings`, `/food-orders`, `/tour-bookings`, `/transport-bookings` tạo luôn một thanh toán trong cùng transaction: `status = unpaid`, `method = e_wallet`, `amount` = `total_price` của đơn, `user_id` là khách. Đơn ở trạng thái `pending`. Frontend hiện mã QR giả lập và đồng hồ đếm ngược; khách bấm "I have paid" để mô phỏng việc quét QR.
+- **Hạn thanh toán:** 15 phút từ `created_at` của đơn (`PAYMENT_HOLD_MINUTES` trong `server/src/config/payments.js`). Đổi ngày hoặc số khách của đơn đặt phòng (`PUT /bookings/:id`) không gia hạn, nhưng `amount` của thanh toán chưa trả đổi theo tổng mới trong cùng transaction. Khách thoát ra vẫn thanh toán tiếp được từ chi tiết đơn nếu còn hạn.
+- **Hết hạn:** không dùng bộ đếm giờ chạy nền (Render gói Free ngủ khi không có người dùng). Trước các API dưới đây, backend hủy mọi đơn `pending` của 5 loại có thanh toán `unpaid` (hoặc không có thanh toán) và `created_at` cũ hơn 15 phút, so bằng giờ của database (`NOW() - INTERVAL 15 MINUTE`, múi giờ +07:00); mỗi loại đơn một transaction. Hủy đơn đặt phòng quá hạn cũng hủy các yêu cầu dịch vụ `pending`, `confirmed` của đơn. Khi không có đơn quá hạn, việc kiểm tra chỉ là một câu `SELECT` nhẹ. Các API có kiểm tra:
+  - Danh sách và chi tiết của 5 loại đơn, của khách và của admin.
+  - `GET /rooms` (tìm phòng), `GET /rooms/:id/availability`, `POST /bookings`, `PUT /bookings/:id`.
+  - `POST /payments`, `GET /payments`, `GET /payments/:id`, `GET /admin/payments`.
+- **Thanh toán (`POST /payments`):** body `{ "method": "e_wallet", "food_order_id": 12 }`, đúng một trong `booking_id`, `service_booking_id`, `food_order_id`, `tour_booking_id`, `transport_booking_id`. Trong một transaction có khóa dòng:
+  - Đơn không có: `404` (ví dụ "Food order not found").
+  - Đơn của người khác: `403`. Tài khoản admin: `403`.
+  - Thanh toán đã `paid` (hoặc đã `refunded`): `409` (ví dụ "This food order has already been paid").
+  - Đơn quá hạn (còn `pending` nhưng quá 15 phút, hoặc đã bị hủy và quá 15 phút): `400` "The payment time has expired. Please make a new booking."
+  - Đơn không còn `pending` (ví dụ khách đã hủy): `400`.
+  - Thành công: thanh toán chuyển `paid`, `paid_at` = bây giờ; tạo hóa đơn `invoice_number` dạng `INV-YYYYMMDD-000042` (ngày theo giờ database, số là id thanh toán), `issued_at` = bây giờ. **Chỉ đơn đặt phòng tự chuyển `confirmed`.** Yêu cầu dịch vụ, đơn đồ ăn, đơn tour, đơn vận chuyển vẫn `pending` và chờ admin duyệt. Trả `200` với dữ liệu thanh toán.
+- **Admin:**
+  - Đơn đặt phòng: admin không đổi `pending` → `confirmed` được nữa (`400` "Bookings are confirmed automatically when the guest pays."). Admin vẫn hủy (`pending`, `confirmed`), check-in và check-out như cũ.
+  - Yêu cầu dịch vụ, đơn đồ ăn, đơn tour, đơn vận chuyển: admin chỉ duyệt (`confirmed`) được khi thanh toán đã `paid`, nếu chưa thì `400` "This order has not been paid yet.". Các bước khác không đổi; quy tắc biển số khi duyệt thuê xe máy giữ nguyên.
+- **Hoàn tiền:** mỗi khi một đơn đã thanh toán bị hủy (khách tự hủy theo quy tắc hiện có, admin hủy, hoặc bị hủy theo khi đơn đặt phòng bị hủy), thanh toán của đơn chuyển `refunded` trong cùng transaction. Thanh toán chưa trả của đơn bị hủy giữ nguyên `unpaid`. `PATCH /admin/payments/:id/refund` chỉ là lưới an toàn: thanh toán phải `paid` và đơn phải `cancelled`, nếu không thì `400`.
+- **Thống kê** vẫn tính theo trạng thái đơn như cũ, không theo thanh toán.
+- QR được lưu với `method = e_wallet`, nên không cần đổi cấu trúc database. Mã QR do frontend tạo bằng thư viện `qrcode` (cài ở bước frontend).
+
+**Object `payment` trong dữ liệu đơn.** Mọi đơn trong danh sách và chi tiết của 5 loại đơn (API của khách và của admin) có thêm trường `payment`; các trường cũ giữ nguyên. Đơn tạo trước khi có thanh toán QR có `payment = null`.
+
+```json
+"payment": {
+  "id": 42,
+  "status": "unpaid",
+  "method": "e_wallet",
+  "amount": 150000,
+  "paid_at": null,
+  "expires_at": "2026-11-19 18:15:00",
+  "seconds_left": 612,
+  "invoice_number": null
+}
+```
+
+- `expires_at` (giờ địa phương, `YYYY-MM-DD HH:mm:ss`) và `seconds_left` (số nguyên ≥ 0, tính từ giờ của database) chỉ có giá trị khi đơn `pending` và thanh toán `unpaid`; các trường hợp khác là `null`.
+- `invoice_number` có khi đã thanh toán (kể cả đã hoàn tiền), nếu không là `null`.
+
+**Thanh toán trong `GET /payments`, `GET /payments/:id`, `POST /payments` và API admin:** các trường của object `payment` ở trên, cộng `created_at`, `target` (`type`: `room`, `service`, `food_order`, `tour`, `transport`; `id` của đơn; `name`, ví dụ "Room 301", tên dịch vụ, "Food order #5") và `order_status`. API admin có thêm `user` (`id`, `full_name`, `email`). `GET /payments/:id` của người khác trả `403`, không có thì `404`.
+
+**Hóa đơn (`GET /payments/:id/invoice`):** `invoice_number`, `issued_at`, `guest` (`full_name`, `email`, `phone`), `payment` (`id`, `status`, `method`, `amount`, `paid_at`), `order` (`type`, `id`, `name`, `status`), `lines`, `subtotal`, `discount`, `total`. Mỗi dòng trong `lines` có `description`, `detail`, `quantity`, `unit`, `unit_price`, `amount`:
+
+| Loại đơn | Dòng hóa đơn |
+|---|---|
+| Đặt phòng | Một dòng: loại phòng và số phòng; `quantity` = số đêm, `unit` = `night`, đơn giá mỗi đêm; `discount` = `discount_amount` |
+| Yêu cầu dịch vụ | Một dòng: tên dịch vụ, `quantity` và đơn vị theo loại (`person`, `kg`, `visit`) |
+| Đơn đồ ăn | Mỗi món một dòng: tên món, số lượng, đơn giá; `discount` = `discount_amount` |
+| Đơn tour | Một dòng: tên tour, `quantity` = số người |
+| Đơn vận chuyển | Một dòng: tên dịch vụ; thuê xe máy `quantity` = số ngày thuê (`day`), đón sân bay = số xe (`car`), xe đưa đón = số người (`person`) |
+
+**Thử nhanh việc hết hạn:** đặt `PAYMENT_HOLD_MINUTES=1` trong `server/.env` rồi khởi động lại server (giá trị hợp lệ 1–1440; không đặt thì 15), hoặc lùi `created_at` của đơn trong MySQL Workbench, ví dụ `UPDATE food_orders SET created_at = NOW() - INTERVAL 16 MINUTE WHERE id = 12;`, rồi gọi một API có kiểm tra ở trên.
 
 ### 12. Voucher
 

@@ -1,5 +1,7 @@
 import { withTransaction } from '../../config/db.js';
+import { ORDER_NOT_PAID } from '../../config/payments.js';
 import { SERVICE_REQUEST_TRANSITIONS } from '../../config/services.js';
+import * as paymentsModel from '../../models/payments.model.js';
 import * as serviceBookingsModel from '../../models/serviceBookings.model.js';
 import AppError from '../../utils/AppError.js';
 import { getPagination } from '../../utils/pagination.js';
@@ -43,7 +45,23 @@ export const updateServiceBookingStatus = async (id, status) => {
       throw new AppError(400, `Cannot change status from ${serviceBooking.status} to ${status}`);
     }
 
+    // Phương án A: chỉ duyệt khi khách đã thanh toán QR.
+    if (status === 'confirmed') {
+      const paymentStatus = await paymentsModel.findPaymentStatusByTarget(
+        'service_booking_id',
+        serviceBooking.id,
+        conn,
+      );
+      if (paymentStatus !== 'paid') {
+        throw new AppError(400, ORDER_NOT_PAID);
+      }
+    }
+
     await serviceBookingsModel.updateServiceBookingStatus(serviceBooking.id, status, conn);
+    if (status === 'cancelled') {
+      // Hủy đơn đã thanh toán thì hoàn tiền.
+      await paymentsModel.refundPaidPayment('service_booking_id', serviceBooking.id, conn);
+    }
   });
 
   return getServiceBooking(id);

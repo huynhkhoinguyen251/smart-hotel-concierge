@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import * as reviewsController from '../controllers/reviews.controller.js';
 import * as roomsController from '../controllers/rooms.controller.js';
+import expireUnpaidOrders from '../middlewares/expireUnpaidOrders.js';
 import validate from '../middlewares/validate.js';
 import { roomReviewsValidator } from '../validators/reviews.validator.js';
 import {
@@ -11,12 +12,19 @@ import {
 
 const router = Router();
 
-router.get('/', listRoomsValidator, validate, roomsController.getRooms);
+router.get(
+  '/',
+  listRoomsValidator,
+  validate,
+  expireUnpaidOrders,
+  roomsController.getRooms,
+);
 router.get('/:id', roomIdValidator, validate, roomsController.getRoomById);
 router.get(
   '/:id/availability',
   availabilityValidator,
   validate,
+  expireUnpaidOrders,
   roomsController.getRoomAvailability,
 );
 router.get('/:id/reviews', roomReviewsValidator, validate, reviewsController.getRoomReviews);

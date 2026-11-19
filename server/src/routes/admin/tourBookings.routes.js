@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import * as tourBookingsController from '../../controllers/admin/tourBookings.controller.js';
+import expireUnpaidOrders from '../../middlewares/expireUnpaidOrders.js';
 import validate from '../../middlewares/validate.js';
 import {
   listAdminTourBookingsValidator,
@@ -9,8 +10,20 @@ import {
 
 const router = Router();
 
-router.get('/', listAdminTourBookingsValidator, validate, tourBookingsController.getTourBookings);
-router.get('/:id', tourBookingIdValidator, validate, tourBookingsController.getTourBooking);
+router.get(
+  '/',
+  listAdminTourBookingsValidator,
+  validate,
+  expireUnpaidOrders,
+  tourBookingsController.getTourBookings,
+);
+router.get(
+  '/:id',
+  tourBookingIdValidator,
+  validate,
+  expireUnpaidOrders,
+  tourBookingsController.getTourBooking,
+);
 router.patch(
   '/:id/status',
   updateTourBookingStatusValidator,

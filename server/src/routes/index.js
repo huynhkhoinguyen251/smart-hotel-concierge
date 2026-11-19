@@ -7,6 +7,7 @@ import foodOrdersRoutes from './foodOrders.routes.js';
 import foodReviewsRoutes from './foodReviews.routes.js';
 import healthRoutes from './health.routes.js';
 import menuItemsRoutes from './menuItems.routes.js';
+import paymentsRoutes from './payments.routes.js';
 import reviewsRoutes from './reviews.routes.js';
 import roomsRoutes from './rooms.routes.js';
 import roomTypesRoutes from './roomTypes.routes.js';
@@ -37,6 +38,7 @@ router.use('/transport-bookings', transportBookingsRoutes);
 router.use('/tickets', ticketsRoutes);
 router.use('/reviews', reviewsRoutes);
 router.use('/food-reviews', foodReviewsRoutes);
+router.use('/payments', paymentsRoutes);
 router.use('/admin', adminRoutes);
 
 export default router;

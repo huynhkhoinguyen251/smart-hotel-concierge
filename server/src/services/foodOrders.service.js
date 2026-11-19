@@ -7,10 +7,12 @@ import * as bookingsModel from '../models/bookings.model.js';
 import * as foodOrderItemsModel from '../models/foodOrderItems.model.js';
 import * as foodOrdersModel from '../models/foodOrders.model.js';
 import * as menuItemsModel from '../models/menuItems.model.js';
+import * as paymentsModel from '../models/payments.model.js';
 import AppError from '../utils/AppError.js';
 import { fromCents, multiplyPrice, toCents } from '../utils/money.js';
 import { getPagination } from '../utils/pagination.js';
 import { BOOKING_NOT_FOUND } from './bookings.service.js';
+import { toPaymentSummary } from './paymentSummary.service.js';
 
 export const FOOD_ORDER_NOT_FOUND = 'Food order not found';
 const FOOD_ORDER_FORBIDDEN = 'You do not have permission to access this food order';
@@ -32,6 +34,7 @@ export const toFoodOrderResponse = (foodOrder, { items, withUser = false } = {})
   item_count: foodOrder.item_count,
   booking: foodOrder.booking,
   can_cancel: foodOrder.status === USER_CANCELLABLE_FOOD_ORDER_STATUS,
+  payment: toPaymentSummary(foodOrder.payment, foodOrder),
   ...(withUser && { user: foodOrder.user }),
   ...(items && { items: items.map(toFoodOrderItemResponse) }),
 });
@@ -106,6 +109,16 @@ export const createFoodOrder = async (userId, { booking_id, items, note = null }
       conn,
     );
     await foodOrderItemsModel.createFoodOrderItems(foodOrderId, lines, conn);
+    // Thanh toán QR chưa trả, tạo cùng transaction. Đơn giữ pending; admin duyệt sau khi khách trả.
+    await paymentsModel.createPayment(
+      {
+        user_id: userId,
+        column: 'food_order_id',
+        target_id: foodOrderId,
+        amount: fromCents(totalCents),
+      },
+      conn,
+    );
     return foodOrderId;
   });
 
@@ -154,6 +167,8 @@ export const cancelMyFoodOrder = async (userId, id) => {
     }
 
     await foodOrdersModel.updateFoodOrderStatus(foodOrder.id, 'cancelled', conn);
+    // Đã thanh toán thì hoàn tiền; chưa thanh toán thì giữ unpaid.
+    await paymentsModel.refundPaidPayment('food_order_id', foodOrder.id, conn);
   });
 
   return getFoodOrderDetail(await findFoodOrderOr404(id));

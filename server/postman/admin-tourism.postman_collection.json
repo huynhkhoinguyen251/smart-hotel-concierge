@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Smart Hotel - Admin Tourism",
-    "description": "Tests the 4 admin tour APIs, the 3 admin tour booking APIs and the 3 admin transport booking APIs. Run the requests in order (Collection Runner). The test tour is deleted at the end of the CRUD steps. Each run creates its own tour booking, motorbike rental and shuttle booking for the status steps, so the collection can be run again and seed data is not changed. The fixed dates in December 2026 work until 20 Dec 2026.",
+    "description": "Tests the 4 admin tour APIs, the 3 admin tour booking APIs and the 3 admin transport booking APIs. Run the requests in order (Collection Runner). The test tour is deleted at the end of the CRUD steps. Each run creates its own tour booking, motorbike rental and shuttle booking for the status steps, so the collection can be run again and seed data is not changed. The fixed dates in December 2026 work until 20 Dec 2026. Requests 18b, 28b and 35b pay the test bookings by QR before the admin confirms them.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -690,6 +690,51 @@
       }
     },
     {
+      "name": "18b. An pays the tour booking by QR",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Paid with invoice, order pending', () => {",
+              "  pm.expect(data.status).to.eql('paid');",
+              "  pm.expect(data.invoice_number).to.match(/^INV-\\d{8}-\\d{6}$/);",
+              "  pm.expect(data.order_status).to.eql('pending');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Simulated QR payment (\"I have paid\") for the tour booking. The admin can only confirm paid orders (Option A). Expected: 200, message 'Payment completed successfully', status paid, an invoice_number, order_status pending.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/payments",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"method\": \"e_wallet\",\n  \"tour_booking_id\": {{tourBookingId}}\n}"
+        }
+      }
+    },
+    {
       "name": "19. Change the tour booking to confirmed",
       "event": [
         {
@@ -1068,6 +1113,51 @@
       }
     },
     {
+      "name": "28b. An pays the motorbike rental by QR",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Paid with invoice, order pending', () => {",
+              "  pm.expect(data.status).to.eql('paid');",
+              "  pm.expect(data.invoice_number).to.match(/^INV-\\d{8}-\\d{6}$/);",
+              "  pm.expect(data.order_status).to.eql('pending');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Simulated QR payment (\"I have paid\") for the motorbike rental. The admin can only confirm paid orders (Option A). Expected: 200, message 'Payment completed successfully', status paid, an invoice_number, order_status pending.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/payments",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"method\": \"e_wallet\",\n  \"transport_booking_id\": {{motorbikeId}}\n}"
+        }
+      }
+    },
+    {
       "name": "29. Approve the motorbike rental without a plate (400)",
       "event": [
         {
@@ -1356,6 +1446,51 @@
         "body": {
           "mode": "raw",
           "raw": "{\n  \"status\": \"in_progress\"\n}"
+        }
+      }
+    },
+    {
+      "name": "35b. An pays the shuttle by QR",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Paid with invoice, order pending', () => {",
+              "  pm.expect(data.status).to.eql('paid');",
+              "  pm.expect(data.invoice_number).to.match(/^INV-\\d{8}-\\d{6}$/);",
+              "  pm.expect(data.order_status).to.eql('pending');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Simulated QR payment (\"I have paid\") for the shuttle booking. The admin can only confirm paid orders (Option A). Expected: 200, message 'Payment completed successfully', status paid, an invoice_number, order_status pending.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/payments",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"method\": \"e_wallet\",\n  \"transport_booking_id\": {{shuttleId}}\n}"
         }
       }
     },

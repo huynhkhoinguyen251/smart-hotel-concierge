@@ -128,7 +128,7 @@ The database is designed for Core and Extended features from the start, so that 
 
 ### Bookings
 
-- A user can update the dates of a booking only while it is `pending`, and availability is checked again.
+- A user can update the dates of a booking only while it is `pending`, and availability is checked again. The amount to pay follows the new total, but the payment deadline is not extended.
 - Check-in time is 14:00 on the check-in date.
 - A user can cancel a booking while it is `pending` or `confirmed`, up to 24 hours before check-in. After that, only an admin can cancel it.
 - When a booking is cancelled, its hotel service requests that are still `pending` or `confirmed` are cancelled automatically.
@@ -151,6 +151,16 @@ The database is designed for Core and Extended features from the start, so that 
 - Service and order items store the price at the time of the request.
 - A user can cancel a service, food, or tourism request only while it is `pending`. An admin can cancel it while it is `pending` or `confirmed`.
 
+### Payments
+
+- Every room booking, hotel service request, food order, tour booking, and transport booking is paid by a simulated QR payment (e-wallet). No real money is processed.
+- Creating an order also creates its unpaid payment, for the order total. The order stays `pending` until it is paid.
+- The guest has 15 minutes from creating the order to pay. An order that is still unpaid after 15 minutes is cancelled automatically, and a cancelled room booking frees the room again. Expired orders are cancelled whenever a related request reaches the server, not by a background job.
+- A paid room booking becomes `confirmed` automatically; an admin does not confirm room bookings.
+- A paid service, food, or tourism request stays `pending` until an admin confirms it. An admin can only confirm a request that has been paid.
+- Each successful payment creates an invoice.
+- When a paid order is cancelled (by the guest, by an admin, or together with its room booking), its payment becomes `refunded`. Unpaid payments of cancelled orders stay `unpaid`.
+
 ### Reviews
 
 - A user can review a room only after a booking for it reaches `checked_out`.
@@ -163,11 +173,11 @@ The database is designed for Core and Extended features from the start, so that 
 
 | Item | Normal flow | Can end early with |
 |---|---|---|
-| Room booking | `pending` → `confirmed` → `checked_in` → `checked_out` | `cancelled` (from `pending` or `confirmed`) |
-| Service and tourism request | `pending` → `confirmed` → `in_progress` → `completed` | `cancelled` (from `pending` or `confirmed`) |
-| Food order | `pending` → `confirmed` → `preparing` → `delivering` → `completed` | `cancelled` (from `pending` or `confirmed`) |
+| Room booking | `pending` → `confirmed` (by payment) → `checked_in` → `checked_out` | `cancelled` (from `pending` or `confirmed`; automatically when unpaid after 15 minutes) |
+| Service and tourism request | `pending` → (payment) → `confirmed` (by an admin) → `in_progress` → `completed` | `cancelled` (from `pending` or `confirmed`; automatically when unpaid after 15 minutes) |
+| Food order | `pending` → (payment) → `confirmed` (by an admin) → `preparing` → `delivering` → `completed` | `cancelled` (from `pending` or `confirmed`; automatically when unpaid after 15 minutes) |
 | Support ticket | `open` → `in_progress` → `resolved` | — |
-| Simulated payment | `unpaid` → `paid` → `refunded` | — |
+| Simulated payment | `unpaid` → `paid` → `refunded` (when the paid order is cancelled) | — |
 
 ## 6. Technology Stack
 

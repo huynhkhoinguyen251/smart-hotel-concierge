@@ -1,5 +1,9 @@
 import pool from '../config/db.js';
 import { buildSetClause } from './sqlHelpers.js';
+import { paymentSummarySql, toPaymentSummaryRow } from './payments.model.js';
+
+// Thanh toán QR của đơn (null với đơn cũ), xem payments.model.js.
+const PAYMENT_SQL = paymentSummarySql('transport_booking_id', 'tr');
 
 const TRANSPORT_BOOKING_FROM = `
   FROM transport_bookings tr
@@ -10,9 +14,11 @@ const TRANSPORT_BOOKING_SELECT = `
          tr.dropoff_location, tr.flight_number, tr.vehicle_plate, tr.quantity, tr.unit_price,
          tr.total_price, tr.note, tr.status, tr.created_at,
          s.name AS service_name, s.category AS service_category,
-         u.full_name AS user_full_name, u.email AS user_email
+         u.full_name AS user_full_name, u.email AS user_email,
+         ${PAYMENT_SQL.columns}
   ${TRANSPORT_BOOKING_FROM}
-  JOIN users u ON u.id = tr.user_id`;
+  JOIN users u ON u.id = tr.user_id
+  ${PAYMENT_SQL.joins}`;
 
 // Đơn mới nhất trước; id là thứ tự phụ khi created_at bằng nhau.
 const NEWEST_FIRST = 'tr.created_at DESC, tr.id DESC';
@@ -34,6 +40,7 @@ const toTransportBooking = (row) => ({
   created_at: row.created_at,
   service: { id: row.service_id, name: row.service_name, category: row.service_category },
   user: { id: row.user_id, full_name: row.user_full_name, email: row.user_email },
+  payment: toPaymentSummaryRow(row),
 });
 
 const buildFilters = ({ user_id, status, category }) => {

@@ -8,12 +8,14 @@ import {
   USER_CANCELLABLE_SERVICE_STATUS,
 } from '../config/services.js';
 import * as bookingsModel from '../models/bookings.model.js';
+import * as paymentsModel from '../models/payments.model.js';
 import * as serviceBookingsModel from '../models/serviceBookings.model.js';
 import * as servicesModel from '../models/services.model.js';
 import AppError from '../utils/AppError.js';
 import { parseLocalDateTime, toLocalDateTime } from '../utils/date.js';
 import { getPagination } from '../utils/pagination.js';
 import { BOOKING_NOT_FOUND } from './bookings.service.js';
+import { toPaymentSummary } from './paymentSummary.service.js';
 import { SERVICE_NOT_FOUND } from './services.service.js';
 
 export const SERVICE_REQUEST_NOT_FOUND = 'Service request not found';
@@ -37,6 +39,7 @@ export const toServiceBookingResponse = (serviceBooking, { withUser = false } = 
   service: serviceBooking.service,
   booking: serviceBooking.booking,
   can_cancel: serviceBooking.status === USER_CANCELLABLE_SERVICE_STATUS,
+  payment: toPaymentSummary(serviceBooking.payment, serviceBooking),
   ...(withUser && { user: serviceBooking.user }),
 });
 
@@ -99,18 +102,30 @@ export const createServiceBooking = async (
     ensureWithinStay(scheduled_at, booking);
 
     // Giá lấy từ database, không tin giá do frontend gửi lên.
-    return serviceBookingsModel.createServiceBooking(
+    const totalPrice = calculateTotal(quantity, service.price);
+    const serviceBookingId = await serviceBookingsModel.createServiceBooking(
       {
         booking_id: booking.id,
         service_id: service.id,
         scheduled_at: `${scheduled_at}:00`,
         quantity,
         unit_price: service.price,
-        total_price: calculateTotal(quantity, service.price),
+        total_price: totalPrice,
         note,
       },
       conn,
     );
+    // Thanh toán QR chưa trả, tạo cùng transaction. Đơn giữ pending; admin duyệt sau khi khách trả.
+    await paymentsModel.createPayment(
+      {
+        user_id: userId,
+        column: 'service_booking_id',
+        target_id: serviceBookingId,
+        amount: totalPrice,
+      },
+      conn,
+    );
+    return serviceBookingId;
   });
 
   return toServiceBookingResponse(await findServiceBookingOr404(id));
@@ -158,6 +173,8 @@ export const cancelMyServiceBooking = async (userId, id) => {
     }
 
     await serviceBookingsModel.updateServiceBookingStatus(serviceBooking.id, 'cancelled', conn);
+    // Đã thanh toán thì hoàn tiền; chưa thanh toán thì giữ unpaid.
+    await paymentsModel.refundPaidPayment('service_booking_id', serviceBooking.id, conn);
   });
 
   return toServiceBookingResponse(await findServiceBookingOr404(id));

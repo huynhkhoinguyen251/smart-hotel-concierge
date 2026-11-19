@@ -1,4 +1,8 @@
 import pool from '../config/db.js';
+import { paymentSummarySql, toPaymentSummaryRow } from './payments.model.js';
+
+// Thanh toán QR của đơn (null với đơn cũ), xem payments.model.js.
+const PAYMENT_SQL = paymentSummarySql('tour_booking_id', 'tb');
 
 const TOUR_BOOKING_FROM = `
   FROM tour_bookings tb
@@ -8,9 +12,11 @@ const TOUR_BOOKING_SELECT = `
   SELECT tb.id, tb.user_id, tb.tour_id, tb.tour_date, tb.participants, tb.unit_price,
          tb.total_price, tb.note, tb.status, tb.created_at,
          t.name AS tour_name, t.location AS tour_location, t.duration AS tour_duration,
-         u.full_name AS user_full_name, u.email AS user_email
+         u.full_name AS user_full_name, u.email AS user_email,
+         ${PAYMENT_SQL.columns}
   ${TOUR_BOOKING_FROM}
-  JOIN users u ON u.id = tb.user_id`;
+  JOIN users u ON u.id = tb.user_id
+  ${PAYMENT_SQL.joins}`;
 
 // Đơn mới nhất trước; id là thứ tự phụ khi created_at bằng nhau.
 const NEWEST_FIRST = 'tb.created_at DESC, tb.id DESC';
@@ -32,6 +38,7 @@ const toTourBooking = (row) => ({
     duration: row.tour_duration,
   },
   user: { id: row.user_id, full_name: row.user_full_name, email: row.user_email },
+  payment: toPaymentSummaryRow(row),
 });
 
 const buildFilters = ({ user_id, status }) => {

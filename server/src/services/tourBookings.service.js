@@ -2,12 +2,14 @@ import { MAX_ADVANCE_DAYS } from '../config/booking.js';
 import { withTransaction } from '../config/db.js';
 import { USER_CANCELLABLE_SERVICE_STATUS } from '../config/services.js';
 import { MIN_PARTICIPANTS } from '../config/tourism.js';
+import * as paymentsModel from '../models/payments.model.js';
 import * as tourBookingsModel from '../models/tourBookings.model.js';
 import * as toursModel from '../models/tours.model.js';
 import AppError from '../utils/AppError.js';
 import { addDays, formatLocalDate } from '../utils/date.js';
 import { multiplyPrice } from '../utils/money.js';
 import { getPagination } from '../utils/pagination.js';
+import { toPaymentSummary } from './paymentSummary.service.js';
 import { TOUR_NOT_FOUND } from './tours.service.js';
 
 export const TOUR_BOOKING_NOT_FOUND = 'Tour booking not found';
@@ -25,6 +27,7 @@ export const toTourBookingResponse = (tourBooking, { withUser = false } = {}) =>
   created_at: tourBooking.created_at,
   tour: tourBooking.tour,
   can_cancel: tourBooking.status === USER_CANCELLABLE_SERVICE_STATUS,
+  payment: toPaymentSummary(tourBooking.payment, tourBooking),
   ...(withUser && { user: tourBooking.user }),
 });
 
@@ -64,18 +67,25 @@ export const createTourBooking = async (
     ensureValidTourDate(tour_date);
 
     // Giá lấy từ database, không tin giá do frontend gửi lên.
-    return tourBookingsModel.createTourBooking(
+    const totalPrice = multiplyPrice(tour.price, participants);
+    const tourBookingId = await tourBookingsModel.createTourBooking(
       {
         user_id: userId,
         tour_id: tour.id,
         tour_date,
         participants,
         unit_price: tour.price,
-        total_price: multiplyPrice(tour.price, participants),
+        total_price: totalPrice,
         note,
       },
       conn,
     );
+    // Thanh toán QR chưa trả, tạo cùng transaction. Đơn giữ pending; admin duyệt sau khi khách trả.
+    await paymentsModel.createPayment(
+      { user_id: userId, column: 'tour_booking_id', target_id: tourBookingId, amount: totalPrice },
+      conn,
+    );
+    return tourBookingId;
   });
 
   return toTourBookingResponse(await findTourBookingOr404(id));
@@ -123,6 +133,8 @@ export const cancelMyTourBooking = async (userId, id) => {
     }
 
     await tourBookingsModel.updateTourBookingStatus(tourBooking.id, 'cancelled', conn);
+    // Đã thanh toán thì hoàn tiền; chưa thanh toán thì giữ unpaid.
+    await paymentsModel.refundPaidPayment('tour_booking_id', tourBooking.id, conn);
   });
 
   return toTourBookingResponse(await findTourBookingOr404(id));

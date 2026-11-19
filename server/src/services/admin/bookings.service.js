@@ -11,8 +11,10 @@ import {
 } from '../bookings.service.js';
 
 // Luồng trạng thái theo Mục 5 của proposal.md. Admin hủy không bị giới hạn 24 giờ.
+// pending → confirmed chỉ xảy ra khi khách thanh toán (POST /payments), admin không duyệt nữa.
+// Hủy đơn đã thanh toán thì thanh toán chuyển refunded (cancelBookingWithServices).
 const ALLOWED_TRANSITIONS = {
-  pending: ['confirmed', 'cancelled'],
+  pending: ['cancelled'],
   confirmed: ['checked_in', 'cancelled'],
   checked_in: ['checked_out'],
 };
@@ -41,6 +43,9 @@ export const updateBookingStatus = async (id, status) => {
       throw new AppError(404, BOOKING_NOT_FOUND);
     }
 
+    if (booking.status === 'pending' && status === 'confirmed') {
+      throw new AppError(400, 'Bookings are confirmed automatically when the guest pays.');
+    }
     if (!ALLOWED_TRANSITIONS[booking.status]?.includes(status)) {
       throw new AppError(400, `Cannot change booking status from ${booking.status} to ${status}`);
     }

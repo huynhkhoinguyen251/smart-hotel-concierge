@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import * as tourBookingsController from '../controllers/tourBookings.controller.js';
 import authenticate from '../middlewares/authenticate.js';
+import expireUnpaidOrders from '../middlewares/expireUnpaidOrders.js';
 import requireGuest from '../middlewares/requireGuest.js';
 import validate from '../middlewares/validate.js';
 import {
@@ -22,8 +23,20 @@ router.post(
   validate,
   tourBookingsController.createTourBooking,
 );
-router.get('/', listMyTourBookingsValidator, validate, tourBookingsController.getMyTourBookings);
-router.get('/:id', tourBookingIdValidator, validate, tourBookingsController.getMyTourBooking);
+router.get(
+  '/',
+  listMyTourBookingsValidator,
+  validate,
+  expireUnpaidOrders,
+  tourBookingsController.getMyTourBookings,
+);
+router.get(
+  '/:id',
+  tourBookingIdValidator,
+  validate,
+  expireUnpaidOrders,
+  tourBookingsController.getMyTourBooking,
+);
 router.patch(
   '/:id/cancel',
   tourBookingIdValidator,

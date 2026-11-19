@@ -1,6 +1,7 @@
 import { CANCELLABLE_SERVICE_STATUSES } from '../config/booking.js';
 import pool from '../config/db.js';
 import { placeholders } from './sqlHelpers.js';
+import { paymentSummarySql, toPaymentSummaryRow } from './payments.model.js';
 
 // Hủy các yêu cầu dịch vụ còn pending hoặc confirmed của một đơn đặt phòng.
 // Trả về số yêu cầu đã hủy. Nên gọi trong cùng transaction với việc hủy đơn.
@@ -13,6 +14,9 @@ export const cancelActiveServiceBookings = async (bookingId, conn = pool) => {
   return result.affectedRows;
 };
 
+// Thanh toán QR của đơn (null với đơn cũ), xem payments.model.js.
+const PAYMENT_SQL = paymentSummarySql('service_booking_id', 'sb');
+
 // Yêu cầu dịch vụ không có user_id riêng; chủ yêu cầu là chủ đơn đặt phòng (bookings.user_id).
 const SERVICE_BOOKING_FROM = `
   FROM service_bookings sb
@@ -24,10 +28,12 @@ const SERVICE_BOOKING_SELECT = `
          sb.total_price, sb.note, sb.status, sb.created_at,
          s.name AS service_name, s.category AS service_category,
          b.user_id, b.room_id, r.room_number,
-         u.full_name AS user_full_name, u.email AS user_email
+         u.full_name AS user_full_name, u.email AS user_email,
+         ${PAYMENT_SQL.columns}
   ${SERVICE_BOOKING_FROM}
   JOIN rooms r ON r.id = b.room_id
-  JOIN users u ON u.id = b.user_id`;
+  JOIN users u ON u.id = b.user_id
+  ${PAYMENT_SQL.joins}`;
 
 // Yêu cầu mới nhất trước; id là thứ tự phụ khi created_at bằng nhau.
 const NEWEST_FIRST = 'sb.created_at DESC, sb.id DESC';
@@ -45,6 +51,7 @@ const toServiceBooking = (row) => ({
   service: { id: row.service_id, name: row.service_name, category: row.service_category },
   booking: { id: row.booking_id, room: { id: row.room_id, room_number: row.room_number } },
   user: { id: row.user_id, full_name: row.user_full_name, email: row.user_email },
+  payment: toPaymentSummaryRow(row),
 });
 
 const buildFilters = ({ user_id, status, category }) => {

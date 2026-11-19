@@ -1,0 +1,1099 @@
+{
+  "info": {
+    "name": "Smart Hotel - Payments",
+    "description": "Tests the simulated QR payment and invoice APIs (section 11 of docs/api.md, Option A). Run the requests in order (Collection Runner). The test food order and the test booking end as cancelled with refunded payments, so the collection can be run again. Request 4 uses seed booking 3, which is checked in until 6 Dec 2026; the dates in March 2027 work until then. Expiry (15 minutes) is not tested here; see docs/api.md section 11 for a quick manual test.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Login An",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('anToken', pm.response.json().data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Logs in as an.tran@example.com (test account from database/README.md). Expected: 200. The token is saved to anToken.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"an.tran@example.com\",\n  \"password\": \"User@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "2. Login Chi",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('chiToken', pm.response.json().data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Logs in as chi.pham@example.com (test account from database/README.md). Expected: 200. The token is saved to chiToken.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"chi.pham@example.com\",\n  \"password\": \"User@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "3. Login admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('adminToken', pm.response.json().data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Logs in as admin@smarthotel.test (test account from database/README.md). Expected: 200. The token is saved to adminToken.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@smarthotel.test\",\n  \"password\": \"Admin@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "4. An orders food on booking 3 (unpaid QR payment)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "const data = pm.response.json().data;",
+              "pm.test('Pending with an unpaid QR payment', () => {",
+              "  pm.expect(data.status).to.eql('pending');",
+              "  pm.expect(data.payment.status).to.eql('unpaid');",
+              "  pm.expect(data.payment.method).to.eql('e_wallet');",
+              "  pm.expect(data.payment.amount).to.eql(data.total_price);",
+              "  pm.expect(data.payment.seconds_left).to.be.within(1, 900);",
+              "  pm.expect(data.payment.expires_at).to.match(/^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$/);",
+              "  pm.expect(data.payment.invoice_number).to.eql(null);",
+              "});",
+              "pm.collectionVariables.set('foodOrderId', data.id);",
+              "pm.collectionVariables.set('foodPaymentId', data.payment.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Creating an order also creates its QR payment in the same transaction. Expected: 201, status pending, payment.status unpaid, payment.method e_wallet, payment.amount 150000 (= total_price), expires_at 15 minutes after created_at, seconds_left from 1 to 900, invoice_number null. The ids are saved to foodOrderId and foodPaymentId.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/food-orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 3,\n  \"items\": [\n    {\n      \"menu_item_id\": 1,\n      \"quantity\": 2\n    }\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "5. Admin confirms the unpaid food order (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"This order has not been paid yet.\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Option A: the admin can only confirm a paid order. Expected: 400 with message 'This order has not been paid yet.'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/food-orders/{{foodOrderId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"confirmed\"\n}"
+        }
+      }
+    },
+    {
+      "name": "6. Chi pays An's food order (403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 403', () => pm.response.to.have.status(403));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"You do not have permission to pay for this food order\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "A guest can only pay their own orders. Expected: 403 with message 'You do not have permission to pay for this food order'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{chiToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/payments",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"method\": \"e_wallet\",\n  \"food_order_id\": {{foodOrderId}}\n}"
+        }
+      }
+    },
+    {
+      "name": "7. Pay with two orders in the body (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Provide exactly one order to pay for\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "The body must point to exactly one order. Expected: 400 with message 'Provide exactly one order to pay for'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/payments",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"method\": \"e_wallet\",\n  \"food_order_id\": {{foodOrderId}},\n  \"booking_id\": 3\n}"
+        }
+      }
+    },
+    {
+      "name": "8. Pay with method cash (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Payment method must be one of: e_wallet\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Only the QR e-wallet is accepted. Expected: 400 with message 'Payment method must be one of: e_wallet'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/payments",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"method\": \"cash\",\n  \"food_order_id\": {{foodOrderId}}\n}"
+        }
+      }
+    },
+    {
+      "name": "9. An pays the food order (\"I have paid\")",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Paid with invoice, order still pending', () => {",
+              "  pm.expect(data.status).to.eql('paid');",
+              "  pm.expect(data.invoice_number).to.match(/^INV-\\d{8}-\\d{6}$/);",
+              "  pm.expect(data.expires_at).to.eql(null);",
+              "  pm.expect(data.seconds_left).to.eql(null);",
+              "  pm.expect(data.target.type).to.eql('food_order');",
+              "  pm.expect(String(data.target.id)).to.eql(String(pm.collectionVariables.get('foodOrderId')));",
+              "  pm.expect(data.order_status).to.eql('pending');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Simulates scanning the QR code. The amount comes from the order, not from the body. Expected: 200, message 'Payment completed successfully', status paid, paid_at set, invoice_number like INV-YYYYMMDD-000042, expires_at and seconds_left null, target { type food_order, id }, order_status pending (food orders still wait for the admin).",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/payments",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"method\": \"e_wallet\",\n  \"food_order_id\": {{foodOrderId}}\n}"
+        }
+      }
+    },
+    {
+      "name": "10. An pays the same order again (409)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 409', () => pm.response.to.have.status(409));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"This food order has already been paid\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 409 with message 'This food order has already been paid'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/payments",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"method\": \"e_wallet\",\n  \"food_order_id\": {{foodOrderId}}\n}"
+        }
+      }
+    },
+    {
+      "name": "11. Admin confirms the paid food order",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Confirmed and paid', () => {",
+              "  pm.expect(data.status).to.eql('confirmed');",
+              "  pm.expect(data.payment.status).to.eql('paid');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, status confirmed. payment.status paid with an invoice_number.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/food-orders/{{foodOrderId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"confirmed\"\n}"
+        }
+      }
+    },
+    {
+      "name": "12. Get the invoice of the food payment",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Invoice lines and total', () => {",
+              "  pm.expect(data.guest.email).to.eql('an.tran@example.com');",
+              "  pm.expect(data.order.type).to.eql('food_order');",
+              "  pm.expect(data.lines).to.have.lengthOf(1);",
+              "  pm.expect(data.lines[0].quantity).to.eql(2);",
+              "  pm.expect(data.lines[0].unit_price).to.eql(75000);",
+              "  pm.expect(data.subtotal).to.eql(150000);",
+              "  pm.expect(data.total).to.eql(150000);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'Invoice retrieved successfully'. invoice_number, issued_at, guest (full_name, email, phone), payment, order { type food_order }, one line Pho Bo x 2 at 75000, subtotal 150000, discount 0, total 150000.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/payments/{{foodPaymentId}}/invoice"
+      }
+    },
+    {
+      "name": "13. Chi gets An's payment (403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 403', () => pm.response.to.have.status(403));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"You do not have permission to access this payment\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 403 with message 'You do not have permission to access this payment'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{chiToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/payments/{{foodPaymentId}}"
+      }
+    },
+    {
+      "name": "14. An books room 1 (8 Mar - 10 Mar 2027)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "const data = pm.response.json().data;",
+              "pm.test('Pending with an unpaid payment', () => {",
+              "  pm.expect(data.status).to.eql('pending');",
+              "  pm.expect(data.payment.status).to.eql('unpaid');",
+              "  pm.expect(data.payment.amount).to.eql(1600000);",
+              "});",
+              "pm.collectionVariables.set('bookingId', data.id);",
+              "pm.collectionVariables.set('bookingPaymentId', data.payment.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 201, status pending, total_price 1600000, payment unpaid for 1600000. The ids are saved to bookingId and bookingPaymentId.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"room_id\": 1,\n  \"check_in\": \"2027-03-08\",\n  \"check_out\": \"2027-03-10\",\n  \"guests\": 1\n}"
+        }
+      }
+    },
+    {
+      "name": "15. Get the invoice before paying (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 404', () => pm.response.to.have.status(404));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Invoice not found. This payment has not been paid yet.\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "The invoice is created when the payment is made. Expected: 404 with message 'Invoice not found. This payment has not been paid yet.'",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/payments/{{bookingPaymentId}}/invoice"
+      }
+    },
+    {
+      "name": "16. An pays the booking (booking becomes confirmed)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Paid and booking confirmed', () => {",
+              "  pm.expect(data.status).to.eql('paid');",
+              "  pm.expect(data.order_status).to.eql('confirmed');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Room bookings are confirmed by the payment, not by the admin. Expected: 200, status paid, invoice_number set, order_status confirmed.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/payments",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"method\": \"e_wallet\",\n  \"booking_id\": {{bookingId}}\n}"
+        }
+      }
+    },
+    {
+      "name": "17. Get the booking (confirmed, with invoice number)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Confirmed and paid', () => {",
+              "  pm.expect(data.status).to.eql('confirmed');",
+              "  pm.expect(data.can_edit).to.eql(false);",
+              "  pm.expect(data.payment.status).to.eql('paid');",
+              "  pm.expect(data.payment.invoice_number).to.match(/^INV-/);",
+              "  pm.expect(data.payment.expires_at).to.eql(null);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, status confirmed, can_edit false, payment.status paid with an invoice_number, expires_at null.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/bookings/{{bookingId}}"
+      }
+    },
+    {
+      "name": "18. Get the booking invoice",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('2 nights at 800000', () => {",
+              "  pm.expect(data.order.type).to.eql('room');",
+              "  pm.expect(data.lines[0].quantity).to.eql(2);",
+              "  pm.expect(data.lines[0].unit).to.eql('night');",
+              "  pm.expect(data.lines[0].unit_price).to.eql(800000);",
+              "  pm.expect(data.total).to.eql(1600000);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200. One line: Standard Room, room 101, 2 nights at 800000; subtotal 1600000, discount 0, total 1600000.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/payments/{{bookingPaymentId}}/invoice"
+      }
+    },
+    {
+      "name": "19. Admin checks out a confirmed booking (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Cannot change booking status from confirmed to checked_out\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "The booking is confirmed now; the admin can still check in (from the check-in date), check out and cancel. Checking out a confirmed booking is not allowed. Expected: 400 with message 'Cannot change booking status from confirmed to checked_out'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/bookings/{{bookingId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"checked_out\"\n}"
+        }
+      }
+    },
+    {
+      "name": "20. An cancels the paid booking (payment refunded)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Cancelled and refunded', () => {",
+              "  pm.expect(data.status).to.eql('cancelled');",
+              "  pm.expect(data.payment.status).to.eql('refunded');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "More than 24 hours before check-in, so the guest can cancel. Expected: 200, status cancelled, payment.status refunded.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/bookings/{{bookingId}}/cancel"
+      }
+    },
+    {
+      "name": "21. List my payments",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Newest first with target', () => {",
+              "  pm.expect(String(data[0].id)).to.eql(String(pm.collectionVariables.get('bookingPaymentId')));",
+              "  data.forEach((payment) => pm.expect(typeof payment.target.name).to.eql('string'));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200 with pagination, newest first. Every payment has target { type, id, name } and order_status. The booking payment from request 16 is first.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/payments?limit=5"
+      }
+    },
+    {
+      "name": "22. Admin lists refunded room payments",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Refunded room payments with guest', () => data.forEach((payment) => {",
+              "  pm.expect(payment.status).to.eql('refunded');",
+              "  pm.expect(payment.target.type).to.eql('room');",
+              "  pm.expect(typeof payment.user.email).to.eql('string');",
+              "}));",
+              "pm.test('Contains bookingPaymentId', () => pm.expect(data.map((payment) => String(payment.id))).to.include(String(pm.collectionVariables.get('bookingPaymentId'))));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200. Every payment is a refunded room payment with the guest (user). The payment from request 20 and seed payment 8 (cancelled booking 8) are in the list.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/payments?type=room&status=refunded&limit=50"
+      }
+    },
+    {
+      "name": "23. Admin refunds a payment whose order is still active (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Only payments of cancelled orders can be refunded\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Manual refund is only a safety net for paid payments of cancelled orders. Expected: 400 with message 'Only payments of cancelled orders can be refunded'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/payments/{{foodPaymentId}}/refund"
+      }
+    },
+    {
+      "name": "24. Admin refunds an already refunded payment (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Only paid payments can be refunded; this payment is refunded\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Only paid payments can be refunded; this payment is refunded'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/payments/{{bookingPaymentId}}/refund"
+      }
+    },
+    {
+      "name": "25. Admin cancels the test food order (cleanup, refunded)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Cancelled and refunded', () => {",
+              "  pm.expect(data.status).to.eql('cancelled');",
+              "  pm.expect(data.payment.status).to.eql('refunded');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Cleanup: the admin can cancel a confirmed order. Expected: 200, status cancelled, payment.status refunded.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/food-orders/{{foodOrderId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"cancelled\"\n}"
+        }
+      }
+    },
+    {
+      "name": "26. Pay an order that does not exist (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 404', () => pm.response.to.have.status(404));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Tour booking not found\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 404 with message 'Tour booking not found'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/payments",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"method\": \"e_wallet\",\n  \"tour_booking_id\": 999999\n}"
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "anToken",
+      "value": ""
+    },
+    {
+      "key": "chiToken",
+      "value": ""
+    },
+    {
+      "key": "adminToken",
+      "value": ""
+    },
+    {
+      "key": "foodOrderId",
+      "value": ""
+    },
+    {
+      "key": "foodPaymentId",
+      "value": ""
+    },
+    {
+      "key": "bookingId",
+      "value": ""
+    },
+    {
+      "key": "bookingPaymentId",
+      "value": ""
+    }
+  ]
+}

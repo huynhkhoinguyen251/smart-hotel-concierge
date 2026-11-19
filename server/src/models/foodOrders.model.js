@@ -1,6 +1,10 @@
 import pool from '../config/db.js';
+import { paymentSummarySql, toPaymentSummaryRow } from './payments.model.js';
 
 // Đơn đồ ăn không có user_id riêng; chủ đơn là chủ đơn đặt phòng (bookings.user_id).
+// Thanh toán QR của đơn (null với đơn cũ), xem payments.model.js.
+const PAYMENT_SQL = paymentSummarySql('food_order_id', 'fo');
+
 const FOOD_ORDER_FROM = `
   FROM food_orders fo
   JOIN bookings b ON b.id = fo.booking_id`;
@@ -10,10 +14,12 @@ const FOOD_ORDER_SELECT = `
          fo.created_at,
          (SELECT COUNT(*) FROM food_order_items fi WHERE fi.food_order_id = fo.id) AS item_count,
          b.user_id, b.room_id, r.room_number,
-         u.full_name AS user_full_name, u.email AS user_email
+         u.full_name AS user_full_name, u.email AS user_email,
+         ${PAYMENT_SQL.columns}
   ${FOOD_ORDER_FROM}
   JOIN rooms r ON r.id = b.room_id
-  JOIN users u ON u.id = b.user_id`;
+  JOIN users u ON u.id = b.user_id
+  ${PAYMENT_SQL.joins}`;
 
 // Đơn mới nhất trước; id là thứ tự phụ khi created_at bằng nhau.
 const NEWEST_FIRST = 'fo.created_at DESC, fo.id DESC';
@@ -29,6 +35,7 @@ const toFoodOrder = (row) => ({
   item_count: Number(row.item_count),
   booking: { id: row.booking_id, room: { id: row.room_id, room_number: row.room_number } },
   user: { id: row.user_id, full_name: row.user_full_name, email: row.user_email },
+  payment: toPaymentSummaryRow(row),
 });
 
 const buildFilters = ({ user_id, status }) => {
