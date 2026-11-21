@@ -10,6 +10,7 @@ import {
   SERVICE_REQUEST_NOT_FOUND,
   toServiceBookingResponse,
 } from '../serviceBookings.service.js';
+import * as notificationsService from '../notifications.service.js';
 
 export const listServiceBookings = async ({ page, limit, ...filters }) => {
   const pagination = getPagination({ page, limit });
@@ -62,6 +63,7 @@ export const updateServiceBookingStatus = async (id, status) => {
       // Hủy đơn đã thanh toán thì hoàn tiền.
       await paymentsModel.refundPaidPayment('service_booking_id', serviceBooking.id, conn);
     }
+    await notificationsService.notifyOrderStatusChanged(conn, 'service', serviceBooking.id, status);
   });
 
   return getServiceBooking(id);

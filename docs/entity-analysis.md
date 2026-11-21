@@ -56,7 +56,7 @@ Dựa trên [proposal.md](proposal.md). Có tất cả 22 bảng. Mọi bảng d
 | `vouchers` | Mã giảm giá | `code` (duy nhất), `discount_type`, `discount_value`, `min_amount`, `max_uses`, `used_count`, `starts_at`, `ends_at`, `is_active` |
 | `payments` | Thanh toán giả lập | `user_id`, `booking_id`, `service_booking_id`, `food_order_id`, `tour_booking_id`, `transport_booking_id`, `amount`, `method`, `status`, `paid_at` |
 | `invoices` | Hóa đơn của một thanh toán | `payment_id` (duy nhất), `invoice_number` (duy nhất), `issued_at` |
-| `notifications` | Thông báo trong ứng dụng | `user_id`, `title`, `message`, `type`, `is_read` |
+| `notifications` | Thông báo trong ứng dụng | `user_id`, `title`, `message`, `type`, `link_path`, `is_read` |
 
 ## Quan hệ
 

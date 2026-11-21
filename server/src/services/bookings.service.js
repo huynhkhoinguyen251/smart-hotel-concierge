@@ -12,6 +12,7 @@ import AppError from '../utils/AppError.js';
 import { countNights, toLocalDateTime } from '../utils/date.js';
 import { getPagination } from '../utils/pagination.js';
 import { toPaymentSummary } from './paymentSummary.service.js';
+import * as notificationsService from './notifications.service.js';
 
 export const BOOKING_NOT_FOUND = 'Booking not found';
 const ROOM_NOT_FOUND = 'Room not found';
@@ -71,11 +72,14 @@ const lockOwnBooking = async (userId, bookingId, conn) => {
 // Hủy đơn và các yêu cầu dịch vụ còn pending hoặc confirmed của đơn, trong transaction đang mở.
 // Thanh toán đã trả của đơn và của các yêu cầu bị hủy theo chuyển refunded; thanh toán chưa trả
 // giữ nguyên unpaid. Hoàn tiền yêu cầu dịch vụ trước, khi trạng thái của chúng chưa bị đổi.
+// Khách được báo về từng yêu cầu dịch vụ bị hủy theo đơn (thông báo trong cùng transaction).
 export const cancelBookingWithServices = async (bookingId, conn) => {
+  const serviceIds = await serviceBookingsModel.findCancellableServiceBookingIds(bookingId, conn);
   await paymentsModel.refundActiveServicePaymentsOfBooking(bookingId, conn);
   await serviceBookingsModel.cancelActiveServiceBookings(bookingId, conn);
   await paymentsModel.refundPaidPayment('booking_id', bookingId, conn);
   await bookingsModel.updateBookingStatus(bookingId, 'cancelled', conn);
+  await notificationsService.notifyServicesCancelledWithBooking(conn, bookingId, serviceIds);
 };
 
 export const createBooking = async (userId, { room_id, check_in, check_out, guests }) => {

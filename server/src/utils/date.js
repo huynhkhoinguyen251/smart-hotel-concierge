@@ -58,6 +58,20 @@ export const parseLocalDateTime = (value) => {
   return toLocalDateTime(date, Number(hour), Number(minute));
 };
 
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+// Ngày dễ đọc cho thông báo: '2026-12-24' thành '24 Dec 2026'; có giờ ('2026-12-24 18:30:00')
+// thì thành '24 Dec 2026, 18:30'. Giá trị lạ thì trả lại nguyên chuỗi.
+export const formatDisplayDate = (value) => {
+  const match = typeof value === 'string' && value.match(/^(\d{4})-(\d{2})-(\d{2})(?: (\d{2}):(\d{2}))?/);
+  if (!match) {
+    return String(value ?? '');
+  }
+  const [, year, month, day, hour, minute] = match;
+  const date = `${Number(day)} ${MONTHS[Number(month) - 1]} ${year}`;
+  return hour ? `${date}, ${hour}:${minute}` : date;
+};
+
 const DATE_TIME_SECONDS_PATTERN = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/;
 
 // Cộng số phút vào chuỗi 'YYYY-MM-DD HH:mm:ss' (giờ địa phương do database trả về) và trả

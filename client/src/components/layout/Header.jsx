@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { GUEST_ACCOUNT_NAV, MAIN_NAV } from '../../config/navigation.js';
 import useAuth from '../../hooks/useAuth.js';
+import NotificationBell from '../notifications/NotificationBell.jsx';
 import Logo from './Logo.jsx';
 import UserMenu from './UserMenu.jsx';
 
@@ -44,46 +45,50 @@ export default function Header() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-2 md:flex">
-          {/* Chưa tải xong hồ sơ thì chỉ hiện khung chờ, tránh nháy Login/Register. */}
-          {loading ? (
-            <AccountPlaceholder />
-          ) : user ? (
-            <UserMenu />
-          ) : (
-            <>
-              <Link
-                to="/login"
-                className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
-              >
-                Login
-              </Link>
-              <Link
-                to="/register"
-                className="rounded-lg bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800"
-              >
-                Register
-              </Link>
-            </>
-          )}
-        </div>
+        <div className="flex items-center gap-1 md:gap-2">
+          {user && <NotificationBell viewAllPath={isAdmin ? '/admin/notifications' : '/notifications'} />}
 
-        <button
-          type="button"
-          className="rounded-lg p-2 text-slate-700 hover:bg-slate-100 md:hidden"
-          onClick={() => setMobileOpen((value) => !value)}
-          aria-expanded={mobileOpen}
-          aria-controls="mobile-menu"
-          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
-        >
-          <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-            {mobileOpen ? (
-              <path strokeLinecap="round" d="M6 6l12 12M18 6L6 18" />
+          <div className="hidden items-center gap-2 md:flex">
+            {/* Chưa tải xong hồ sơ thì chỉ hiện khung chờ, tránh nháy Login/Register. */}
+            {loading ? (
+              <AccountPlaceholder />
+            ) : user ? (
+              <UserMenu />
             ) : (
-              <path strokeLinecap="round" d="M4 7h16M4 12h16M4 17h16" />
+              <>
+                <Link
+                  to="/login"
+                  className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="rounded-lg bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800"
+                >
+                  Register
+                </Link>
+              </>
             )}
-          </svg>
-        </button>
+          </div>
+
+          <button
+            type="button"
+            className="rounded-lg p-2 text-slate-700 hover:bg-slate-100 md:hidden"
+            onClick={() => setMobileOpen((value) => !value)}
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-menu"
+            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+          >
+            <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              {mobileOpen ? (
+                <path strokeLinecap="round" d="M6 6l12 12M18 6L6 18" />
+              ) : (
+                <path strokeLinecap="round" d="M4 7h16M4 12h16M4 17h16" />
+              )}
+            </svg>
+          </button>
+        </div>
       </div>
 
       {mobileOpen && (

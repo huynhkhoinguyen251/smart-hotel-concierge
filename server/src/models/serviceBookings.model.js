@@ -17,6 +17,17 @@ export const cancelActiveServiceBookings = async (bookingId, conn = pool) => {
 // Thanh toán QR của đơn (null với đơn cũ), xem payments.model.js.
 const PAYMENT_SQL = paymentSummarySql('service_booking_id', 'sb');
 
+// id các yêu cầu dịch vụ sẽ bị hủy theo đơn đặt phòng (pending hoặc confirmed), để gửi thông báo.
+export const findCancellableServiceBookingIds = async (bookingId, conn = pool) => {
+  const [rows] = await conn.execute(
+    `SELECT id FROM service_bookings
+     WHERE booking_id = ? AND status IN (${placeholders(CANCELLABLE_SERVICE_STATUSES)})
+     ORDER BY id`,
+    [bookingId, ...CANCELLABLE_SERVICE_STATUSES],
+  );
+  return rows.map((row) => row.id);
+};
+
 // Yêu cầu dịch vụ không có user_id riêng; chủ yêu cầu là chủ đơn đặt phòng (bookings.user_id).
 const SERVICE_BOOKING_FROM = `
   FROM service_bookings sb

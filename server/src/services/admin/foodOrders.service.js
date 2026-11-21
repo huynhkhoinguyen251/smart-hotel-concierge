@@ -11,6 +11,7 @@ import {
   getFoodOrderDetail,
   toFoodOrderResponse,
 } from '../foodOrders.service.js';
+import * as notificationsService from '../notifications.service.js';
 
 export const listFoodOrders = async ({ page, limit, ...filters }) => {
   const pagination = getPagination({ page, limit });
@@ -61,6 +62,7 @@ export const updateFoodOrderStatus = async (id, status) => {
       // Hủy đơn đã thanh toán thì hoàn tiền.
       await paymentsModel.refundPaidPayment('food_order_id', foodOrder.id, conn);
     }
+    await notificationsService.notifyOrderStatusChanged(conn, 'food_order', foodOrder.id, status);
   });
 
   return getFoodOrder(id);

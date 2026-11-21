@@ -16,6 +16,17 @@ export default function formatDate(value, { withTime = false } = {}) {
   return withTime && hour ? `${date}, ${hour}:${minute}` : date;
 }
 
+// Ngày giờ ngắn cho thông báo: "2026-11-20 14:05:00" thành "20 Nov, 14:05" (năm khác năm nay thì thêm năm).
+export function formatShortDateTime(value, currentYear = new Date().getFullYear()) {
+  const match = typeof value === 'string' ? value.match(PATTERN) : null;
+  if (!match) {
+    return '';
+  }
+  const [, year, month, day, hour, minute] = match;
+  const date = `${Number(day)} ${MONTHS[Number(month) - 1]}${Number(year) === currentYear ? '' : ` ${year}`}`;
+  return hour ? `${date}, ${hour}:${minute}` : date;
+}
+
 // Khoảng ngày gọn: cùng năm thì "28 Dec - 31 Dec 2026", khác năm thì "30 Dec 2026 - 2 Jan 2027".
 export function formatDateRange(start, end) {
   const from = formatDate(start);

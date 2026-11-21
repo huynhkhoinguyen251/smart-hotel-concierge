@@ -11,6 +11,7 @@ import {
   TRANSPORT_BOOKING_NOT_FOUND,
   toTransportBookingResponse,
 } from '../transportBookings.service.js';
+import * as notificationsService from '../notifications.service.js';
 
 export const listTransportBookings = async ({ page, limit, ...filters }) => {
   const pagination = getPagination({ page, limit });
@@ -84,6 +85,7 @@ export const updateTransportBookingStatus = async (id, { status, vehicle_plate }
       // Hủy đơn đã thanh toán thì hoàn tiền.
       await paymentsModel.refundPaidPayment('transport_booking_id', transportBooking.id, conn);
     }
+    await notificationsService.notifyOrderStatusChanged(conn, 'transport', transportBooking.id, status);
   });
 
   return getTransportBooking(id);

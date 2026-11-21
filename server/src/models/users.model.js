@@ -115,3 +115,11 @@ export const updateUserStatus = async (id, isActive, conn = pool) => {
 export const updateUserRole = async (id, role, conn = pool) => {
   await conn.execute('UPDATE users SET role = ? WHERE id = ?', [role, id]);
 };
+
+// id của mọi admin đang hoạt động, dùng để gửi thông báo cho admin.
+export const findActiveAdminIds = async (conn = pool) => {
+  const [rows] = await conn.execute(
+    "SELECT id FROM users WHERE role = 'admin' AND is_active = 1 ORDER BY id",
+  );
+  return rows.map((row) => row.id);
+};

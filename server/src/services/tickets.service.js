@@ -4,6 +4,7 @@ import * as supportTicketsModel from '../models/supportTickets.model.js';
 import * as ticketMessagesModel from '../models/ticketMessages.model.js';
 import AppError from '../utils/AppError.js';
 import { getPagination } from '../utils/pagination.js';
+import * as notificationsService from './notifications.service.js';
 
 export const TICKET_NOT_FOUND = 'Support ticket not found';
 const TICKET_FORBIDDEN = 'You do not have permission to access this support ticket';
@@ -71,6 +72,7 @@ export const createTicket = async (userId, { subject, message }) => {
       { ticket_id: ticketId, sender_id: userId, message },
       conn,
     );
+    await notificationsService.notifyTicketCreated(conn, ticketId);
     return ticketId;
   });
 
@@ -114,6 +116,7 @@ export const addMyMessage = async (userId, id, { message }) => {
       checkAccess: ensureOwner(userId),
     });
     await supportTicketsModel.touchTicket(ticket.id, conn);
+    await notificationsService.notifyTicketGuestReply(conn, ticket.id);
   });
 
   return getTicketDetail(await findTicketOr404(id));

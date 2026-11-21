@@ -294,13 +294,14 @@ ORDER BY id;
 -- Thông báo trong ứng dụng
 -- ============================================================
 
-INSERT INTO notifications (id, user_id, title, message, type, is_read) VALUES
-(1, 2, 'Booking confirmed', 'Your payment was received. Your booking for room 302 from 24 Dec to 27 Dec is confirmed.', 'booking', 0),
-(2, 3, 'Booking confirmed', 'Your booking for room 202 from 10 Dec to 13 Dec has been confirmed.', 'booking', 1),
-(3, 4, 'Service confirmed', 'Your massage request at 16:00 on 8 Nov has been confirmed.', 'service', 0),
-(4, 2, 'Food order being prepared', 'The kitchen is preparing your food order #3.', 'food_order', 0),
-(5, 3, 'Motorbike rental approved', 'Your motorbike rental on 10 Dec has been approved. License plate: 43B1-456.78.', 'transport', 0),
-(6, 3, 'Refund completed', 'Your payment of 5,400,000 VND for the cancelled room booking has been refunded.', 'payment', 1),
-(7, 1, 'New support request', 'Guest Pham Thu Chi has submitted a request: Late check-out request.', 'support', 0);
+-- link_path: trang của frontend mở khi bấm vào thông báo.
+INSERT INTO notifications (id, user_id, title, message, type, link_path, is_read) VALUES
+(1, 2, 'Booking confirmed', 'Your payment was received. Your booking for room 302 from 24 Dec to 27 Dec is confirmed.', 'payment', '/my-bookings/7', 0),
+(2, 3, 'Booking confirmed', 'Your booking for room 202 from 10 Dec to 13 Dec has been confirmed.', 'booking', '/my-bookings/5', 1),
+(3, 4, 'Service confirmed', 'Your massage request at 16:00 on 8 Nov has been confirmed.', 'service', '/my-services/5', 0),
+(4, 2, 'Food order being prepared', 'The kitchen is preparing your food order #3.', 'food_order', '/my-food-orders/3', 0),
+(5, 3, 'Motorbike rental approved', 'Your motorbike rental on 10 Dec has been approved. License plate: 43B1-456.78.', 'transport', '/my-trips/transport/4', 0),
+(6, 3, 'Refund completed', 'Your payment of 5,400,000 VND for the cancelled room booking has been refunded.', 'payment', '/payments/8/invoice', 1),
+(7, 1, 'New support request', 'Guest Pham Thu Chi has submitted a request: Late check-out request.', 'support', '/admin/tickets/3', 0);
 
 COMMIT;

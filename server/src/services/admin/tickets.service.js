@@ -1,5 +1,9 @@
 import { withTransaction } from '../../config/db.js';
-import { AUTO_REPLY_TRANSITION, TICKET_TRANSITIONS } from '../../config/tickets.js';
+import {
+  AUTO_REPLY_TRANSITION,
+  CLOSED_TICKET_STATUS,
+  TICKET_TRANSITIONS,
+} from '../../config/tickets.js';
 import * as supportTicketsModel from '../../models/supportTickets.model.js';
 import AppError from '../../utils/AppError.js';
 import { getPagination } from '../../utils/pagination.js';
@@ -10,6 +14,7 @@ import {
   TICKET_NOT_FOUND,
   toTicketResponse,
 } from '../tickets.service.js';
+import * as notificationsService from '../notifications.service.js';
 
 export const listTickets = async ({ page, limit, ...filters }) => {
   const pagination = getPagination({ page, limit });
@@ -46,6 +51,7 @@ export const replyToTicket = async (adminId, id, { message }) => {
     } else {
       await supportTicketsModel.touchTicket(ticket.id, conn);
     }
+    await notificationsService.notifyTicketReply(conn, ticket.id);
   });
 
   return getTicket(id);
@@ -63,6 +69,9 @@ export const updateTicketStatus = async (id, status) => {
     }
 
     await supportTicketsModel.updateTicketStatus(ticket.id, status, conn);
+    if (status === CLOSED_TICKET_STATUS) {
+      await notificationsService.notifyTicketResolved(conn, ticket.id);
+    }
   });
 
   return getTicket(id);

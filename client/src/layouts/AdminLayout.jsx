@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import Logo from '../components/layout/Logo.jsx';
+import NotificationBell from '../components/notifications/NotificationBell.jsx';
 import { ADMIN_NAV } from '../config/navigation.js';
 import useAuth from '../hooks/useAuth.js';
 
@@ -65,7 +66,8 @@ export default function AdminLayout() {
           <Link to="/" className="text-sm font-medium text-teal-700 hover:text-teal-800">
             Back to site
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <NotificationBell viewAllPath="/admin/notifications" />
             <span className="hidden max-w-[12rem] truncate text-sm text-slate-600 sm:inline">
               {user.full_name}
             </span>

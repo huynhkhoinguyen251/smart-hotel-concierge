@@ -20,6 +20,7 @@ import { fromCents, multiplyPrice, toCents } from '../utils/money.js';
 import { getPagination } from '../utils/pagination.js';
 import { cancelBookingWithServices } from './bookings.service.js';
 import { toPaymentSummary } from './paymentSummary.service.js';
+import * as notificationsService from './notifications.service.js';
 
 export const PAYMENT_NOT_FOUND = 'Payment not found';
 const PAYMENT_FORBIDDEN = 'You do not have permission to access this payment';
@@ -88,8 +89,10 @@ export const expireUnpaidOrders = async () => {
   for (const column of columns) {
     await withTransaction(async (conn) => {
       const ids = await paymentsModel.lockExpiredOrderIds(column, PAYMENT_HOLD_MINUTES, conn);
+      const kind = PAYMENT_TARGETS.find((target) => target.column === column).type;
       for (const id of ids) {
         await CANCEL_EXPIRED_ORDER[column](id, conn);
+        await notificationsService.notifyPaymentExpired(conn, kind, id);
       }
     });
   }
@@ -145,6 +148,7 @@ export const payOrder = async (userId, data) => {
     if (target.confirmsOrder) {
       await bookingsModel.updateBookingStatus(order.order_id, 'confirmed', conn);
     }
+    await notificationsService.notifyPaymentReceived(conn, target.type, order.order_id);
     return order.payment_id;
   });
 

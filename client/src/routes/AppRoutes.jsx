@@ -18,6 +18,7 @@ import MyServicesPage from '../pages/MyServicesPage.jsx';
 import MySupportPage from '../pages/MySupportPage.jsx';
 import MyTripsPage from '../pages/MyTripsPage.jsx';
 import NewTicketPage from '../pages/NewTicketPage.jsx';
+import NotificationsPage from '../pages/NotificationsPage.jsx';
 import NotFoundPage from '../pages/NotFoundPage.jsx';
 import ProfilePage from '../pages/ProfilePage.jsx';
 import RegisterPage from '../pages/RegisterPage.jsx';
@@ -95,6 +96,7 @@ export default function AppRoutes() {
           <Route path="my-trips/tours/:id" element={<TourBookingDetailPage />} />
           <Route path="my-trips/transport/:id" element={<TransportBookingDetailPage />} />
           <Route path="my-payments" element={<MyPaymentsPage />} />
+          <Route path="notifications" element={<NotificationsPage />} />
           <Route path="payments/:id/invoice" element={<InvoicePage />} />
           <Route path="my-reviews" element={<MyReviewsPage />} />
           <Route path="support" element={<MySupportPage />} />
@@ -131,6 +133,7 @@ export default function AppRoutes() {
           <Route path="tickets" element={withSuspense(<AdminTicketsPage />)} />
           <Route path="tickets/:id" element={withSuspense(<AdminTicketDetailPage />)} />
           <Route path="payments" element={withSuspense(<AdminPaymentsPage />)} />
+          <Route path="notifications" element={<NotificationsPage />} />
           <Route path="reviews" element={withSuspense(<AdminReviewsPage />)} />
           <Route path="users" element={withSuspense(<AdminUsersPage />)} />
           <Route path="users/:id" element={withSuspense(<AdminUserDetailPage />)} />

@@ -10,6 +10,7 @@ import {
   TOUR_BOOKING_NOT_FOUND,
   toTourBookingResponse,
 } from '../tourBookings.service.js';
+import * as notificationsService from '../notifications.service.js';
 
 export const listTourBookings = async ({ page, limit, ...filters }) => {
   const pagination = getPagination({ page, limit });
@@ -60,6 +61,7 @@ export const updateTourBookingStatus = async (id, status) => {
       // Hủy đơn đã thanh toán thì hoàn tiền.
       await paymentsModel.refundPaidPayment('tour_booking_id', tourBooking.id, conn);
     }
+    await notificationsService.notifyOrderStatusChanged(conn, 'tour', tourBooking.id, status);
   });
 
   return getTourBooking(id);

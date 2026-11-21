@@ -318,11 +318,48 @@ Chỉ làm sau khi toàn bộ phần Core đã chạy ổn.
 
 | Method | Endpoint | Quyền | Mô tả |
 |---|---|---|---|
-| GET | `/notifications` | User | Thông báo của tôi, kèm số chưa đọc |
-| PATCH | `/notifications/:id/read` | User | Đánh dấu đã đọc |
-| PATCH | `/notifications/read-all` | User | Đánh dấu tất cả đã đọc |
+| GET | `/notifications` | User, Admin | Thông báo của tôi, mới nhất trước, có phân trang; lọc `unread_only=true`; kèm `unread_count` |
+| PATCH | `/notifications/read-all` | User, Admin | Đánh dấu tất cả thông báo của tôi đã đọc; trả `unread_count` mới (bằng 0) |
+| PATCH | `/notifications/:id/read` | User, Admin | Đánh dấu một thông báo đã đọc; gọi lại vẫn `200` |
 
-Thông báo được backend tự tạo khi trạng thái đơn thay đổi, nên không có API tạo thông báo.
+Thông báo được backend tự tạo khi trạng thái đơn hoặc yêu cầu hỗ trợ thay đổi, nên không có API tạo hay xóa thông báo. Admin dùng chung các API này cho thông báo của chính mình.
+
+- Route `/notifications/read-all` được khai báo trước `/notifications/:id/read`.
+- Mỗi thông báo: `id`, `type` (`booking`, `service`, `food_order`, `tour`, `transport`, `payment`, `support`), `title`, `message`, `link_path` (trang của frontend mở khi bấm, ví dụ `/my-food-orders/12`, hoặc `null`), `is_read`, `created_at`.
+- `unread_count` (số thông báo chưa đọc của tôi) nằm ở cấp ngoài cùng của phản hồi, giống `pagination`:
+
+```json
+{
+  "success": true,
+  "data": [ { "id": 12, "type": "food_order", "title": "Food order confirmed", "message": "Your food order #12 has been confirmed.", "link_path": "/my-food-orders/12", "is_read": false, "created_at": "2026-11-21 14:05:00" } ],
+  "pagination": { "page": 1, "limit": 10, "total": 1 },
+  "unread_count": 1
+}
+```
+
+- `PATCH /notifications/:id/read` trả `data` là thông báo (đã đọc) và `unread_count` ở cấp ngoài cùng. Thông báo của người khác: `403`; không có: `404`.
+- `PATCH /notifications/read-all` trả `data: { "unread_count": 0 }` và `unread_count` ở cấp ngoài cùng.
+- `unread_only` chỉ nhận `true` hoặc `false`, nếu không thì `400`.
+
+**Khi nào có thông báo.** Thông báo được tạo trong cùng transaction với thay đổi gây ra nó: thay đổi bị từ chối hoặc rollback thì không có thông báo. Không báo cho người dùng về hành động của chính họ (ví dụ khách tự hủy đơn), trừ xác nhận thanh toán. Tiêu đề và nội dung nằm trong `server/src/config/notifications.js`.
+
+| Sự kiện | Người nhận | Tiêu đề (ví dụ) | `link_path` |
+|---|---|---|---|
+| Khách thanh toán đơn đặt phòng | Khách | "Booking confirmed" (kèm số phòng và ngày) | `/my-bookings/:id` |
+| Khách thanh toán 4 loại đơn còn lại | Khách | "Payment received, waiting for confirmation" | Trang chi tiết đơn của khách |
+| Khách thanh toán đơn đặt phòng | Mọi admin | "New paid booking" | `/admin/bookings/:id` |
+| Khách thanh toán 4 loại đơn còn lại | Mọi admin | "Food order waiting for confirmation"… | Trang chi tiết đơn của admin |
+| Admin đổi trạng thái đơn (`confirmed`, `checked_in`, `checked_out`, `in_progress`, `preparing`, `delivering`, `completed`, `cancelled`) | Khách | "Food order confirmed", "Checked in"… Hủy đơn đã trả có thêm "Your payment has been refunded."; duyệt thuê xe máy có biển số | Trang chi tiết đơn của khách |
+| Yêu cầu dịch vụ bị hủy theo đơn đặt phòng | Khách | "Service request cancelled" | `/my-services/:id` |
+| Đơn bị hủy vì quá hạn thanh toán | Khách | "... cancelled" ("not paid within 15 minutes") | Trang chi tiết đơn của khách |
+| Khách tạo yêu cầu hỗ trợ | Mọi admin | "New support request" | `/admin/tickets/:id` |
+| Khách gửi thêm tin nhắn | Mọi admin | "New message from a guest" | `/admin/tickets/:id` |
+| Lễ tân trả lời | Khách | "Reception replied" | `/support/:id` |
+| Admin đánh dấu yêu cầu `resolved` | Khách | "Support request resolved" | `/support/:id` |
+
+Trang chi tiết đơn của khách: `/my-bookings/:id`, `/my-services/:id`, `/my-food-orders/:id`, `/my-trips/tours/:id`, `/my-trips/transport/:id`. Của admin: `/admin/bookings/:id`, `/admin/services/:id`, `/admin/food-orders/:id`, `/admin/tourism/tours/:id`, `/admin/tourism/transport/:id`.
+
+Frontend tải `unread_count` sau khi đăng nhập, mỗi 60 giây khi tab đang mở, khi đổi trang và ngay sau khi đánh dấu đã đọc. Không dùng WebSocket.
 
 ### 11. Thanh toán giả lập và hóa đơn
 

@@ -9,6 +9,7 @@ import {
   findBookingOr404,
   toBookingResponse,
 } from '../bookings.service.js';
+import * as notificationsService from '../notifications.service.js';
 
 // Luồng trạng thái theo Mục 5 của proposal.md. Admin hủy không bị giới hạn 24 giờ.
 // pending → confirmed chỉ xảy ra khi khách thanh toán (POST /payments), admin không duyệt nữa.
@@ -59,6 +60,7 @@ export const updateBookingStatus = async (id, status) => {
     } else {
       await bookingsModel.updateBookingStatus(booking.id, status, conn);
     }
+    await notificationsService.notifyOrderStatusChanged(conn, 'room', booking.id, status);
   });
 
   return getBooking(id);
