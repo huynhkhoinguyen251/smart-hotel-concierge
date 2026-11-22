@@ -12,6 +12,7 @@ import {
   toFoodOrderResponse,
 } from '../foodOrders.service.js';
 import * as notificationsService from '../notifications.service.js';
+import * as vouchersService from '../vouchers.service.js';
 
 export const listFoodOrders = async ({ page, limit, ...filters }) => {
   const pagination = getPagination({ page, limit });
@@ -61,6 +62,8 @@ export const updateFoodOrderStatus = async (id, status) => {
     if (status === 'cancelled') {
       // Hủy đơn đã thanh toán thì hoàn tiền.
       await paymentsModel.refundPaidPayment('food_order_id', foodOrder.id, conn);
+      // Đơn có voucher: trả lại lượt dùng.
+      await vouchersService.releaseVoucher(conn, 'food_order', foodOrder.id);
     }
     await notificationsService.notifyOrderStatusChanged(conn, 'food_order', foodOrder.id, status);
   });

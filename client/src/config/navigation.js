@@ -25,6 +25,7 @@ export const ADMIN_NAV = [
   { to: '/admin/rooms', label: 'Rooms' },
   { to: '/admin/bookings', label: 'Bookings' },
   { to: '/admin/payments', label: 'Payments' },
+  { to: '/admin/vouchers', label: 'Vouchers' },
   { to: '/admin/services', label: 'Services' },
   { to: '/admin/food-orders', label: 'Food Orders' },
   { to: '/admin/tourism', label: 'Tourism' },

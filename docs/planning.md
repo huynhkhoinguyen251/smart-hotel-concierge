@@ -145,7 +145,7 @@ Chỉ bắt đầu khi toàn bộ tính năng Core đã chạy ổn.
 - [x] Notification System (chuông thông báo, tự tạo khi đơn và yêu cầu hỗ trợ đổi trạng thái; thêm cột `link_path`; xong 21/11/2026; nhớ chạy ALTER TABLE trên TiDB khi deploy)
 - [x] Payment Simulation (QR giả lập cho cả 5 loại đơn theo phương án A, giữ đơn 15 phút, quy tắc ở `api.md` mục 11; backend 19/11, giao diện 20/11/2026)
 - [x] Invoice Generation (tự tạo khi thanh toán, trang hóa đơn in được; backend 19/11, giao diện 20/11/2026)
-- [ ] Voucher & Discount
+- [x] Voucher & Discount (áp cho đặt phòng và đồ ăn, khóa dòng khi dùng, hủy đơn trả lại lượt; admin quản lý mã; xong 22/11/2026)
 - [ ] So sánh phòng và dịch vụ
 - [ ] Smart Recommendation
 

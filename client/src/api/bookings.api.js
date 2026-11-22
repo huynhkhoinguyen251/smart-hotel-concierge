@@ -2,8 +2,15 @@ import { cleanParams } from '../utils/queryString.js';
 import client from './client.js';
 
 // Đặt phòng. Backend tự lấy giá và tính tổng tiền; trả đơn vừa tạo.
-export const createBooking = async ({ room_id, check_in, check_out, guests }) => {
-  const body = await client.post('/bookings', { room_id, check_in, check_out, guests });
+// voucher_code không bắt buộc (mục 12 của docs/api.md).
+export const createBooking = async ({ room_id, check_in, check_out, guests, voucher_code }) => {
+  const body = await client.post('/bookings', {
+    room_id,
+    check_in,
+    check_out,
+    guests,
+    ...(voucher_code ? { voucher_code } : {}),
+  });
   return body.data;
 };
 

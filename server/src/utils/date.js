@@ -87,3 +87,15 @@ export const addMinutesToDateTime = (value, minutes) => {
     date.getUTCHours(),
   )}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())}`;
 };
+
+// Đúng dạng 'YYYY-MM-DD HH:mm:ss', ngày có thật, giờ 00-23, phút và giây 00-59.
+export const isValidDateTimeSecondsString = (value) => {
+  const match = typeof value === 'string' && value.match(DATE_TIME_SECONDS_PATTERN);
+  return Boolean(
+    match &&
+      isValidDateString(`${match[1]}-${match[2]}-${match[3]}`) &&
+      Number(match[4]) <= 23 &&
+      Number(match[5]) <= 59 &&
+      Number(match[6]) <= 59,
+  );
+};

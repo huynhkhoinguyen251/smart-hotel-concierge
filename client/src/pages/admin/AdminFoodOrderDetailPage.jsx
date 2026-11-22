@@ -16,6 +16,7 @@ import { sumPrices } from '../../utils/price.js';
 import formatCurrency from '../../utils/formatCurrency.js';
 import { getConfirmDisabledReason } from '../../utils/paymentHelpers.js';
 import PaymentInfoCard from '../../components/payments/PaymentInfoCard.jsx';
+import { getDiscountLabel } from '../../config/vouchers.js';
 
 function FoodOrderDetails({ initialOrder }) {
   const { item: order, message, actionProps } = useAdminItem(initialOrder);
@@ -68,7 +69,7 @@ function FoodOrderDetails({ initialOrder }) {
             <h2 className="text-lg font-semibold text-slate-900">Price</h2>
             <dl className="mt-2 divide-y divide-slate-100 text-sm">
               <DetailRow label="Subtotal">{formatCurrency(subtotal)}</DetailRow>
-              {discount > 0 && <DetailRow label="Discount">- {formatCurrency(discount)}</DetailRow>}
+              {discount > 0 && <DetailRow label={getDiscountLabel(order.voucher?.code)}>- {formatCurrency(discount)}</DetailRow>}
               <div className="flex items-start justify-between gap-4 py-2.5">
                 <dt className="font-semibold text-slate-900">Total</dt>
                 <dd className="text-right text-lg font-bold text-teal-700">{formatCurrency(order.total_price)}</dd>

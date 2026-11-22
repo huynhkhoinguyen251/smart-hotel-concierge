@@ -15,6 +15,7 @@ import { CHECK_IN_TIME } from '../../utils/cancellation.js';
 import formatCurrency from '../../utils/formatCurrency.js';
 import formatDate from '../../utils/formatDate.js';
 import PaymentInfoCard from '../../components/payments/PaymentInfoCard.jsx';
+import { getDiscountLabel } from '../../config/vouchers.js';
 
 // Nội dung đơn. Giữ trong state để cập nhật ngay sau khi đổi trạng thái (API trả lại cả đơn).
 function BookingDetails({ initialBooking }) {
@@ -86,7 +87,7 @@ function BookingDetails({ initialBooking }) {
               <DetailRow label="Guests">{booking.guests}</DetailRow>
               <DetailRow label="Price per night">{formatCurrency(booking.price_per_night)}</DetailRow>
               {Number(booking.discount_amount) > 0 && (
-                <DetailRow label="Discount">- {formatCurrency(booking.discount_amount)}</DetailRow>
+                <DetailRow label={getDiscountLabel(booking.voucher?.code)}>- {formatCurrency(booking.discount_amount)}</DetailRow>
               )}
               <div className="flex items-start justify-between gap-4 py-2.5">
                 <dt className="font-semibold text-slate-900">Total</dt>

@@ -19,6 +19,7 @@ import tourBookingsRoutes from './tourBookings.routes.js';
 import toursRoutes from './tours.routes.js';
 import transportBookingsRoutes from './transportBookings.routes.js';
 import usersRoutes from './users.routes.js';
+import vouchersRoutes from './vouchers.routes.js';
 
 const router = Router();
 
@@ -41,6 +42,7 @@ router.use('/reviews', reviewsRoutes);
 router.use('/food-reviews', foodReviewsRoutes);
 router.use('/payments', paymentsRoutes);
 router.use('/notifications', notificationsRoutes);
+router.use('/vouchers', vouchersRoutes);
 router.use('/admin', adminRoutes);
 
 export default router;

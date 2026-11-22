@@ -2,11 +2,12 @@ import { cleanParams } from '../utils/queryString.js';
 import client from './client.js';
 
 // Đặt món. items: [{ menu_item_id, quantity }]. Không gửi giá: backend tự lấy giá và tính tổng tiền.
-export const createFoodOrder = async ({ booking_id, items, note }) => {
+export const createFoodOrder = async ({ booking_id, items, note, voucher_code }) => {
   const body = await client.post('/food-orders', {
     booking_id,
     items: items.map(({ menu_item_id, quantity }) => ({ menu_item_id, quantity })),
     ...(note ? { note } : {}),
+    ...(voucher_code ? { voucher_code } : {}),
   });
   return body.data;
 };

@@ -4,6 +4,7 @@ import { createBooking } from '../api/bookings.api.js';
 import { checkAvailability, getRoom } from '../api/rooms.api.js';
 import StayFields from '../components/bookings/StayFields.jsx';
 import RoomImage from '../components/rooms/RoomImage.jsx';
+import VoucherInput from '../components/vouchers/VoucherInput.jsx';
 import Alert from '../components/ui/Alert.jsx';
 import Button from '../components/ui/Button.jsx';
 import Card from '../components/ui/Card.jsx';
@@ -79,6 +80,8 @@ function BookingForm({ roomId }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  // Voucher đang áp dụng (kết quả của POST /vouchers/validate) hoặc null.
+  const [voucher, setVoucher] = useState(null);
 
   const stay = {
     check_in: searchParams.get('check_in') ?? '',
@@ -119,7 +122,9 @@ function BookingForm({ roomId }) {
   const guestsReduced = Number(stay.guests) > capacity;
   const nights = countNights(stay.check_in, stay.check_out);
   const pricePerNight = availability.data?.price_per_night ?? room.room_type.price_per_night;
-  const total = availability.data?.estimated_total ?? nights * pricePerNight;
+  const subtotal = availability.data?.estimated_total ?? nights * pricePerNight;
+  const discount = voucher?.discount_amount ?? 0;
+  const total = voucher ? voucher.total_after_discount : subtotal;
   const deadline = getFreeCancellationDeadline(stay.check_in);
   const roomLink = `/rooms/${room.id}${toQueryString({ ...stay, guests })}`;
 
@@ -142,6 +147,7 @@ function BookingForm({ roomId }) {
         check_in: stay.check_in,
         check_out: stay.check_out,
         guests: Number(guests),
+        voucher_code: voucher?.code,
       });
       // replace: bấm Back sau khi đặt không quay lại form này để đặt lần nữa.
       navigate(`/my-bookings/${booking.id}`, {
@@ -149,7 +155,7 @@ function BookingForm({ roomId }) {
         state: { success: BOOKING_CREATED_MESSAGE },
       });
     } catch (error) {
-      // Ví dụ 409: người khác vừa đặt phòng này; kiểm tra lại để cập nhật trạng thái.
+      // Ví dụ 409: người khác vừa đặt phòng này; 400: voucher vừa hết lượt. Giữ nguyên form.
       setSubmitError(error.message);
       setSubmitting(false);
       if (error.status === 409) availability.retry();
@@ -212,12 +218,28 @@ function BookingForm({ roomId }) {
                 <SummaryRow label="Price">
                   {formatCurrency(pricePerNight)} × {nights} {nights === 1 ? 'night' : 'nights'}
                 </SummaryRow>
+                <SummaryRow label="Subtotal">{formatCurrency(subtotal)}</SummaryRow>
+                {discount > 0 && (
+                  <SummaryRow label={`Discount (${voucher.code})`}>- {formatCurrency(discount)}</SummaryRow>
+                )}
                 <SummaryRow label="Total" strong>
                   {formatCurrency(total)}
                 </SummaryRow>
               </>
             )}
           </dl>
+
+          <div className="mt-4">
+            <VoucherInput
+              subtotal={datesError ? null : subtotal}
+              applied={voucher}
+              onChange={(value) => {
+                setVoucher(value);
+                setSubmitError('');
+              }}
+              disabled={submitting}
+            />
+          </div>
 
           <div className="mt-4 space-y-3" aria-live="polite">
             <AvailabilityStatus datesError={datesError} availability={availability} />
@@ -230,8 +252,8 @@ function BookingForm({ roomId }) {
 
           {!datesError && deadline && (
             <p className="mt-3 text-xs text-slate-500">
-              Free cancellation until {deadline.label}. The hotel confirms your booking after you
-              submit it.
+              Free cancellation until {deadline.label}. Pay by QR within 15 minutes after booking to
+              confirm it.
             </p>
           )}
         </Card>

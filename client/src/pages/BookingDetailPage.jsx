@@ -23,6 +23,7 @@ import { formatNights } from '../utils/bookingHelpers.js';
 import { CHECK_IN_TIME, getFreeCancellationDeadline } from '../utils/cancellation.js';
 import formatCurrency from '../utils/formatCurrency.js';
 import formatDate from '../utils/formatDate.js';
+import { getDiscountLabel } from '../config/vouchers.js';
 
 const SERVICES_NOTE =
   'Your pending or confirmed service requests for this stay will also be cancelled.';
@@ -181,7 +182,7 @@ function BookingDetails({ initialBooking, initialMessage }) {
               <DetailRow label="Price per night">{formatCurrency(booking.price_per_night)}</DetailRow>
               <DetailRow label="Nights">{nightsLabel}</DetailRow>
               {booking.discount_amount > 0 && (
-                <DetailRow label="Discount">- {formatCurrency(booking.discount_amount)}</DetailRow>
+                <DetailRow label={getDiscountLabel(booking.voucher?.code)}>- {formatCurrency(booking.discount_amount)}</DetailRow>
               )}
               <div className="flex items-start justify-between gap-4 py-2.5">
                 <dt className="font-semibold text-slate-900">Total</dt>

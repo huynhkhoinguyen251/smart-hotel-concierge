@@ -10,7 +10,8 @@ import {
   NO_CHECKED_IN_BOOKING_NOTE,
 } from '../../config/food.js';
 import useFetch from '../../hooks/useFetch.js';
-import { toOrderItems } from '../../utils/foodCart.js';
+import { getCartTotal, toOrderItems } from '../../utils/foodCart.js';
+import formatCurrency from '../../utils/formatCurrency.js';
 import { getBookingOptionLabel } from '../../utils/serviceHelpers.js';
 import Alert from '../ui/Alert.jsx';
 import Button from '../ui/Button.jsx';
@@ -18,6 +19,7 @@ import ErrorState from '../ui/ErrorState.jsx';
 import Select from '../ui/Select.jsx';
 import Spinner from '../ui/Spinner.jsx';
 import Textarea from '../ui/Textarea.jsx';
+import VoucherInput from '../vouchers/VoucherInput.jsx';
 
 // Khách thường chỉ có 1 đơn đang ở; 50 là giới hạn limit của backend.
 const BOOKINGS_LIMIT = 50;
@@ -52,6 +54,10 @@ function OrderFields({ lines, bookings, initialBookingId, onOrdered }) {
   const [bookingError, setBookingError] = useState('');
   const [submitError, setSubmitError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  // Voucher đang áp dụng (kết quả của POST /vouchers/validate) hoặc null.
+  const [voucher, setVoucher] = useState(null);
+  const subtotal = getCartTotal(lines);
+  const total = voucher ? voucher.total_after_discount : subtotal;
 
   const bookingNotUsable = Boolean(initialBookingId) && !matched;
   const options = [
@@ -73,11 +79,12 @@ function OrderFields({ lines, bookings, initialBookingId, onOrdered }) {
         booking_id: Number(bookingId),
         items: toOrderItems(lines),
         note: note.trim(),
+        voucher_code: voucher?.code,
       });
       onOrdered();
       navigate(`/my-food-orders/${created.id}`, { state: { success: FOOD_ORDER_CREATED_MESSAGE } });
     } catch (apiError) {
-      // Ví dụ 400: đơn vừa check-out hoặc một món vừa ngừng bán; 404: món không còn.
+      // Ví dụ 400: đơn vừa check-out, một món vừa ngừng bán hoặc voucher vừa hết lượt; 404: món không còn.
       setSubmitError(apiError.message);
       setSubmitting(false);
     }
@@ -113,6 +120,31 @@ function OrderFields({ lines, bookings, initialBookingId, onOrdered }) {
         placeholder="For example: no chili, less ice"
         disabled={submitting}
       />
+      <VoucherInput
+        subtotal={lines.length > 0 ? subtotal : null}
+        applied={voucher}
+        onChange={(value) => {
+          setVoucher(value);
+          setSubmitError('');
+        }}
+        disabled={submitting}
+      />
+      <dl className="space-y-1 rounded-lg bg-slate-50 px-3 py-2 text-sm">
+        <div className="flex justify-between gap-4">
+          <dt className="text-slate-600">Subtotal</dt>
+          <dd className="font-medium text-slate-900">{formatCurrency(subtotal)}</dd>
+        </div>
+        {voucher && (
+          <div className="flex justify-between gap-4">
+            <dt className="text-slate-600">Discount ({voucher.code})</dt>
+            <dd className="font-medium text-slate-900">- {formatCurrency(voucher.discount_amount)}</dd>
+          </div>
+        )}
+        <div className="flex justify-between gap-4">
+          <dt className="font-semibold text-slate-900">Total</dt>
+          <dd className="font-bold text-teal-700">{formatCurrency(total)}</dd>
+        </div>
+      </dl>
       <div aria-live="polite">
         <Alert type="error">{submitError}</Alert>
       </div>
@@ -120,7 +152,7 @@ function OrderFields({ lines, bookings, initialBookingId, onOrdered }) {
         Place order
       </Button>
       <p className="text-xs text-slate-500">
-        The hotel confirms your order. You can cancel it while it is pending.
+        Pay by QR within 15 minutes after ordering. You can cancel the order while it is pending.
       </p>
     </form>
   );

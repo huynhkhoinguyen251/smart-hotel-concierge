@@ -11,6 +11,7 @@ import useFetch from '../hooks/useFetch.js';
 import formatCurrency from '../utils/formatCurrency.js';
 import formatDate from '../utils/formatDate.js';
 import { formatUnitQuantity } from '../utils/paymentHelpers.js';
+import { getDiscountLabel } from '../config/vouchers.js';
 
 function SummaryRow({ label, children, strong = false }) {
   return (
@@ -118,7 +119,7 @@ function Invoice({ invoice }) {
 
         <dl className="mt-4 ml-auto max-w-xs border-t border-slate-200 pt-3 text-sm">
           <SummaryRow label="Subtotal">{formatCurrency(invoice.subtotal)}</SummaryRow>
-          {invoice.discount > 0 && <SummaryRow label="Discount">- {formatCurrency(invoice.discount)}</SummaryRow>}
+          {invoice.discount > 0 && <SummaryRow label={getDiscountLabel(invoice.voucher_code)}>- {formatCurrency(invoice.discount)}</SummaryRow>}
           <SummaryRow label="Total" strong>
             {formatCurrency(invoice.total)}
           </SummaryRow>

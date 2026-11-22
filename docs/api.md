@@ -91,10 +91,10 @@ Tham số của `GET /rooms`: `check_in`, `check_out`, `guests`, `room_type_id`,
 
 | Method | Endpoint | Quyền | Mô tả |
 |---|---|---|---|
-| POST | `/bookings` | User | Đặt phòng; `room_id`, `check_in`, `check_out`, `guests`. Đơn `pending`, kèm thanh toán QR `unpaid` (mục 11) |
+| POST | `/bookings` | User | Đặt phòng; `room_id`, `check_in`, `check_out`, `guests`, `voucher_code` (không bắt buộc, mục 12). Đơn `pending`, kèm thanh toán QR `unpaid` (mục 11) |
 | GET | `/bookings` | User | Lịch sử đặt phòng của tôi |
 | GET | `/bookings/:id` | User | Chi tiết đơn |
-| PUT | `/bookings/:id` | User | Đổi ngày khi đơn còn `pending`; kiểm tra lại phòng trống; số tiền thanh toán chưa trả đổi theo tổng mới, hạn thanh toán không được gia hạn |
+| PUT | `/bookings/:id` | User | Đổi ngày khi đơn còn `pending`; kiểm tra lại phòng trống; có voucher thì tính lại tiền giảm (vẫn cần đủ `min_amount`); số tiền thanh toán chưa trả đổi theo tổng mới, hạn thanh toán không được gia hạn |
 | PATCH | `/bookings/:id/cancel` | User | Hủy khi đơn `pending` hoặc `confirmed`, và còn ít nhất 24 giờ trước 14:00 ngày check-in; tự hủy các yêu cầu dịch vụ `pending`, `confirmed` của đơn; thanh toán đã trả của đơn và của các yêu cầu đó chuyển `refunded` |
 
 Lưu ý: `POST /bookings` và `PUT /bookings/:id` phải kiểm tra phòng trống và ghi dữ liệu trong cùng một transaction. Số khách không được vượt `capacity` của loại phòng. Đơn chuyển `confirmed` khi khách thanh toán QR (`POST /payments`), không do admin duyệt.
@@ -120,7 +120,7 @@ Lưu ý: `booking_id` phải thuộc người dùng và đúng trạng thái the
 |---|---|---|---|
 | GET | `/menu-items` | Public | Thực đơn; lọc bằng `category` |
 | GET | `/menu-items/:id` | Public | Chi tiết món |
-| POST | `/food-orders` | User | Đặt món; `booking_id`, `items` (`menu_item_id`, `quantity`), `note`. Kèm thanh toán QR `unpaid` |
+| POST | `/food-orders` | User | Đặt món; `booking_id`, `items` (`menu_item_id`, `quantity`), `note`, `voucher_code` (không bắt buộc, mục 12). Kèm thanh toán QR `unpaid` |
 | GET | `/food-orders` | User | Đơn đồ ăn của tôi |
 | GET | `/food-orders/:id` | User | Chi tiết đơn và các món |
 | PATCH | `/food-orders/:id/cancel` | User | Hủy khi còn `pending`; đã thanh toán thì chuyển `refunded` |
@@ -432,13 +432,50 @@ Thanh toán QR cho cả 5 loại đơn (Phương án A, chủ dự án duyệt n
 
 | Method | Endpoint | Quyền | Mô tả |
 |---|---|---|---|
-| POST | `/vouchers/validate` | User | Kiểm tra mã và tính số tiền giảm; `code`, `amount` |
-| GET | `/admin/vouchers` | Admin | Danh sách voucher |
+| POST | `/vouchers/validate` | User (khách) | Xem trước tiền giảm; `code`, `amount` (tạm tính). Không giữ lượt dùng. Admin: `403` |
+| GET | `/admin/vouchers` | Admin | Danh sách, mới nhất trước; tìm `search` (theo mã), lọc `status`; có phân trang |
 | POST | `/admin/vouchers` | Admin | Thêm voucher |
-| PUT | `/admin/vouchers/:id` | Admin | Sửa hoặc tắt voucher |
-| DELETE | `/admin/vouchers/:id` | Admin | Xóa; trả `409` nếu đã được dùng |
+| PUT | `/admin/vouchers/:id` | Admin | Sửa toàn bộ (gửi đủ mọi trường), kể cả bật/tắt bằng `is_active` |
+| DELETE | `/admin/vouchers/:id` | Admin | Xóa; `409` nếu đã có đơn đặt phòng hoặc đơn đồ ăn dùng |
 
-Khi làm phần này, `POST /bookings` và `POST /food-orders` nhận thêm `voucher_code`. Backend kiểm tra lại mã, tính giảm giá và tăng `used_count` trong cùng transaction với đơn.
+Hằng số và thông báo nằm trong `server/src/config/vouchers.js`.
+
+- **Áp dụng cho:** đơn đặt phòng và đơn đồ ăn (hai bảng có `voucher_id`). Mỗi đơn tối đa một voucher.
+- **Mã:** không phân biệt hoa thường (backend trim rồi viết hoa); chỉ gồm A–Z, 0–9, `-`, `_`; tối đa 50 ký tự.
+- **Dùng được khi** (so bằng giờ của database): `is_active`, `starts_at` ≤ bây giờ ≤ `ends_at`, `max_uses` là `null` (không giới hạn) hoặc `used_count < max_uses`, và tạm tính ≥ `min_amount`. Lỗi:
+
+| Trường hợp | Mã | Thông báo |
+|---|---|---|
+| Không có mã | `404` | "Voucher not found" |
+| Đã tắt | `400` | "This voucher is not active" |
+| Chưa bắt đầu | `400` | "This voucher is not active yet. It starts on 1 Dec 2026" |
+| Hết hạn | `400` | "This voucher has expired" |
+| Hết lượt | `400` | "This voucher has been fully used" |
+| Chưa đủ tiền | `400` | "Spend at least 200,000 VND to use this voucher" |
+
+- **Tiền giảm:** `percent` → làm tròn xuống tới đồng: floor(tạm tính × giá trị / 100); `fixed` → đúng giá trị. Không bao giờ lớn hơn tạm tính. `total_price` = tạm tính − `discount_amount`; số tiền của thanh toán chưa trả bằng `total_price`.
+- **Tạo đơn có `voucher_code`** (`POST /bookings`, `POST /food-orders`; rỗng hoặc `null` là không dùng): trong cùng transaction với đơn, backend khóa dòng voucher (`SELECT ... FOR UPDATE`), kiểm tra, tính tiền giảm, lưu `voucher_id`, `discount_amount` và tăng `used_count`. Hai khách cùng tranh lượt cuối thì người sau nhận `400` "This voucher has been fully used".
+- **Hủy đơn có voucher** vì bất kỳ lý do nào (khách hủy, admin hủy, hủy theo đơn đặt phòng, quá hạn thanh toán): trả lại một lượt (`used_count − 1`, không bao giờ dưới 0) trong cùng transaction.
+- **Đổi ngày đơn đặt phòng** (`PUT /bookings/:id`): tính lại tiền giảm của chính voucher đó trên tạm tính mới. Không xét lại thời gian và số lượt (đã kiểm tra lúc đặt), nhưng vẫn cần đủ `min_amount` (nếu không thì `400` với thông báo ở trên).
+- **Dữ liệu đơn:** mọi đơn đặt phòng và đơn đồ ăn (khách và admin, danh sách và chi tiết) có `voucher`: `{ id, code, discount_type, discount_value }` hoặc `null`, cùng `discount_amount` như cũ. Hóa đơn có thêm `voucher_code` (hoặc `null`).
+
+**`POST /vouchers/validate`:** body `{ "code": "welcome10", "amount": 1600000 }` → `{ code, discount_type, discount_value, discount_amount, total_after_discount, min_amount, ends_at }`, ví dụ WELCOME10 trên 1,600,000: `discount_amount` 160000, `total_after_discount` 1440000.
+
+**Voucher trong API admin:** `id`, `code`, `discount_type` (`percent`, `fixed`), `discount_value`, `min_amount`, `max_uses` (`null` = không giới hạn), `used_count`, `starts_at`, `ends_at`, `is_active`, `status`, `created_at`, `updated_at`. `status` do backend tính, theo thứ tự ưu tiên: `inactive` (đã tắt), `scheduled` (chưa bắt đầu), `expired` (đã hết hạn), `used_up` (hết lượt), `active`. Lọc `status` dùng đúng các giá trị này.
+
+Dữ liệu của `POST` và `PUT /admin/vouchers/:id`:
+
+| Trường | Quy tắc |
+|---|---|
+| `code` | Bắt buộc; như trên; trùng thì `409` "A voucher with this code already exists" |
+| `discount_type` | `percent` hoặc `fixed` |
+| `discount_value` | `percent`: số nguyên 1–100; `fixed`: lớn hơn 0, tối đa 2 chữ số thập phân |
+| `min_amount` | ≥ 0; mặc định 0 |
+| `max_uses` | `null` (không giới hạn) hoặc số nguyên ≥ 1; khi sửa không được thấp hơn `used_count` (`400`) |
+| `starts_at`, `ends_at` | Giờ địa phương dạng `YYYY-MM-DD HH:mm:ss`; `starts_at` < `ends_at` |
+| `is_active` | `true` hoặc `false`; mặc định `true` |
+
+`used_count` không sửa được qua API. `DELETE` voucher đã được đơn dùng trả `409` "This voucher has been used and cannot be deleted. Switch it off instead."
 
 ### 13. So sánh và gợi ý
 

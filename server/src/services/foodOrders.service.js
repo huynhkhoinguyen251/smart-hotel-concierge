@@ -13,6 +13,7 @@ import { fromCents, multiplyPrice, toCents } from '../utils/money.js';
 import { getPagination } from '../utils/pagination.js';
 import { BOOKING_NOT_FOUND } from './bookings.service.js';
 import { toPaymentSummary } from './paymentSummary.service.js';
+import * as vouchersService from './vouchers.service.js';
 
 export const FOOD_ORDER_NOT_FOUND = 'Food order not found';
 const FOOD_ORDER_FORBIDDEN = 'You do not have permission to access this food order';
@@ -35,6 +36,7 @@ export const toFoodOrderResponse = (foodOrder, { items, withUser = false } = {})
   booking: foodOrder.booking,
   can_cancel: foodOrder.status === USER_CANCELLABLE_FOOD_ORDER_STATUS,
   payment: toPaymentSummary(foodOrder.payment, foodOrder),
+  voucher: foodOrder.voucher,
   ...(withUser && { user: foodOrder.user }),
   ...(items && { items: items.map(toFoodOrderItemResponse) }),
 });
@@ -74,7 +76,7 @@ const loadOrderedMenuItems = async (items, conn) => {
   });
 };
 
-export const createFoodOrder = async (userId, { booking_id, items, note = null }) => {
+export const createFoodOrder = async (userId, { booking_id, items, note = null, voucher_code }) => {
   const id = await withTransaction(async (conn) => {
     // Khóa đơn đặt phòng, để đơn không bị đổi trạng thái trong lúc đặt món.
     const booking = await bookingsModel.lockBookingById(booking_id, conn);
@@ -97,13 +99,17 @@ export const createFoodOrder = async (userId, { booking_id, items, note = null }
       0,
     );
 
-    // Voucher là tính năng Extended, chưa làm: không có voucher và không giảm giá.
+    const subtotal = fromCents(totalCents);
+    // Voucher (nếu có): khóa, kiểm tra, tính tiền giảm và tăng used_count trong cùng transaction.
+    const voucher = voucher_code
+      ? await vouchersService.applyVoucherInTransaction(conn, voucher_code, subtotal)
+      : { voucherId: null, discountAmount: 0, total: subtotal };
     const foodOrderId = await foodOrdersModel.createFoodOrder(
       {
         booking_id: booking.id,
-        voucher_id: null,
-        discount_amount: 0,
-        total_price: fromCents(totalCents),
+        voucher_id: voucher.voucherId,
+        discount_amount: voucher.discountAmount,
+        total_price: voucher.total,
         note,
       },
       conn,
@@ -115,7 +121,7 @@ export const createFoodOrder = async (userId, { booking_id, items, note = null }
         user_id: userId,
         column: 'food_order_id',
         target_id: foodOrderId,
-        amount: fromCents(totalCents),
+        amount: voucher.total,
       },
       conn,
     );
@@ -169,6 +175,7 @@ export const cancelMyFoodOrder = async (userId, id) => {
     await foodOrdersModel.updateFoodOrderStatus(foodOrder.id, 'cancelled', conn);
     // Đã thanh toán thì hoàn tiền; chưa thanh toán thì giữ unpaid.
     await paymentsModel.refundPaidPayment('food_order_id', foodOrder.id, conn);
+    await vouchersService.releaseVoucher(conn, 'food_order', foodOrder.id);
   });
 
   return getFoodOrderDetail(await findFoodOrderOr404(id));

@@ -84,7 +84,7 @@ export default function CartPanel({ lines, total, bookingId, onChangeQuantity, o
       )}
 
       <div className="mt-3 flex items-center justify-between gap-4">
-        <p className="font-semibold text-slate-900">Total</p>
+        <p className="font-semibold text-slate-900">Subtotal</p>
         <p className="text-lg font-bold text-teal-700">{formatCurrency(total)}</p>
       </div>
       {lines.length >= MAX_ORDER_LINES && (

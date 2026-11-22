@@ -2,6 +2,7 @@ import { query } from 'express-validator';
 import { BOOKING_STATUSES } from '../config/booking.js';
 import { atLeastOneFieldRule, bodyIntRule, idParamRule, paginationRules } from './common.rules.js';
 import { dateRangeRules } from './date.rules.js';
+import { optionalVoucherCodeRule } from './vouchers.validator.js';
 
 const STATUS_MESSAGE = `Status must be one of: ${BOOKING_STATUSES.join(', ')}`;
 
@@ -23,6 +24,7 @@ export const createBookingValidator = [
   bodyIntRule('room_id', 'Room (room_id) must be a positive integer'),
   ...dateRangeRules({ location: 'body', required: true, bookingLimits: true }),
   guestsRule(),
+  optionalVoucherCodeRule(),
 ];
 
 export const listMyBookingsValidator = [bookingStatusQueryRule(), ...paginationRules()];

@@ -7,6 +7,7 @@ import {
   MIN_ORDER_LINES,
 } from '../config/food.js';
 import { bodyIntRule, idParamRule, noteRule, paginationRules } from './common.rules.js';
+import { optionalVoucherCodeRule } from './vouchers.validator.js';
 
 const STATUS_MESSAGE = `Status must be one of: ${FOOD_ORDER_STATUSES.join(', ')}`;
 
@@ -47,6 +48,7 @@ export const createFoodOrderValidator = [
     .custom(hasNoDuplicateMenuItems)
     .withMessage('Each menu item can appear only once in an order'),
   noteRule(),
+  optionalVoucherCodeRule(),
 ];
 
 export const listMyFoodOrdersValidator = [

@@ -55,6 +55,7 @@ const AdminTransportBookingDetailPage = lazy(() => import('../pages/admin/AdminT
 const AdminTicketsPage = lazy(() => import('../pages/admin/AdminTicketsPage.jsx'));
 const AdminTicketDetailPage = lazy(() => import('../pages/admin/AdminTicketDetailPage.jsx'));
 const AdminPaymentsPage = lazy(() => import('../pages/admin/AdminPaymentsPage.jsx'));
+const AdminVouchersPage = lazy(() => import('../pages/admin/AdminVouchersPage.jsx'));
 const AdminReviewsPage = lazy(() => import('../pages/admin/AdminReviewsPage.jsx'));
 const AdminUsersPage = lazy(() => import('../pages/admin/AdminUsersPage.jsx'));
 const AdminUserDetailPage = lazy(() => import('../pages/admin/AdminUserDetailPage.jsx'));
@@ -134,6 +135,7 @@ export default function AppRoutes() {
           <Route path="tickets/:id" element={withSuspense(<AdminTicketDetailPage />)} />
           <Route path="payments" element={withSuspense(<AdminPaymentsPage />)} />
           <Route path="notifications" element={<NotificationsPage />} />
+          <Route path="vouchers" element={withSuspense(<AdminVouchersPage />)} />
           <Route path="reviews" element={withSuspense(<AdminReviewsPage />)} />
           <Route path="users" element={withSuspense(<AdminUsersPage />)} />
           <Route path="users/:id" element={withSuspense(<AdminUserDetailPage />)} />

@@ -20,6 +20,7 @@ import { fromCents, multiplyPrice, toCents } from '../utils/money.js';
 import { getPagination } from '../utils/pagination.js';
 import { cancelBookingWithServices } from './bookings.service.js';
 import { toPaymentSummary } from './paymentSummary.service.js';
+import * as vouchersService from './vouchers.service.js';
 import * as notificationsService from './notifications.service.js';
 
 export const PAYMENT_NOT_FOUND = 'Payment not found';
@@ -75,7 +76,10 @@ const CANCEL_EXPIRED_ORDER = {
   booking_id: (id, conn) => cancelBookingWithServices(id, conn),
   service_booking_id: (id, conn) =>
     serviceBookingsModel.updateServiceBookingStatus(id, 'cancelled', conn),
-  food_order_id: (id, conn) => foodOrdersModel.updateFoodOrderStatus(id, 'cancelled', conn),
+  food_order_id: async (id, conn) => {
+    await foodOrdersModel.updateFoodOrderStatus(id, 'cancelled', conn);
+    await vouchersService.releaseVoucher(conn, 'food_order', id);
+  },
   tour_booking_id: (id, conn) => tourBookingsModel.updateTourBookingStatus(id, 'cancelled', conn),
   transport_booking_id: (id, conn) =>
     transportBookingsModel.updateTransportBookingStatus(id, { status: 'cancelled' }, conn),
@@ -198,6 +202,7 @@ const INVOICE_BUILDERS = {
         },
       ],
       discount: booking.discount_amount,
+      voucherCode: booking.voucher?.code ?? null,
       total: booking.total_price,
     };
   },
@@ -231,6 +236,7 @@ const INVOICE_BUILDERS = {
         amount: multiplyPrice(item.unit_price, item.quantity),
       })),
       discount: order.discount_amount,
+      voucherCode: order.voucher?.code ?? null,
       total: order.total_price,
     };
   },
@@ -307,6 +313,7 @@ export const getMyInvoice = async (userId, paymentId) => {
     lines: order.lines,
     subtotal: sumAmounts(order.lines),
     discount: order.discount,
+    voucher_code: order.voucherCode ?? null,
     total: order.total,
   };
 };

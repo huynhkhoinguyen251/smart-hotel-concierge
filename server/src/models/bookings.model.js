@@ -2,9 +2,12 @@ import pool from '../config/db.js';
 import { primaryImageSubquery } from './roomImages.model.js';
 import { buildSetClause } from './sqlHelpers.js';
 import { paymentSummarySql, toPaymentSummaryRow } from './payments.model.js';
+import { toVoucherSummaryRow, voucherSummarySql } from './vouchers.model.js';
 
 // Thanh toán QR của đơn (null với đơn cũ), xem payments.model.js.
 const PAYMENT_SQL = paymentSummarySql('booking_id', 'b');
+// Voucher của đơn (null nếu không dùng), xem vouchers.model.js.
+const VOUCHER_SQL = voucherSummarySql('b');
 
 const BOOKING_SELECT = `
   SELECT b.id, b.user_id, b.room_id, b.status, b.check_in, b.check_out, b.guests,
@@ -12,12 +15,14 @@ const BOOKING_SELECT = `
          r.room_number, rt.id AS room_type_id, rt.name AS room_type_name,
          ${primaryImageSubquery('r.id')} AS primary_image,
          u.full_name AS user_full_name, u.email AS user_email,
-         ${PAYMENT_SQL.columns}
+         ${PAYMENT_SQL.columns},
+         ${VOUCHER_SQL.columns}
   FROM bookings b
   JOIN rooms r ON r.id = b.room_id
   JOIN room_types rt ON rt.id = r.room_type_id
   JOIN users u ON u.id = b.user_id
-  ${PAYMENT_SQL.joins}`;
+  ${PAYMENT_SQL.joins}
+  ${VOUCHER_SQL.joins}`;
 
 // Đơn mới nhất trước; id là thứ tự phụ khi created_at bằng nhau.
 const NEWEST_FIRST = 'b.created_at DESC, b.id DESC';
@@ -42,6 +47,7 @@ const toBooking = (row) => ({
   },
   user: { id: row.user_id, full_name: row.user_full_name, email: row.user_email },
   payment: toPaymentSummaryRow(row),
+  voucher: toVoucherSummaryRow(row),
 });
 
 const buildFilters = ({ user_id, status, room_id, check_in_from, check_in_to }) => {
@@ -96,34 +102,45 @@ export const findBookingById = async (id, conn = pool) => {
 // Khóa dòng đơn đến hết transaction và trả các cột cần để kiểm tra quy tắc.
 export const lockBookingById = async (id, conn = pool) => {
   const [rows] = await conn.execute(
-    `SELECT id, user_id, room_id, status, check_in, check_out, guests, price_per_night
+    `SELECT id, user_id, room_id, voucher_id, status, check_in, check_out, guests, price_per_night
      FROM bookings WHERE id = ? FOR UPDATE`,
     [id],
   );
   return rows[0] ? { ...rows[0], price_per_night: Number(rows[0].price_per_night) } : null;
 };
 
-// Đơn mới luôn ở trạng thái pending, chưa có giảm giá.
+// Đơn mới luôn ở trạng thái pending. voucher_id null và discount_amount 0 khi không dùng voucher.
 export const createBooking = async (
-  { user_id, room_id, check_in, check_out, guests, price_per_night, total_price },
+  {
+    user_id,
+    room_id,
+    voucher_id = null,
+    check_in,
+    check_out,
+    guests,
+    price_per_night,
+    discount_amount = 0,
+    total_price,
+  },
   conn = pool,
 ) => {
   const [result] = await conn.execute(
     `INSERT INTO bookings
        (user_id, room_id, voucher_id, check_in, check_out, guests,
         price_per_night, discount_amount, total_price, status)
-     VALUES (?, ?, NULL, ?, ?, ?, ?, 0, ?, 'pending')`,
-    [user_id, room_id, check_in, check_out, guests, price_per_night, total_price],
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+    [user_id, room_id, voucher_id, check_in, check_out, guests, price_per_night, discount_amount, total_price],
   );
   return result.insertId;
 };
 
-// Đổi ngày, số khách và tổng tiền. price_per_night đã lưu không bao giờ bị đổi ở đây.
+// Đổi ngày, số khách, tiền giảm và tổng tiền. price_per_night đã lưu không bao giờ bị đổi ở đây.
 export const updateBookingStay = async (id, data, conn = pool) => {
   const { setClause, values } = buildSetClause(data, [
     'check_in',
     'check_out',
     'guests',
+    'discount_amount',
     'total_price',
   ]);
   if (!setClause) {

@@ -20,6 +20,7 @@ import { formatItemCount } from '../utils/foodCart.js';
 import { sumPrices } from '../utils/price.js';
 import formatCurrency from '../utils/formatCurrency.js';
 import formatDate from '../utils/formatDate.js';
+import { getDiscountLabel } from '../config/vouchers.js';
 
 // Nội dung đơn. Giữ trong state để cập nhật ngay sau khi hủy (API hủy trả lại cả đơn).
 function OrderDetails({ initialOrder, initialMessage }) {
@@ -116,7 +117,7 @@ function OrderDetails({ initialOrder, initialMessage }) {
             <dl className="mt-2 divide-y divide-slate-100 text-sm">
               <DetailRow label="Subtotal">{formatCurrency(subtotal)}</DetailRow>
               {discount > 0 && (
-                <DetailRow label="Discount">- {formatCurrency(discount)}</DetailRow>
+                <DetailRow label={getDiscountLabel(order.voucher?.code)}>- {formatCurrency(discount)}</DetailRow>
               )}
               <div className="flex items-start justify-between gap-4 py-2.5">
                 <dt className="font-semibold text-slate-900">Total</dt>

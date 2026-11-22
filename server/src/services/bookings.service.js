@@ -12,6 +12,7 @@ import AppError from '../utils/AppError.js';
 import { countNights, toLocalDateTime } from '../utils/date.js';
 import { getPagination } from '../utils/pagination.js';
 import { toPaymentSummary } from './paymentSummary.service.js';
+import * as vouchersService from './vouchers.service.js';
 import * as notificationsService from './notifications.service.js';
 
 export const BOOKING_NOT_FOUND = 'Booking not found';
@@ -46,6 +47,7 @@ export const toBookingResponse = (booking, { withUser = false } = {}) => ({
   can_edit: booking.status === 'pending',
   can_cancel: canUserCancel(booking),
   payment: toPaymentSummary(booking.payment, booking),
+  voucher: booking.voucher,
   ...(withUser && { user: booking.user }),
 });
 
@@ -79,10 +81,12 @@ export const cancelBookingWithServices = async (bookingId, conn) => {
   await serviceBookingsModel.cancelActiveServiceBookings(bookingId, conn);
   await paymentsModel.refundPaidPayment('booking_id', bookingId, conn);
   await bookingsModel.updateBookingStatus(bookingId, 'cancelled', conn);
+  // Đơn có voucher: trả lại lượt dùng.
+  await vouchersService.releaseVoucher(conn, 'room', bookingId);
   await notificationsService.notifyServicesCancelledWithBooking(conn, bookingId, serviceIds);
 };
 
-export const createBooking = async (userId, { room_id, check_in, check_out, guests }) => {
+export const createBooking = async (userId, { room_id, check_in, check_out, guests, voucher_code }) => {
   const bookingId = await withTransaction(async (conn) => {
     // Khóa phòng trước, để hai người đặt cùng phòng cùng lúc phải chạy lần lượt.
     if (!(await roomsModel.lockRoomById(room_id, conn))) {
@@ -105,15 +109,22 @@ export const createBooking = async (userId, { room_id, check_in, check_out, gues
 
     // Giá lấy từ database, không tin giá do frontend gửi lên.
     const pricePerNight = room.room_type.price_per_night;
-    const totalPrice = calculateTotal(countNights(check_in, check_out), pricePerNight);
+    const subtotal = calculateTotal(countNights(check_in, check_out), pricePerNight);
+    // Voucher (nếu có): khóa, kiểm tra, tính tiền giảm và tăng used_count trong cùng transaction.
+    const voucher = voucher_code
+      ? await vouchersService.applyVoucherInTransaction(conn, voucher_code, subtotal)
+      : { voucherId: null, discountAmount: 0, total: subtotal };
+    const totalPrice = voucher.total;
     const id = await bookingsModel.createBooking(
       {
         user_id: userId,
         room_id,
+        voucher_id: voucher.voucherId,
         check_in,
         check_out,
         guests,
         price_per_night: pricePerNight,
+        discount_amount: voucher.discountAmount,
         total_price: totalPrice,
       },
       conn,
@@ -181,10 +192,20 @@ export const updateMyBooking = async (userId, id, { check_in, check_out, guests 
       throw new AppError(409, ROOM_BOOKED);
     }
 
-    const totalPrice = calculateTotal(countNights(newCheckIn, newCheckOut), booking.price_per_night);
+    const subtotal = calculateTotal(countNights(newCheckIn, newCheckOut), booking.price_per_night);
+    // Có voucher thì tính lại tiền giảm trên subtotal mới (vẫn cần đủ min_amount).
+    const { discountAmount, total: totalPrice } = booking.voucher_id
+      ? await vouchersService.recomputeVoucherDiscount(conn, booking.voucher_id, subtotal)
+      : { discountAmount: 0, total: subtotal };
     await bookingsModel.updateBookingStay(
       booking.id,
-      { check_in: newCheckIn, check_out: newCheckOut, guests: newGuests, total_price: totalPrice },
+      {
+        check_in: newCheckIn,
+        check_out: newCheckOut,
+        guests: newGuests,
+        discount_amount: discountAmount,
+        total_price: totalPrice,
+      },
       conn,
     );
     // Số tiền cần trả theo tổng mới. Hạn thanh toán vẫn tính từ lúc đặt, không được gia hạn.

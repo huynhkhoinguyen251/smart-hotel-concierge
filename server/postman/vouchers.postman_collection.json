@@ -1,0 +1,1022 @@
+{
+  "info": {
+    "name": "Smart Hotel - Vouchers",
+    "description": "Tests voucher validation, vouchers on room bookings and food orders, and the 4 admin voucher APIs (section 12 of docs/api.md). Run the requests in order (Collection Runner). The test orders end as cancelled (their uses are given back) and the test vouchers are deleted, so the collection can be run again. Request 15 uses seed booking 3, which is checked in until 6 Dec 2026; WELCOME10 is valid until 31 Jan 2027 and FOOD50K until 31 Dec 2026.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Login An",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('anToken', pm.response.json().data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Logs in as an.tran@example.com (test account from database/README.md). Expected: 200. The token is saved to anToken.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"an.tran@example.com\",\n  \"password\": \"User@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "2. Login admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('adminToken', pm.response.json().data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Logs in as admin@smarthotel.test (test account from database/README.md). Expected: 200. The token is saved to adminToken.",
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@smarthotel.test\",\n  \"password\": \"Admin@123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "3. Admin creates an expired test voucher",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "pm.test('Expired', () => pm.expect(pm.response.json().data.status).to.eql('expired'));",
+              "pm.collectionVariables.set('expiredId', pm.response.json().data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Creates PM-EXPIRED (ended 31 Jan 2026) to test the 'expired' message. Expected: 201, status expired. The id is saved to expiredId.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/vouchers",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"PM-EXPIRED\",\n  \"discount_type\": \"fixed\",\n  \"discount_value\": 10000,\n  \"min_amount\": 0,\n  \"max_uses\": null,\n  \"starts_at\": \"2026-01-01 00:00:00\",\n  \"ends_at\": \"2026-01-31 23:59:59\",\n  \"is_active\": true\n}"
+        }
+      }
+    },
+    {
+      "name": "4. Validate WELCOME10 on 1,600,000 VND",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const d = pm.response.json().data;",
+              "pm.test('10% of 1,600,000', () => {",
+              "  pm.expect(d.code).to.eql('WELCOME10');",
+              "  pm.expect(d.discount_amount).to.eql(160000);",
+              "  pm.expect(d.total_after_discount).to.eql(1440000);",
+              "  pm.expect(d.min_amount).to.eql(1000000);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Codes are trimmed and upper-cased. Expected: 200, code WELCOME10, discount_type percent, discount_value 10, discount_amount 160000, total_after_discount 1440000, min_amount 1000000, ends_at. No use is reserved.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/vouchers/validate",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \" welcome10 \",\n  \"amount\": 1600000\n}"
+        }
+      }
+    },
+    {
+      "name": "5. Validate an expired voucher (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"This voucher has expired\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'This voucher has expired'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/vouchers/validate",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"PM-EXPIRED\",\n  \"amount\": 500000\n}"
+        }
+      }
+    },
+    {
+      "name": "6. Validate BLACKFRIDAY, which is switched off (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"This voucher is not active\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'This voucher is not active'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/vouchers/validate",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"BLACKFRIDAY\",\n  \"amount\": 2000000\n}"
+        }
+      }
+    },
+    {
+      "name": "7. Validate WELCOME10 below the minimum (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Spend at least 1,000,000 VND to use this voucher\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400 with message 'Spend at least 1,000,000 VND to use this voucher'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/vouchers/validate",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"WELCOME10\",\n  \"amount\": 500000\n}"
+        }
+      }
+    },
+    {
+      "name": "8. Validate a code that does not exist (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 404', () => pm.response.to.have.status(404));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Voucher not found\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 404 with message 'Voucher not found'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/vouchers/validate",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"NO-SUCH-CODE\",\n  \"amount\": 500000\n}"
+        }
+      }
+    },
+    {
+      "name": "9. Admin reads WELCOME10 used_count",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const v = pm.response.json().data.find((x) => x.code === 'WELCOME10');",
+              "pm.collectionVariables.set('welcomeUsed', v.used_count);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200. The current used_count of WELCOME10 is saved to welcomeUsed.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/vouchers?search=WELCOME10"
+      }
+    },
+    {
+      "name": "10. An books room 1 with WELCOME10 (15 Mar - 17 Mar 2027)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "const d = pm.response.json().data;",
+              "pm.test('Discount, total and payment', () => {",
+              "  pm.expect(d.discount_amount).to.eql(160000);",
+              "  pm.expect(d.total_price).to.eql(1440000);",
+              "  pm.expect(d.voucher.code).to.eql('WELCOME10');",
+              "  pm.expect(d.payment.amount).to.eql(1440000);",
+              "});",
+              "pm.collectionVariables.set('bookingId', d.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Subtotal 1,600,000 (2 nights x 800,000). Expected: 201, discount_amount 160000, total_price 1440000, voucher { code WELCOME10 }, payment.amount 1440000. The id is saved to bookingId.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"room_id\": 1,\n  \"check_in\": \"2027-03-15\",\n  \"check_out\": \"2027-03-17\",\n  \"guests\": 1,\n  \"voucher_code\": \"welcome10\"\n}"
+        }
+      }
+    },
+    {
+      "name": "11. Admin checks WELCOME10 used_count went up",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const v = pm.response.json().data.find((x) => x.code === 'WELCOME10');",
+              "pm.test('used_count + 1', () => pm.expect(v.used_count).to.eql(Number(pm.collectionVariables.get('welcomeUsed')) + 1));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200. used_count of WELCOME10 is one more than before the booking.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/vouchers?search=WELCOME10"
+      }
+    },
+    {
+      "name": "12. An cancels the booking",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "pm.test('Cancelled', () => pm.expect(pm.response.json().data.status).to.eql('cancelled'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Cancelling an order with a voucher gives the use back. Expected: 200, status cancelled.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/bookings/{{bookingId}}/cancel"
+      }
+    },
+    {
+      "name": "13. Admin checks WELCOME10 used_count went back",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const v = pm.response.json().data.find((x) => x.code === 'WELCOME10');",
+              "pm.test('used_count is back', () => pm.expect(v.used_count).to.eql(Number(pm.collectionVariables.get('welcomeUsed'))));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200. used_count of WELCOME10 is back to the value before the booking.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/vouchers?search=WELCOME10"
+      }
+    },
+    {
+      "name": "14. An orders food with FOOD50K below 200,000 VND (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"Spend at least 200,000 VND to use this voucher\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Subtotal 75,000. Expected: 400 with message 'Spend at least 200,000 VND to use this voucher'; no order is created.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/food-orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 3,\n  \"items\": [\n    {\n      \"menu_item_id\": 1,\n      \"quantity\": 1\n    }\n  ],\n  \"voucher_code\": \"FOOD50K\"\n}"
+        }
+      }
+    },
+    {
+      "name": "15. An orders food with FOOD50K on booking 3",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "const d = pm.response.json().data;",
+              "pm.test('Fixed discount', () => {",
+              "  pm.expect(d.discount_amount).to.eql(50000);",
+              "  pm.expect(d.total_price).to.eql(175000);",
+              "  pm.expect(d.voucher.code).to.eql('FOOD50K');",
+              "  pm.expect(d.payment.amount).to.eql(175000);",
+              "});",
+              "pm.collectionVariables.set('foodOrderId', d.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Pho Bo x3 = 225,000. Expected: 201, discount_amount 50000, total_price 175000, voucher { code FOOD50K }, payment.amount 175000. The id is saved to foodOrderId.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/food-orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": 3,\n  \"items\": [\n    {\n      \"menu_item_id\": 1,\n      \"quantity\": 3\n    }\n  ],\n  \"voucher_code\": \"FOOD50K\"\n}"
+        }
+      }
+    },
+    {
+      "name": "16. An cancels the food order (cleanup)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200. The FOOD50K use is given back.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/food-orders/{{foodOrderId}}/cancel"
+      }
+    },
+    {
+      "name": "17. Admin creates a test voucher",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', () => pm.response.to.have.status(201));",
+              "const d = pm.response.json().data;",
+              "pm.test('Created', () => {",
+              "  pm.expect(d.code).to.eql('PM-TEST');",
+              "  pm.expect(d.used_count).to.eql(0);",
+              "  pm.expect(d.status).to.eql('active');",
+              "});",
+              "pm.collectionVariables.set('voucherId', d.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 201, code PM-TEST (upper-cased), used_count 0, status active. The id is saved to voucherId.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/vouchers",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"pm-test\",\n  \"discount_type\": \"percent\",\n  \"discount_value\": 20,\n  \"min_amount\": 100000,\n  \"max_uses\": 10,\n  \"starts_at\": \"2026-11-01 00:00:00\",\n  \"ends_at\": \"2027-12-31 23:59:59\",\n  \"is_active\": true\n}"
+        }
+      }
+    },
+    {
+      "name": "18. Create the same code again (409)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 409', () => pm.response.to.have.status(409));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"A voucher with this code already exists\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 409 with message 'A voucher with this code already exists'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/vouchers",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"pm-test\",\n  \"discount_type\": \"percent\",\n  \"discount_value\": 20,\n  \"min_amount\": 100000,\n  \"max_uses\": 10,\n  \"starts_at\": \"2026-11-01 00:00:00\",\n  \"ends_at\": \"2027-12-31 23:59:59\",\n  \"is_active\": true\n}"
+        }
+      }
+    },
+    {
+      "name": "19. Create with a percent value above 100 (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 400.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/vouchers",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"PM-BAD\",\n  \"discount_type\": \"percent\",\n  \"discount_value\": 150,\n  \"min_amount\": 100000,\n  \"max_uses\": 10,\n  \"starts_at\": \"2026-11-01 00:00:00\",\n  \"ends_at\": \"2027-12-31 23:59:59\",\n  \"is_active\": true\n}"
+        }
+      }
+    },
+    {
+      "name": "20. Admin switches the test voucher off (full update)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const d = pm.response.json().data;",
+              "pm.test('Inactive, unlimited', () => {",
+              "  pm.expect(d.is_active).to.eql(false);",
+              "  pm.expect(d.status).to.eql('inactive');",
+              "  pm.expect(d.max_uses).to.eql(null);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "PUT replaces every field. Expected: 200, is_active false, status inactive, max_uses null (unlimited).",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/vouchers/{{voucherId}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"pm-test\",\n  \"discount_type\": \"percent\",\n  \"discount_value\": 20,\n  \"min_amount\": 100000,\n  \"max_uses\": null,\n  \"starts_at\": \"2026-11-01 00:00:00\",\n  \"ends_at\": \"2027-12-31 23:59:59\",\n  \"is_active\": false\n}"
+        }
+      }
+    },
+    {
+      "name": "21. Admin lists inactive vouchers",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('Inactive only', () => data.forEach((v) => pm.expect(v.status).to.eql('inactive')));",
+              "pm.test('Contains BLACKFRIDAY and PM-TEST', () => pm.expect(data.map((v) => v.code)).to.include.members(['BLACKFRIDAY', 'PM-TEST']));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200. Every voucher has status inactive; BLACKFRIDAY and PM-TEST are in the list.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/vouchers?status=inactive&limit=50"
+      }
+    },
+    {
+      "name": "22. Admin deletes WELCOME10, which has been used (409)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 409', () => pm.response.to.have.status(409));",
+              "pm.test('Message', () => pm.expect(pm.response.json().message).to.eql(\"This voucher has been used and cannot be deleted. Switch it off instead.\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Seed bookings 2 and 6 use WELCOME10. Expected: 409 with message 'This voucher has been used and cannot be deleted. Switch it off instead.'",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/vouchers/1"
+      }
+    },
+    {
+      "name": "23. Guest calls an admin voucher API (403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 403', () => pm.response.to.have.status(403));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 403.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{anToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/vouchers"
+      }
+    },
+    {
+      "name": "24. Admin deletes the test voucher (cleanup)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200, message 'Voucher deleted successfully'.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/vouchers/{{voucherId}}"
+      }
+    },
+    {
+      "name": "25. Admin deletes the expired test voucher (cleanup)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "description": "Expected: 200.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/vouchers/{{expiredId}}"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "anToken",
+      "value": ""
+    },
+    {
+      "key": "adminToken",
+      "value": ""
+    },
+    {
+      "key": "expiredId",
+      "value": ""
+    },
+    {
+      "key": "welcomeUsed",
+      "value": ""
+    },
+    {
+      "key": "bookingId",
+      "value": ""
+    },
+    {
+      "key": "foodOrderId",
+      "value": ""
+    },
+    {
+      "key": "voucherId",
+      "value": ""
+    }
+  ]
+}

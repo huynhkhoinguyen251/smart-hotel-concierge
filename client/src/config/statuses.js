@@ -28,6 +28,10 @@ const STATUS_CONFIG = {
   unpaid: { label: 'Unpaid', tone: 'amber' },
   paid: { label: 'Paid', tone: 'emerald' },
   refunded: { label: 'Refunded', tone: 'slate' },
+  // Voucher: active và inactive dùng chung nhãn ở trên.
+  scheduled: { label: 'Scheduled', tone: 'sky' },
+  expired: { label: 'Expired', tone: 'slate' },
+  used_up: { label: 'Used up', tone: 'violet' },
   // Yêu cầu hỗ trợ: open → in_progress → resolved.
   open: { label: 'Open', tone: 'amber' },
   resolved: { label: 'Resolved', tone: 'emerald' },
