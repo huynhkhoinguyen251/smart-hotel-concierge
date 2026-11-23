@@ -11,7 +11,7 @@ Web app đặt phòng khách sạn, dịch vụ khách sạn và dịch vụ du 
 
 ## Công nghệ
 
-- Frontend: ReactJS + Vite, JavaScript, Tailwind CSS, Axios, Chart.js
+- Frontend: ReactJS + Vite, JavaScript, Ant Design, Tailwind CSS, Axios, Chart.js
 - Backend: Node.js, Express.js, mysql2, JWT, Bcrypt, Multer
 - Database: MySQL 8.0, tên database `smart_hotel_concierge`
 - Môi trường: Windows, Node.js v24.11.0, npm 11.6.1

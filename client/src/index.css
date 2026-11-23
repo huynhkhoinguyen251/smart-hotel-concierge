@@ -1,15 +1,124 @@
+/* Thứ tự lớp CSS: antd nằm sau base (preflight của Tailwind không phá antd)
+   và trước utilities (lớp Tailwind ghi đè được antd). */
+@layer theme, base, antd, components, utilities;
+
 @import 'tailwindcss';
 
-/* Màu chủ đạo: teal của Tailwind (teal-700 cho nút, teal-50 cho nền nhạt). */
+/* Cùng giá trị với src/config/theme.js; đổi ở đây thì đổi cả ở đó. */
+@theme {
+  --font-sans: 'Be Vietnam Pro', ui-sans-serif, system-ui, 'Segoe UI', sans-serif;
+
+  --color-ink: #0b2a3c;
+  --color-ink-soft: #48606f;
+  --color-ink-faint: #5c7280;
+  --color-sea: #0e5a7a;
+  --color-sea-hover: #0b4a65;
+  --color-sea-active: #083a50;
+  --color-sea-tint: #e6f0f4;
+  --color-sea-line: #9cc3d3;
+  --color-sun: #f5a524;
+  --color-sun-hover: #ffb63d;
+  --color-sun-active: #e0921a;
+  --color-ground: #f2f6f9;
+  --color-line: #c9d6de;
+  --color-line-soft: #e3eaef;
+  --color-success: #1b7a4b;
+  --color-success-tint: #e6f4ec;
+  --color-success-deep: #145c38;
+  --color-warning: #b45309;
+  --color-warning-tint: #fdf0e2;
+  --color-warning-deep: #8a3f06;
+  --color-danger: #c0322b;
+  --color-danger-hover: #a52822;
+  --color-danger-active: #8a1f1a;
+  --color-danger-tint: #fcecea;
+  --color-danger-line: #eeb5b1;
+
+  --radius-control: 6px;
+  --radius-panel: 8px;
+  --shadow-quiet: 0 1px 2px rgb(11 42 60 / 0.06);
+  --shadow-popup: 0 6px 20px -4px rgb(11 42 60 / 0.16);
+}
+
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
   }
 
   body {
-    @apply bg-white text-slate-800 antialiased;
-    font-family:
-      ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
-      sans-serif;
+    @apply bg-white text-ink antialiased;
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  ::selection {
+    background-color: var(--color-sea);
+    color: #fff;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-sea);
+    outline-offset: 2px;
+  }
+
+  input,
+  textarea {
+    caret-color: var(--color-sea);
+  }
+}
+
+@layer components {
+  /* Trên điện thoại, bảng chọn ngày giờ nằm cố định ở đáy màn hình, giờ xếp dưới lịch,
+     để không rộng hoặc cao hơn màn hình. antd đặt vị trí bằng style nên cần !important. */
+  @media (max-width: 479px) {
+    .ant-picker-dropdown:has(.ant-picker-datetime-panel) {
+      position: fixed !important;
+      inset: auto 8px 8px 8px !important;
+      width: fit-content;
+      margin-inline: auto;
+      max-height: calc(100dvh - 16px);
+      overflow-y: auto;
+    }
+
+    .ant-picker-dropdown .ant-picker-datetime-panel {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .ant-picker-dropdown .ant-picker-datetime-panel .ant-picker-time-panel {
+      width: 100%;
+      border-inline-start: 0;
+      border-block-start: 1px solid var(--color-line-soft);
+    }
+
+    .ant-picker-dropdown .ant-picker-datetime-panel .ant-picker-time-panel .ant-picker-content {
+      height: 120px;
+    }
+
+    .ant-picker-dropdown .ant-picker-datetime-panel .ant-picker-time-panel-column {
+      flex: 1;
+      height: 120px;
+    }
+
+    .ant-picker-dropdown .ant-picker-time-panel-column::after {
+      height: 92px;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }

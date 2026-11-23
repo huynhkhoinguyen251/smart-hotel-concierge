@@ -1,7 +1,7 @@
-const BUTTON_CLASS =
-  'inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-base font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50';
+import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
+import { Button as AntButton } from 'antd';
 
-// Nút "- số lượng +". itemName dùng cho nhãn đọc màn hình, ví dụ "Decrease Pho Bo".
+// Nút giảm, số lượng, nút tăng. itemName dùng cho nhãn đọc màn hình, ví dụ "Decrease Pho Bo".
 export default function QuantityControl({
   quantity,
   itemName,
@@ -13,28 +13,24 @@ export default function QuantityControl({
 }) {
   return (
     <div className={`inline-flex items-center gap-2 ${className}`}>
-      <button
-        type="button"
-        className={BUTTON_CLASS}
+      <AntButton
+        size="small"
+        icon={<MinusOutlined />}
         onClick={onDecrease}
         disabled={decreaseDisabled}
         aria-label={`Decrease ${itemName}`}
-      >
-        −
-      </button>
-      <span className="min-w-6 text-center text-sm font-semibold text-slate-900" aria-live="polite">
+      />
+      <span className="min-w-6 text-center text-sm font-semibold text-ink" aria-live="polite">
         <span className="sr-only">Quantity of {itemName}: </span>
         {quantity}
       </span>
-      <button
-        type="button"
-        className={BUTTON_CLASS}
+      <AntButton
+        size="small"
+        icon={<PlusOutlined />}
         onClick={onIncrease}
         disabled={increaseDisabled}
         aria-label={`Increase ${itemName}`}
-      >
-        +
-      </button>
+      />
     </div>
   );
 }

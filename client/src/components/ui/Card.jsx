@@ -1,8 +1,14 @@
-// Khung trắng bo góc, dùng cho form và các khối nội dung.
+import { Card as AntCard } from 'antd';
+
+// Phần thân của antd Card dùng display: contents, nên className bố cục của nơi gọi (flex, gap, padding)
+// tác động thẳng lên nội dung như trước.
+const CLASS_NAMES = { body: 'contents before:hidden after:hidden' };
+
+// Khung trắng bo góc, dùng cho form và các khối nội dung. Không lồng Card trong Card.
 export default function Card({ children, className = '' }) {
   return (
-    <div className={`rounded-2xl border border-slate-200 bg-white p-6 shadow-sm ${className}`}>
+    <AntCard classNames={CLASS_NAMES} className={`p-6 ${className}`}>
       {children}
-    </div>
+    </AntCard>
   );
 }

@@ -30,7 +30,7 @@ function FeedbackLine() {
   if (!stats.data) return null;
   const { average_rating: average, review_count: count } = stats.data;
   return (
-    <p className="mb-4 flex flex-wrap items-center gap-2 text-sm text-slate-600">
+    <div className="mb-4 flex flex-wrap items-center gap-2 text-sm text-slate-600">
       {count > 0 ? (
         <>
           <RatingStars rating={average} />
@@ -41,7 +41,7 @@ function FeedbackLine() {
       ) : (
         'No reviews yet.'
       )}
-    </p>
+    </div>
   );
 }
 

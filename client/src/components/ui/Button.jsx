@@ -1,20 +1,15 @@
-import Spinner from './Spinner.jsx';
+import { Button as AntButton } from 'antd';
 
 const VARIANTS = {
-  primary: 'bg-teal-700 text-white hover:bg-teal-800 focus-visible:outline-teal-700',
-  secondary:
-    'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 focus-visible:outline-slate-400',
-  danger: 'bg-red-600 text-white hover:bg-red-700 focus-visible:outline-red-600',
+  primary: { type: 'primary' },
+  secondary: {},
+  danger: { type: 'primary', danger: true },
 };
 
-// Kích thước nút. Dùng size="sm" thay vì ghi đè px/py bằng className, vì khi hai lớp cùng thuộc tính,
-// lớp nào thắng phụ thuộc thứ tự trong file CSS, không phụ thuộc thứ tự trong className.
-const SIZES = {
-  md: 'px-4 py-2.5 text-sm',
-  sm: 'px-3 py-1.5 text-xs',
-};
+const SIZES = { md: 'medium', sm: 'small' };
 
 // Nút dùng chung. loading: hiện vòng xoay và tự khóa nút để không gửi hai lần.
+// Mỗi màn hình chỉ nên có một nút primary (màu vàng).
 export default function Button({
   type = 'button',
   variant = 'primary',
@@ -27,14 +22,17 @@ export default function Button({
   ...props
 }) {
   return (
-    <button
-      type={type}
+    <AntButton
+      {...VARIANTS[variant]}
+      htmlType={type}
+      size={SIZES[size] ?? SIZES.md}
+      loading={loading}
       disabled={disabled || loading}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition ${SIZES[size] ?? SIZES.md} focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60 ${VARIANTS[variant]} ${fullWidth ? 'w-full' : ''} ${className}`}
+      block={fullWidth}
+      className={className}
       {...props}
     >
-      {loading && <Spinner size="sm" />}
       {children}
-    </button>
+    </AntButton>
   );
 }

@@ -122,6 +122,15 @@ Test từng API bằng Postman ngay sau khi viết xong.
 - [x] Thiết kế User Profile
 - [x] Thiết kế Admin Dashboard (thống kê có biểu đồ, quản lý đơn đặt phòng, xử lý yêu cầu dịch vụ, đồ ăn, tour, xe, trả lời hỗ trợ, quản lý phòng, loại phòng, tiện nghi, ảnh, danh mục dịch vụ, món ăn, tour, đánh giá và người dùng)
 
+### Làm lại giao diện
+
+Hướng thiết kế "Da Nang coast" với Ant Design và Tailwind (xem `PRODUCT.md`, `DESIGN.md`). Giữ nguyên đường dẫn, API và nghiệp vụ.
+
+- [x] U1: Nền tảng Ant Design (theme, font, 22 component dùng chung trong `client/src/components/ui`)
+- [ ] U2: Ảnh thật, khung trang khách, trang chủ, phòng, đồ ăn, dịch vụ, tour
+- [ ] U3: Khung admin, dashboard, bảng danh sách
+- [ ] U4: Trang chi tiết, form, đăng nhập, giảm dung lượng tải, rà soát cuối
+
 ## Giai đoạn 4: Integration
 
 Làm song song với Giai đoạn 2 và 3: mỗi chức năng đi lần lượt từ API, giao diện đến kết nối và test, rồi mới sang chức năng tiếp theo.
@@ -146,8 +155,8 @@ Chỉ bắt đầu khi toàn bộ tính năng Core đã chạy ổn.
 - [x] Payment Simulation (QR giả lập cho cả 5 loại đơn theo phương án A, giữ đơn 15 phút, quy tắc ở `api.md` mục 11; backend 19/11, giao diện 20/11/2026)
 - [x] Invoice Generation (tự tạo khi thanh toán, trang hóa đơn in được; backend 19/11, giao diện 20/11/2026)
 - [x] Voucher & Discount (áp cho đặt phòng và đồ ăn, khóa dòng khi dùng, hủy đơn trả lại lượt; admin quản lý mã; xong 22/11/2026)
-- [ ] So sánh phòng và dịch vụ
-- [ ] Smart Recommendation
+- [ ] So sánh phòng và dịch vụ (làm sau khi xong Làm lại giao diện U1–U4)
+- [ ] Smart Recommendation (gợi ý; làm sau khi xong Làm lại giao diện U1–U4)
 
 **Optional (chỉ làm khi còn thời gian; phải hỏi bạn trước khi bắt đầu):**
 
@@ -179,6 +188,7 @@ Chỉ bắt đầu khi toàn bộ tính năng Core đã chạy ổn.
 |---|---|---|
 | Frontend | ReactJS hoặc VueJS | ReactJS + Vite |
 | UI | Bootstrap hoặc Tailwind | Tailwind CSS |
+| Thư viện giao diện | Tailwind CSS | Ant Design + Tailwind CSS (bạn đồng ý ngày 23/11/2026) |
 | Chuyển trang ở frontend | Chưa chọn | React Router (bạn đồng ý ngày 11/11/2026) |
 | Wireframe | Figma | Không vẽ riêng; bố cục từng trang được mô tả trong prompt và chỉnh trực tiếp trên giao diện |
 | Database | MongoDB hoặc MySQL | MySQL 8.0 |

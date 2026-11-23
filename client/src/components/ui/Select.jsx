@@ -1,41 +1,41 @@
 import { useId } from 'react';
+import { Select as AntSelect } from 'antd';
+import Field from './Field.jsx';
 
+// Cho phép mô tả dài (ví dụ đơn đặt phòng kèm ngày) xuống dòng trong danh sách chọn.
+const CLASS_NAMES = { popup: { listItem: '[&_.ant-select-item-option-content]:whitespace-normal' } };
+
+// w-0 min-w-full: rộng bằng khung chứa, nhưng nội dung dài không kéo khung chứa rộng ra (375px).
 // Ô chọn có nhãn và dòng báo lỗi, cùng kiểu với Input.
-// options: [{ value, label }]. Các thuộc tính khác chuyển thẳng cho <select>.
-export default function Select({ label, error, id, options, className = '', ...props }) {
+// options: [{ value, label }]. Giống <select> gốc: value là chuỗi, onChange nhận { target: { name, value } },
+// và value không có trong options thì hiện lựa chọn đầu tiên.
+export default function Select({ label, error, id, name, options, value, onChange, className = '', ...props }) {
   const autoId = useId();
   const selectId = id || autoId;
-  const messageId = `${selectId}-message`;
+  const items = options.map((option) => ({ ...option, value: String(option.value) }));
+  const current = String(value ?? '');
+  const selected = items.some((item) => item.value === current) ? current : items[0]?.value;
+
+  const handleChange = (next) => {
+    const target = { id: selectId, name, value: next };
+    onChange?.({ type: 'change', target, currentTarget: target });
+  };
 
   return (
-    <div className={className}>
-      {label && (
-        <label htmlFor={selectId} className="mb-1.5 block text-sm font-medium text-slate-700">
-          {label}
-        </label>
-      )}
-      <select
+    <Field id={selectId} label={label} message={error} error={error} className={className}>
+      <AntSelect
         id={selectId}
         aria-invalid={Boolean(error)}
-        aria-describedby={error ? messageId : undefined}
-        className={`block w-full rounded-lg border bg-white px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 disabled:bg-slate-100 ${
-          error
-            ? 'border-red-400 focus:border-red-500 focus:ring-red-200'
-            : 'border-slate-300 focus:border-teal-600 focus:ring-teal-100'
-        }`}
+        aria-describedby={error ? `${selectId}-message` : undefined}
+        status={error ? 'error' : undefined}
+        className="w-0 min-w-full"
+        classNames={CLASS_NAMES}
+        virtual={false}
+        options={items}
+        value={selected}
+        onChange={handleChange}
         {...props}
-      >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-      {error && (
-        <p id={messageId} className="mt-1 text-xs text-red-600">
-          {error}
-        </p>
-      )}
-    </div>
+      />
+    </Field>
   );
 }
