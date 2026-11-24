@@ -20,7 +20,7 @@ web
 
 Smart Hotel Concierge is a web application for booking hotel rooms, hotel services and local tourism services in one place. Guests usually have to contact reception for each of these, which takes time for them and for the staff. Here they can do it online, and the hotel can manage every booking and request in one system.
 
-The project is a graduation project in information technology, due on 4 December 2026.
+The project is a graduation project in information technology, submitted on 27 November 2026 and defended on 4 December 2026.
 
 ## Positioning
 

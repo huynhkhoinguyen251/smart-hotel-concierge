@@ -25,7 +25,7 @@ Tài liệu chuẩn về phạm vi và nghiệp vụ: [proposal.md](proposal.md)
 
 ## Lịch làm việc
 
-**Hạn nộp: 04/12/2026.** Làm phần cơ bản trước, phần nâng cao làm sau.
+**Hạn nộp bài: 27/11/2026. Bảo vệ đồ án: 04/12/2026** (bạn báo lại ngày 25/11/2026). Làm phần cơ bản trước, phần nâng cao làm sau.
 
 | Thời gian (2026) | Công việc |
 |---|---|
@@ -36,10 +36,12 @@ Tài liệu chuẩn về phạm vi và nghiệp vụ: [proposal.md](proposal.md)
 | 19/11–20/11 | Dịch vụ khách sạn |
 | 21/11–22/11 | Đặt đồ ăn và dịch vụ du lịch |
 | 23/11–24/11 | Support ticket, đánh giá, Admin Dashboard |
-| 25/11–27/11 | Tính năng Extended; Optional nếu còn thời gian và bạn đồng ý |
-| 28/11–30/11 | Test toàn bộ, sửa lỗi, deploy chính thức |
-| 01/12–03/12 | Báo cáo, tài liệu hướng dẫn, slide, demo |
-| 04/12 | Nộp đồ án |
+| 25/11 | Viết proposal và các chương report dựa trên phần đã làm |
+| 26/11 | Kiểm thử, sửa lỗi, viết tiếp report |
+| 27/11 | Hoàn thiện report, nộp bài |
+| 28/11–30/11 | Deploy chính thức, merge vào main |
+| 01/12–03/12 | Slide, kịch bản và tập demo |
+| 04/12 | Bảo vệ đồ án |
 
 ## Tổng quan tiến độ
 
@@ -196,7 +198,7 @@ Chỉ bắt đầu khi toàn bộ tính năng Core đã chạy ổn.
 | Liên hệ lễ tân | Chat hoặc support ticket | Support ticket là Core; chat real-time là Optional |
 | Review & Rating | Nằm ở cả Giai đoạn 2 và 5 | Core, làm ở Giai đoạn 2–4 |
 | Local Tour Booking | Nằm ở Giai đoạn 5 của planning | Core, vì là một phần của tên đề tài |
-| Tiến trình | 12 tuần; làm giao diện trước, backend sau | Lịch đến 04/12/2026; làm trọn từng chức năng; deploy thử trong đợt 10–12/11 |
+| Tiến trình | 12 tuần; làm giao diện trước, backend sau | Nộp bài 27/11/2026, bảo vệ 04/12/2026; làm trọn từng chức năng; deploy thử trong đợt 10–12/11 |
 | Voice Search | Làm nếu có thể | Optional |
 | Đánh giá | Phòng và dịch vụ | Phòng, dịch vụ và đơn đồ ăn; đánh giá đồ ăn hiện ở mục chung trên trang thực đơn |
 | Đăng nhập Google | Chưa có | Optional |

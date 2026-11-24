@@ -1,6 +1,6 @@
 # Smart Hotel Concierge
 
-Web app đặt phòng khách sạn, dịch vụ khách sạn và dịch vụ du lịch. Đây là đồ án tốt nghiệp ngành IT, hạn nộp 04/12/2026.
+Web app đặt phòng khách sạn, dịch vụ khách sạn và dịch vụ du lịch. Đây là đồ án tốt nghiệp ngành IT, hạn nộp 27/11/2026, bảo vệ 04/12/2026.
 
 ## Tài liệu
 
