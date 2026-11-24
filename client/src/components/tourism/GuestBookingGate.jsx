@@ -1,5 +1,6 @@
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth.js';
+import ButtonLink from '../ui/ButtonLink.jsx';
 import Spinner from '../ui/Spinner.jsx';
 
 // Chỉ hiện form đặt (children) cho khách đã đăng nhập.
@@ -11,27 +12,23 @@ export default function GuestBookingGate({ adminNote, loginText, children }) {
 
   if (loading) {
     return (
-      <p className="flex items-center gap-2 text-sm text-slate-600">
-        <Spinner size="sm" className="text-teal-700" /> Loading...
+      <p className="flex items-center gap-2 text-sm text-ink-soft">
+        <Spinner size="sm" className="text-sea" /> Loading...
       </p>
     );
   }
   if (!user) {
     return (
       <div className="space-y-3">
-        <p className="text-sm text-slate-600">{loginText}</p>
-        <Link
-          to="/login"
-          state={{ from: location }}
-          className="flex w-full items-center justify-center rounded-lg bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800"
-        >
+        <p className="text-sm text-ink-soft">{loginText}</p>
+        <ButtonLink to="/login" state={{ from: location }} fullWidth>
           Log in to book
-        </Link>
+        </ButtonLink>
       </div>
     );
   }
   if (isAdmin) {
-    return <p className="text-sm text-slate-500">{adminNote}</p>;
+    return <p className="text-sm text-ink-soft">{adminNote}</p>;
   }
   return children;
 }

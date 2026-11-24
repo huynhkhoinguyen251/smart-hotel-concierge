@@ -34,10 +34,30 @@
   --color-danger-tint: #fcecea;
   --color-danger-line: #eeb5b1;
 
+  /* Cỡ chữ lớn nhất, chỉ dùng cho tiêu đề ở ảnh đầu trang chủ. */
+  --text-display: clamp(2rem, 1.35rem + 2.6vw, 3.25rem);
+  --text-display--line-height: 1.12;
+
   --radius-control: 6px;
   --radius-panel: 8px;
   --shadow-quiet: 0 1px 2px rgb(11 42 60 / 0.06);
   --shadow-popup: 0 6px 20px -4px rgb(11 42 60 / 0.16);
+}
+
+/* Cột nội dung của các trang khách: căn giữa, lề 16px trên điện thoại. */
+@utility shell {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+
+  @media (width >= 40rem) {
+    padding-inline: 1.5rem;
+  }
+
+  @media (width >= 64rem) {
+    padding-inline: 2rem;
+  }
 }
 
 @layer base {

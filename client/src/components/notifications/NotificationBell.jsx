@@ -1,18 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
+import { BellOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
 import { getNotifications, markAllNotificationsRead, markNotificationRead } from '../../api/notifications.api.js';
 import { BELL_PREVIEW_LIMIT, formatUnreadBadge, getNotificationType } from '../../config/notifications.js';
 import useNotifications from '../../hooks/useNotifications.js';
 import { formatShortDateTime } from '../../utils/formatDate.js';
 import Spinner from '../ui/Spinner.jsx';
-
-function BellIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-6 w-6" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5m6 0a3 3 0 11-6 0m6 0H9" />
-    </svg>
-  );
-}
 
 // Chuông thông báo ở header (khách) và thanh trên cùng (admin).
 // Bấm mở khung 5 thông báo mới nhất; Esc hoặc bấm ra ngoài thì đóng và trả con trỏ về chuông.
@@ -104,13 +97,13 @@ export default function NotificationBell({ viewAllPath = '/notifications' }) {
         aria-label={label}
         aria-expanded={open}
         aria-haspopup="true"
-        className="relative rounded-lg p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+        className="relative flex size-11 items-center justify-center rounded-control text-ink-soft hover:bg-ground hover:text-ink"
       >
-        <BellIcon />
+        <BellOutlined aria-hidden="true" className="text-xl" />
         {unreadCount > 0 && (
           <span
             aria-hidden="true"
-            className="absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-bold text-white"
+            className="absolute top-0.5 right-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-danger px-1 text-[11px] font-bold text-white"
           >
             {formatUnreadBadge(unreadCount)}
           </span>
@@ -121,12 +114,12 @@ export default function NotificationBell({ viewAllPath = '/notifications' }) {
         <div
           role="region"
           aria-label="Latest notifications"
-          className="fixed inset-x-0 top-16 z-50 max-h-[calc(100vh-5rem)] overflow-y-auto border-b border-slate-200 bg-white shadow-lg sm:absolute sm:inset-x-auto sm:top-full sm:right-0 sm:mt-2 sm:w-96 sm:rounded-2xl sm:border"
+          className="fixed inset-x-0 top-16 z-50 max-h-[calc(100vh-5rem)] overflow-y-auto border-b border-line-soft bg-white shadow-popup sm:absolute sm:inset-x-auto sm:top-full sm:right-0 sm:mt-2 sm:w-96 sm:rounded-panel sm:border"
         >
-          <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
-            <p className="font-semibold text-slate-900">Notifications</p>
+          <div className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-3">
+            <p className="font-semibold text-ink">Notifications</p>
             {unreadCount > 0 && (
-              <button type="button" onClick={markAll} className="text-sm font-semibold text-teal-700 hover:text-teal-800">
+              <button type="button" onClick={markAll} className="text-sm font-semibold text-sea hover:text-sea-hover">
                 Mark all as read
               </button>
             )}
@@ -137,36 +130,36 @@ export default function NotificationBell({ viewAllPath = '/notifications' }) {
               <Spinner />
             </div>
           ) : list.error ? (
-            <p className="px-4 py-6 text-sm text-red-700" role="alert">
+            <p className="px-4 py-6 text-sm text-danger" role="alert">
               {list.error}
             </p>
           ) : list.items.length === 0 ? (
-            <p className="px-4 py-6 text-center text-sm text-slate-500">No notifications yet</p>
+            <p className="px-4 py-6 text-center text-sm text-ink-soft">No notifications yet</p>
           ) : (
-            <ul className="divide-y divide-slate-100">
+            <ul className="divide-y divide-line-soft">
               {list.items.map((notification) => (
                 <li key={notification.id}>
                   <button
                     type="button"
                     onClick={() => openNotification(notification)}
-                    className={`flex w-full gap-3 px-4 py-3 text-left hover:bg-slate-50 ${notification.is_read ? '' : 'bg-teal-50/40'}`}
+                    className={`flex w-full gap-3 px-4 py-3 text-left hover:bg-ground ${notification.is_read ? '' : 'bg-sea-tint/60'}`}
                   >
                     <span
-                      className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${notification.is_read ? 'bg-transparent' : 'bg-teal-600'}`}
+                      className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${notification.is_read ? 'bg-transparent' : 'bg-sea'}`}
                       aria-hidden="true"
                     />
                     <span className="min-w-0 flex-1">
-                      <span className="flex flex-wrap items-center gap-x-2 text-xs text-slate-500">
+                      <span className="flex flex-wrap items-center gap-x-2 text-xs text-ink-soft">
                         <span className={`rounded px-1.5 py-0.5 font-semibold ${getNotificationType(notification.type).className}`}>
                           {getNotificationType(notification.type).label}
                         </span>
                         {formatShortDateTime(notification.created_at)}
                         {!notification.is_read && <span className="sr-only">Unread.</span>}
                       </span>
-                      <span className={`mt-0.5 block text-sm break-words text-slate-900 ${notification.is_read ? '' : 'font-semibold'}`}>
+                      <span className={`mt-0.5 block text-sm break-words text-ink ${notification.is_read ? '' : 'font-semibold'}`}>
                         {notification.title}
                       </span>
-                      <span className="block text-sm break-words text-slate-600">{notification.message}</span>
+                      <span className="block text-sm break-words text-ink-soft">{notification.message}</span>
                     </span>
                   </button>
                 </li>
@@ -174,11 +167,11 @@ export default function NotificationBell({ viewAllPath = '/notifications' }) {
             </ul>
           )}
 
-          <div className="border-t border-slate-100 px-4 py-3 text-center">
+          <div className="border-t border-line-soft px-4 py-3 text-center">
             <Link
               to={viewAllPath}
               onClick={() => close(false)}
-              className="text-sm font-semibold text-teal-700 hover:text-teal-800"
+              className="text-sm font-semibold text-sea hover:text-sea-hover"
             >
               View all
             </Link>

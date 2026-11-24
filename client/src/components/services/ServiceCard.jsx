@@ -1,33 +1,37 @@
-import { Link } from 'react-router-dom';
-import formatCurrency from '../../utils/formatCurrency.js';
 import { getCategoryLabel, getPriceUnit } from '../../utils/serviceHelpers.js';
-import RoomImage from '../rooms/RoomImage.jsx';
+import ButtonLink from '../ui/ButtonLink.jsx';
+import PhotoFrame from '../ui/PhotoFrame.jsx';
+import Price from '../ui/Price.jsx';
 
-// Thẻ dịch vụ trong trang Services. to: link sang trang đặt dịch vụ (có thể kèm ?booking_id=).
-export default function ServiceCard({ service, to }) {
+// Một dịch vụ trong trang Services: ảnh lớn, tên, mô tả, giá kèm đơn vị và nút đặt. Cả khối bấm được.
+// to: link sang trang đặt dịch vụ (có thể kèm ?booking_id=).
+// wide = true: ảnh bên trái, chữ bên phải (dịch vụ đứng một mình trên hàng).
+export default function ServiceCard({ service, to, wide = false }) {
   return (
-    <article className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <RoomImage src={service.image_url} alt={service.name} className="aspect-[4/3] w-full" />
-      <div className="flex flex-1 flex-col p-5">
-        <p className="text-xs font-semibold uppercase tracking-wide text-teal-700">
-          {getCategoryLabel(service.category)}
-        </p>
-        <h3 className="mt-1 text-lg font-semibold text-slate-900">{service.name}</h3>
-        {service.description && (
-          <p className="mt-2 text-sm text-slate-600">{service.description}</p>
-        )}
-
-        <div className="mt-auto pt-4">
-          <p>
-            <span className="text-lg font-bold text-teal-700">{formatCurrency(service.price)}</span>
-            <span className="text-sm text-slate-500"> {getPriceUnit(service.category)}</span>
-          </p>
-          <Link
+    <article
+      className={`group relative ${wide ? 'grid gap-5 md:grid-cols-[1.6fr_1fr] md:items-center md:gap-10' : ''}`}
+    >
+      <PhotoFrame
+        src={service.image_url}
+        alt={service.name}
+        className={`aspect-[4/3] sm:aspect-auto sm:h-72 ${wide ? 'lg:h-96' : 'lg:h-80'}`}
+      />
+      <div className={wide ? '' : 'mt-5'}>
+        <h3 className="text-xl font-semibold break-words text-ink transition-colors duration-150 group-hover:text-sea">
+          {service.name}
+        </h3>
+        <p className="mt-1 text-sm text-ink-soft">{getCategoryLabel(service.category)}</p>
+        {service.description && <p className="mt-3 max-w-prose text-ink">{service.description}</p>}
+        <div className={`mt-5 flex flex-wrap items-center gap-x-6 gap-y-3 ${wide ? '' : 'justify-between'}`}>
+          <Price amount={service.price} unit={getPriceUnit(service.category)} />
+          <ButtonLink
             to={to}
-            className="mt-3 flex w-full items-center justify-center rounded-lg bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800"
+            variant="secondary"
+            aria-label={`Book this service: ${service.name}`}
+            className="static! after:absolute after:inset-0 after:content-['']"
           >
             Book this service
-          </Link>
+          </ButtonLink>
         </div>
       </div>
     </article>

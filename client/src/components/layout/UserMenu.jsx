@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
+import { DownOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
 import { GUEST_ACCOUNT_NAV } from '../../config/navigation.js';
 import useAuth from '../../hooks/useAuth.js';
 
-const ITEM_CLASS = 'block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50';
+const ITEM_CLASS = 'block w-full px-4 py-2 text-left text-sm text-ink hover:bg-ground';
 
 // Nút tên người dùng ở góc phải header, mở menu: Profile, My bookings và My service requests (khách),
 // Admin Dashboard (admin), Logout.
@@ -43,21 +44,21 @@ export default function UserMenu() {
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
         aria-haspopup="menu"
-        className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+        aria-label={user.full_name}
+        className="flex items-center gap-2 rounded-control px-2 py-1.5 text-sm font-medium text-ink hover:bg-ground"
       >
-        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-800">
+        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-sea-tint text-xs font-bold text-sea">
           {user.full_name.charAt(0).toUpperCase()}
         </span>
-        <span className="max-w-[10rem] truncate">{user.full_name}</span>
-        <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-          <path d="M5.3 7.3a1 1 0 0 1 1.4 0L10 10.6l3.3-3.3a1 1 0 1 1 1.4 1.4l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 0 1 0-1.4z" />
-        </svg>
+        {/* Màn hình vừa (768px): chỉ hiện chữ cái đầu để vừa thanh menu. */}
+        <span className="hidden max-w-40 truncate lg:inline">{user.full_name}</span>
+        <DownOutlined aria-hidden="true" className="text-xs" />
       </button>
 
       {open && (
         <div
           role="menu"
-          className="absolute right-0 z-20 mt-2 w-52 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg"
+          className="absolute right-0 z-20 mt-2 w-52 overflow-hidden rounded-panel border border-line-soft bg-white py-1 shadow-popup"
         >
           <Link to="/profile" role="menuitem" className={ITEM_CLASS} onClick={() => setOpen(false)}>
             Profile
@@ -83,7 +84,7 @@ export default function UserMenu() {
           <button
             type="button"
             role="menuitem"
-            className={`${ITEM_CLASS} border-t border-slate-100 text-red-600`}
+            className={`${ITEM_CLASS} border-t border-line-soft text-danger`}
             onClick={handleLogout}
           >
             Logout

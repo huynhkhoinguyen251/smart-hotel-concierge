@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { checkAvailability } from '../../api/rooms.api.js';
 import useAuth from '../../hooks/useAuth.js';
 import { ADMIN_BOOKING_NOTE, clampGuests } from '../../utils/bookingHelpers.js';
@@ -13,8 +12,10 @@ import {
 } from '../../utils/stayDates.js';
 import Alert from '../ui/Alert.jsx';
 import Button from '../ui/Button.jsx';
+import ButtonLink from '../ui/ButtonLink.jsx';
 import Card from '../ui/Card.jsx';
 import Input from '../ui/Input.jsx';
+import Price from '../ui/Price.jsx';
 import Select from '../ui/Select.jsx';
 
 // Khung kiểm tra phòng trống. initialStay: ngày và số khách lấy từ địa chỉ trang.
@@ -67,15 +68,15 @@ export default function BookingBox({ room, initialStay }) {
 
   return (
     <Card className="lg:sticky lg:top-24">
+      <h2 id="booking-heading" tabIndex={-1} className="sr-only">
+        Book this room
+      </h2>
       <p>
-        <span className="text-2xl font-bold text-teal-700">
-          {formatCurrency(room.room_type.price_per_night)}
-        </span>
-        <span className="text-sm text-slate-500"> / night</span>
+        <Price amount={room.room_type.price_per_night} unit="/ night" size="lg" />
       </p>
 
       <form onSubmit={handleCheck} noValidate className="mt-5 space-y-4" aria-label="Check availability">
-        <div className="grid gap-3">
+        <div className="grid gap-4">
           <Input
             label="Check-in"
             name="check_in"
@@ -93,7 +94,7 @@ export default function BookingBox({ room, initialStay }) {
             onChange={handleChange}
           />
         </div>
-        {orderError && <p className="-mt-2 text-xs text-red-600">{orderError}</p>}
+        {orderError && <p className="-mt-3 text-xs text-danger">{orderError}</p>}
         <Select
           label="Guests"
           name="guests"
@@ -101,12 +102,13 @@ export default function BookingBox({ room, initialStay }) {
           onChange={handleChange}
           options={guestOptions(capacity)}
         />
-        <Button type="submit" variant="secondary" fullWidth loading={checking}>
+        {/* Chỉ một nút vàng: khi phòng còn trống thì nút vàng là "Book now". */}
+        <Button type="submit" variant={result?.available && !isAdmin ? 'secondary' : 'primary'} fullWidth loading={checking}>
           Check availability
         </Button>
       </form>
 
-      <div className="mt-4 space-y-3" aria-live="polite">
+      <div className="mt-4 space-y-3 empty:mt-0" aria-live="polite">
         <Alert type="error">{error}</Alert>
         {result && !result.available && <Alert type="error">{result.reason}</Alert>}
         {result?.available && (
@@ -124,14 +126,11 @@ export default function BookingBox({ room, initialStay }) {
             </Alert>
             {/* Admin vẫn kiểm tra phòng trống được, nhưng không có nút đặt. */}
             {isAdmin ? (
-              <p className="text-center text-sm text-slate-500">{ADMIN_BOOKING_NOTE}</p>
+              <p className="text-center text-sm text-ink-soft">{ADMIN_BOOKING_NOTE}</p>
             ) : (
-              <Link
-                to={bookingLink}
-                className="flex w-full items-center justify-center rounded-lg bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800"
-              >
+              <ButtonLink to={bookingLink} fullWidth>
                 Book now
-              </Link>
+              </ButtonLink>
             )}
           </>
         )}

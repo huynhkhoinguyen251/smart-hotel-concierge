@@ -36,7 +36,10 @@ export const CART_STORAGE_KEY = 'shc_food_cart';
 export const FOOD_ORDER_CREATED_MESSAGE = `Your order has been created. Please pay within ${PAYMENT_HOLD_MINUTES} minutes to send it to the kitchen.`;
 export const FOOD_ORDER_CANCELLED_MESSAGE = 'Your order has been cancelled.';
 export const ADMIN_FOOD_NOTE = 'Admin accounts cannot order food.';
-export const NO_CHECKED_IN_BOOKING_NOTE = 'Food delivery to your room is available after you check in.';
+// Quy tắc giao đồ ăn: chỉ hiện một lần, ở đầu trang thực đơn.
+export const FOOD_DELIVERY_RULE = 'Room delivery is available for guests who have checked in.';
+// Tình trạng của khách (không lặp lại quy tắc).
+export const NO_CHECKED_IN_BOOKING_NOTE = 'You have no checked-in room booking right now.';
 
 // Các bước của đơn đồ ăn theo thứ tự; cancelled hiện riêng.
 export const FOOD_ORDER_STEPS = ['pending', 'confirmed', 'preparing', 'delivering', 'completed'];

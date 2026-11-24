@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getRoomReviews } from '../../api/rooms.api.js';
-import formatDate from '../../utils/formatDate.js';
+import ReviewItem from '../reviews/ReviewItem.jsx';
 import Button from '../ui/Button.jsx';
 import ErrorState from '../ui/ErrorState.jsx';
 import RatingStars from '../ui/RatingStars.jsx';
@@ -57,39 +57,28 @@ export default function RoomReviews({ roomId }) {
   const hasMore = reviews.length < total;
 
   return (
-    <section aria-labelledby="reviews-heading" className="mt-10">
-      <h2 id="reviews-heading" className="text-xl font-semibold text-slate-900">
+    <section aria-labelledby="reviews-heading" className="max-w-3xl">
+      <h2 id="reviews-heading" className="text-xl font-semibold text-ink">
         Guest reviews
       </h2>
 
       {summary && summary.review_count > 0 && (
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <RatingStars rating={summary.average_rating} size="md" />
-          <span className="text-sm text-slate-500">
+          <span className="text-sm text-ink-soft">
             from {summary.review_count} {summary.review_count === 1 ? 'review' : 'reviews'}
           </span>
         </div>
       )}
 
       {summary && summary.review_count === 0 && (
-        <p className="mt-3 text-sm text-slate-500">No reviews yet</p>
+        <p className="mt-3 text-sm text-ink-soft">No reviews yet</p>
       )}
 
       {reviews.length > 0 && (
-        <ul className="mt-5 space-y-4">
+        <ul className="mt-5 divide-y divide-line-soft border-y border-line-soft">
           {reviews.map((review) => (
-            <li key={review.id} className="rounded-2xl border border-slate-200 bg-white p-5">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="font-semibold text-slate-900">{review.reviewer.full_name}</p>
-                <p className="text-sm text-slate-500">{formatDate(review.created_at)}</p>
-              </div>
-              <RatingStars rating={review.rating} showValue={false} className="mt-1.5" />
-              {review.comment && (
-                <p className="mt-2 whitespace-pre-line break-words text-sm text-slate-700">
-                  {review.comment}
-                </p>
-              )}
-            </li>
+            <ReviewItem key={review.id} review={review} />
           ))}
         </ul>
       )}
@@ -104,13 +93,13 @@ export default function RoomReviews({ roomId }) {
       )}
 
       {loading && reviews.length === 0 && !error && (
-        <div className="mt-5 flex justify-center text-teal-700">
+        <div className="mt-5 text-sea">
           <Spinner />
         </div>
       )}
 
       {hasMore && !error && (
-        <div className="mt-5 text-center">
+        <div className="mt-5">
           <Button variant="secondary" loading={loading} onClick={() => loadPage(page + 1)}>
             Load more
           </Button>

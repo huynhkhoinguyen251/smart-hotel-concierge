@@ -9,6 +9,17 @@
       content="Book rooms, hotel services, food and local tours in one place."
     />
     <title>Smart Hotel Concierge</title>
+    <script>
+      // Trang chủ: tải sớm ảnh đầu trang, trước khi JavaScript chạy. Các trang khác không cần ảnh này.
+      if (location.pathname === '/') {
+        var hero = document.createElement('link');
+        hero.rel = 'preload';
+        hero.as = 'image';
+        hero.href = '/images/hero-my-khe.jpg';
+        hero.fetchPriority = 'high';
+        document.head.appendChild(hero);
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

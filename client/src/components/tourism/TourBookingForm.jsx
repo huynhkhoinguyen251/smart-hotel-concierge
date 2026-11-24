@@ -73,7 +73,7 @@ export default function TourBookingForm({ tour }) {
         disabled={submitting}
       />
       <div>
-        <p className="mb-1.5 text-sm font-medium text-slate-700">Participants</p>
+        <p className="mb-1.5 text-sm font-medium text-ink">Participants</p>
         <QuantityControl
           quantity={form.participants}
           itemName="participants"
@@ -82,7 +82,7 @@ export default function TourBookingForm({ tour }) {
           decreaseDisabled={submitting || form.participants <= MIN_PARTICIPANTS}
           increaseDisabled={submitting || form.participants >= MAX_PARTICIPANTS}
         />
-        <p className={`mt-1 text-xs ${errors.participants ? 'text-red-600' : 'text-slate-500'}`}>
+        <p className={`mt-1 text-xs ${errors.participants ? 'text-danger' : 'text-ink-soft'}`}>
           {errors.participants || `From ${MIN_PARTICIPANTS} to ${MAX_PARTICIPANTS} people`}
         </p>
       </div>
@@ -97,14 +97,14 @@ export default function TourBookingForm({ tour }) {
         disabled={submitting}
       />
 
-      <div className="flex items-start justify-between gap-4 border-t border-slate-100 pt-4">
+      <div className="flex items-start justify-between gap-4 border-t border-line-soft pt-4">
         <div>
-          <p className="font-semibold text-slate-900">Estimated total</p>
-          <p className="text-xs text-slate-500">
+          <p className="font-semibold text-ink">Estimated total</p>
+          <p className="text-xs text-ink-soft">
             {formatCurrency(tour.price)} × {formatParticipants(form.participants)}
           </p>
         </div>
-        <p className="text-right text-lg font-bold text-teal-700">
+        <p className="text-right text-lg font-bold text-ink">
           {formatCurrency(estimateTourTotal(tour.price, form.participants))}
         </p>
       </div>
@@ -115,7 +115,7 @@ export default function TourBookingForm({ tour }) {
       <Button type="submit" fullWidth loading={submitting}>
         Book tour
       </Button>
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-ink-soft">
         The hotel confirms your booking. You can cancel it while it is pending.
       </p>
     </form>

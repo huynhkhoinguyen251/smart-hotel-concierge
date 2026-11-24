@@ -39,12 +39,12 @@ function EstimatedTotal({ service, form, isMotorbike }) {
   }
 
   return (
-    <div className="flex items-start justify-between gap-4 border-t border-slate-100 pt-4">
+    <div className="flex items-start justify-between gap-4 border-t border-line-soft pt-4">
       <div>
-        <p className="font-semibold text-slate-900">Estimated total</p>
-        <p className="text-xs text-slate-500">{detail}</p>
+        <p className="font-semibold text-ink">Estimated total</p>
+        <p className="text-xs text-ink-soft">{detail}</p>
       </div>
-      <p className="text-right text-lg font-bold text-teal-700">
+      <p className="text-right text-lg font-bold text-ink">
         {total === null ? '-' : formatCurrency(total)}
       </p>
     </div>
@@ -137,7 +137,7 @@ export default function TransportBookingForm({ service }) {
       )}
       {category.quantity && (
         <div>
-          <p className="mb-1.5 text-sm font-medium text-slate-700">{category.quantity.label}</p>
+          <p className="mb-1.5 text-sm font-medium text-ink">{category.quantity.label}</p>
           <QuantityControl
             quantity={form.quantity}
             itemName={category.quantity.label.toLowerCase()}
@@ -146,7 +146,7 @@ export default function TransportBookingForm({ service }) {
             decreaseDisabled={submitting || form.quantity <= category.quantity.min}
             increaseDisabled={submitting || form.quantity >= category.quantity.max}
           />
-          <p className={`mt-1 text-xs ${errors.quantity ? 'text-red-600' : 'text-slate-500'}`}>
+          <p className={`mt-1 text-xs ${errors.quantity ? 'text-danger' : 'text-ink-soft'}`}>
             {errors.quantity || `From ${category.quantity.min} to ${category.quantity.max}`}
           </p>
         </div>
@@ -190,7 +190,7 @@ export default function TransportBookingForm({ service }) {
       <Button type="submit" fullWidth loading={submitting}>
         Send request
       </Button>
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-ink-soft">
         The hotel confirms your request. You can cancel it while it is pending.
       </p>
     </form>

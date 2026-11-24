@@ -129,20 +129,20 @@ function OrderFields({ lines, bookings, initialBookingId, onOrdered }) {
         }}
         disabled={submitting}
       />
-      <dl className="space-y-1 rounded-lg bg-slate-50 px-3 py-2 text-sm">
+      <dl className="space-y-1 rounded-control bg-ground px-3 py-2 text-sm">
         <div className="flex justify-between gap-4">
-          <dt className="text-slate-600">Subtotal</dt>
-          <dd className="font-medium text-slate-900">{formatCurrency(subtotal)}</dd>
+          <dt className="text-ink-soft">Subtotal</dt>
+          <dd className="font-medium text-ink">{formatCurrency(subtotal)}</dd>
         </div>
         {voucher && (
           <div className="flex justify-between gap-4">
-            <dt className="text-slate-600">Discount ({voucher.code})</dt>
-            <dd className="font-medium text-slate-900">- {formatCurrency(voucher.discount_amount)}</dd>
+            <dt className="text-ink-soft">Discount ({voucher.code})</dt>
+            <dd className="font-medium text-ink">- {formatCurrency(voucher.discount_amount)}</dd>
           </div>
         )}
         <div className="flex justify-between gap-4">
-          <dt className="font-semibold text-slate-900">Total</dt>
-          <dd className="font-bold text-teal-700">{formatCurrency(total)}</dd>
+          <dt className="font-semibold text-ink">Total</dt>
+          <dd className="font-bold text-ink">{formatCurrency(total)}</dd>
         </div>
       </dl>
       <div aria-live="polite">
@@ -151,7 +151,7 @@ function OrderFields({ lines, bookings, initialBookingId, onOrdered }) {
       <Button type="submit" fullWidth loading={submitting} disabled={!canOrderLines(lines)}>
         Place order
       </Button>
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-ink-soft">
         Pay by QR within 15 minutes after ordering. You can cancel the order while it is pending.
       </p>
     </form>
@@ -168,8 +168,8 @@ export default function FoodOrderForm({ lines, initialBookingId = '', onOrdered 
 
   if (bookingsRequest.loading) {
     return (
-      <p className="flex items-center gap-2 text-sm text-slate-600">
-        <Spinner size="sm" className="text-teal-700" /> Loading your bookings...
+      <p className="flex items-center gap-2 text-sm text-ink-soft">
+        <Spinner size="sm" className="text-sea" /> Loading your bookings...
       </p>
     );
   }

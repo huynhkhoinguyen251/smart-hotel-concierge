@@ -28,6 +28,12 @@ colors:
   danger-active: "#8A1F1A"
   danger-tint: "#FCECEA"
 typography:
+  display:
+    fontFamily: "'Be Vietnam Pro', ui-sans-serif, system-ui, 'Segoe UI', sans-serif"
+    fontSize: "clamp(2rem, 1.35rem + 2.6vw, 3.25rem)"
+    fontWeight: 700
+    lineHeight: 1.12
+    letterSpacing: "-0.025em"
   page-title:
     fontFamily: "'Be Vietnam Pro', ui-sans-serif, system-ui, 'Segoe UI', sans-serif"
     fontSize: 1.875rem
@@ -138,8 +144,8 @@ Guest browsing pages persuade: photographs of rooms, food and tours carry them a
 
 **Key Characteristics:**
 
-- White ground for guests; a light blue-grey ground behind admin content.
-- One amber button per view, or per item in a list of things to add.
+- White ground for guests with a navy footer; a light blue-grey ground behind admin content.
+- One amber button per view. The buttons inside a list are white.
 - Sea blue marks links, focus, selection and tabs, and nothing decorative.
 - Flat surfaces, thin lines, small radius.
 - One typeface in four weights.
@@ -172,7 +178,7 @@ Green for success, orange for waiting, red for danger. Each has a tint for backg
 
 Be Vietnam Pro everywhere, self-hosted, in weights 400, 500, 600 and 700. It is drawn for Vietnamese and reads well in English at small sizes.
 
-Sizes are fixed in rem and do not scale with the window: 0.75, 0.875, 1, 1.125, 1.25, 1.5, 1.875 and 2.25. Page titles drop to 1.5 on phones. Hierarchy comes from size and weight together, one clear step at a time. Supporting text stays within 65 to 75 characters per line.
+Sizes are fixed in rem, and only the headline over the home photograph (`display`) scales with the window. The fixed sizes are 0.75, 0.875, 1, 1.125, 1.25, 1.5, 1.875 and 2.25. Page titles drop to 1.5 on phones; the title of a room, service, tour or transport page is 2.25, and 1.875 on phones. Hierarchy comes from size and weight together, one clear step at a time. Supporting text stays within 65 to 75 characters per line.
 
 Numbers are tabular, so prices, dates and countdowns line up and do not jump.
 
@@ -180,9 +186,30 @@ Numbers are tabular, so prices, dates and countdowns line up and do not jump.
 
 ## Layout
 
-Guest content sits in a centred column with a 16px gutter on phones. Detail pages use a wide column for content and a narrow column for the action, which stays in view on desktop and follows the content on phones. Admin content sits beside a fixed sidebar.
+Guest browsing pages use one centred column (the `shell` utility): at most 80rem wide, with a gutter of 16px on phones, 24px from 640px and 32px from 1024px. Detail pages use a wide column for content and a narrow column for the action, which stays in view on desktop and follows the content on phones. Admin content sits beside a fixed sidebar.
 
 Space is tight inside a group and generous between groups, with more above a heading than below it. The page never scrolls sideways at 375px; wide tables and tab rows scroll inside their own area.
+
+### Guest pages
+
+Each page has its own composition, so a photograph of a dish is never framed like a photograph of a room.
+
+| Page | Composition |
+|---|---|
+| Header | Solid white, the hotel name as text. The current page is sea blue with an underline. Below 768px the menu is a drawer from the right. |
+| Footer | Ink ground, white text: address, main links, photo credits. |
+| Home | A full-width photograph, about 70% of the window high. The headline sits over the sea on a flat block of ink at 70%, running off the left edge; the room search is one white bar inside the bottom of the photograph. Then four sections that load on their own: one large room beside two smaller ones; two photographs of uneven size beside a text list of services with prices; one row of six square dishes; one wide tour above three of uneven width. |
+| Rooms | Full-width rows divided by lines: photograph 40%, facts in the middle, price and button on the right. The whole row is the link. Filters are a plain column on the left, and a drawer with a count of active filters below 1024px. |
+| Room details | A mosaic of photographs that opens larger on click (two photographs: one wide, one tall, the same height; on phones a row to swipe). Facts on one line, amenities with icons, reviews divided by lines. The booking box stays in view on desktop; on phones a bar at the bottom shows the price and leads to it. |
+| Food | Rows grouped under Food, Coffee and Drinks: a 4:3 photograph, name, price, and the add or quantity control. The order stays in view on desktop; below 1024px a bar at the bottom opens it in a drawer. |
+| Services | Two large photographs per row, 7 and 5 columns wide, and the next row the other way round. A last one on its own puts its text beside the photograph. |
+| Tours | The first tour is a wide photograph, the others are smaller and of uneven width. One or two tours are both wide. |
+| Transport | A compact list: small square photograph, how it is charged, price and button. |
+| Service, tour and transport details | Large photograph, then title, price and description; one panel with the form on the right, and after the description on phones. |
+
+**The Photograph Rule.** Photographs have a fixed ratio or height, so nothing moves when they load. They are lazy, except the home photograph, which is preloaded. A missing photograph is replaced by a drawing of the coast in flat tints of sea blue.
+
+**The Whole Block Rule.** Where a row or block leads to one page, all of it can be clicked, but there is only one link in it for the keyboard.
 
 ## Elevation & Depth
 
@@ -194,13 +221,13 @@ Only things that float have a shadow: menus, calendars, dropdown lists and dialo
 
 ## Shapes
 
-Controls have a 6px radius, cards and dialogs 8px, badges and small buttons 4px. Circles are kept for steps and avatars. No pills, no one-sided coloured borders, no gradients.
+Controls have a 6px radius, cards, dialogs and photographs 8px, badges and small buttons 4px. Circles are kept for steps and avatars. No pills, no one-sided coloured borders, no gradients.
 
 ## Components
 
 ### Buttons
 
-Primary is amber with ink text, secondary is white with a line, danger is red with white text. Default height is 40px and small is 32px. Hover and active change the fill; secondary turns its text and border sea blue. While loading, a button shows a spinning icon and cannot be pressed again.
+Primary is amber with ink text and appears once per view, secondary is white with a line, danger is red with white text. Default height is 40px and small is 32px. Hover and active change the fill; secondary turns its text and border sea blue. While loading, a button shows a spinning icon and cannot be pressed again.
 
 ### Fields
 
@@ -224,17 +251,17 @@ A loading page shows a grey outline of its content; a small spinner is only for 
 
 ### Icons
 
-Line icons from one library, in one weight. No emoji and no text characters used as icons.
+Line icons from `@ant-design/icons`, in one weight. Amenities use a small set drawn for the project, also in one weight, because the library has no bathtub, balcony or hair dryer. No emoji and no text characters used as icons.
 
 ### Motion
 
-State changes take 150 to 200 milliseconds and nothing moves for decoration. With reduced motion, changes are immediate.
+State changes take 150 to 200 milliseconds. A photograph that leads somewhere grows by 2.5% over 300 milliseconds when pointed at; nothing else moves. With reduced motion, changes are immediate.
 
 ## Do's and Don'ts
 
 ### Do:
 
-- **Do** give each view one obvious amber action.
+- **Do** give each view one obvious amber action, and make the buttons in its lists white.
 - **Do** keep text at 4.5:1 or better, including placeholders and badges.
 - **Do** use the shared controls; a date, a select or a dialog looks and behaves the same everywhere.
 - **Do** design the hover, focus, disabled, loading, empty and error states with the default one.
@@ -243,6 +270,7 @@ State changes take 150 to 200 milliseconds and nothing moves for decoration. Wit
 ### Don't:
 
 - **Don't** use amber for anything except a primary button.
+- **Don't** say the hotel is on the beach; it is on Bach Dang Street.
 - **Don't** put a card in a card, or use cards where a line or space is enough.
 - **Don't** add gradients, glass, glows, pills or coloured side borders.
 - **Don't** write uppercase labels above headings.

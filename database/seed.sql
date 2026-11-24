@@ -57,30 +57,30 @@ INSERT INTO rooms (id, room_type_id, room_number, floor, status) VALUES
 (12, 4, '402', 4, 'available');
 
 INSERT INTO room_images (id, room_id, image_url, is_primary) VALUES
-(1, 1, 'https://placehold.co/800x600?text=Room+101', 1),
-(2, 1, 'https://placehold.co/800x600?text=Room+101+Bathroom', 0),
-(3, 2, 'https://placehold.co/800x600?text=Room+102', 1),
-(4, 2, 'https://placehold.co/800x600?text=Room+102+Bathroom', 0),
-(5, 3, 'https://placehold.co/800x600?text=Room+103', 1),
-(6, 3, 'https://placehold.co/800x600?text=Room+103+Bathroom', 0),
-(7, 4, 'https://placehold.co/800x600?text=Room+104', 1),
-(8, 4, 'https://placehold.co/800x600?text=Room+104+Bathroom', 0),
-(9, 5, 'https://placehold.co/800x600?text=Room+201', 1),
-(10, 5, 'https://placehold.co/800x600?text=Room+201+Bathroom', 0),
-(11, 6, 'https://placehold.co/800x600?text=Room+202', 1),
-(12, 6, 'https://placehold.co/800x600?text=Room+202+Bathroom', 0),
-(13, 7, 'https://placehold.co/800x600?text=Room+203', 1),
-(14, 7, 'https://placehold.co/800x600?text=Room+203+Bathroom', 0),
-(15, 8, 'https://placehold.co/800x600?text=Room+301', 1),
-(16, 8, 'https://placehold.co/800x600?text=Room+301+Bathroom', 0),
-(17, 9, 'https://placehold.co/800x600?text=Room+302', 1),
-(18, 9, 'https://placehold.co/800x600?text=Room+302+Bathroom', 0),
-(19, 10, 'https://placehold.co/800x600?text=Room+303', 1),
-(20, 10, 'https://placehold.co/800x600?text=Room+303+Bathroom', 0),
-(21, 11, 'https://placehold.co/800x600?text=Room+401', 1),
-(22, 11, 'https://placehold.co/800x600?text=Room+401+Bathroom', 0),
-(23, 12, 'https://placehold.co/800x600?text=Room+402', 1),
-(24, 12, 'https://placehold.co/800x600?text=Room+402+Bathroom', 0);
+(1, 1, '/uploads/seed-room-standard-1.jpg', 1),
+(2, 1, '/uploads/seed-bath-standard.jpg', 0),
+(3, 2, '/uploads/seed-room-standard-2.jpg', 1),
+(4, 2, '/uploads/seed-bath-standard.jpg', 0),
+(5, 3, '/uploads/seed-room-standard-1.jpg', 1),
+(6, 3, '/uploads/seed-bath-standard.jpg', 0),
+(7, 4, '/uploads/seed-room-standard-2.jpg', 1),
+(8, 4, '/uploads/seed-bath-standard.jpg', 0),
+(9, 5, '/uploads/seed-room-superior-1.jpg', 1),
+(10, 5, '/uploads/seed-bath-superior.jpg', 0),
+(11, 6, '/uploads/seed-room-superior-2.jpg', 1),
+(12, 6, '/uploads/seed-bath-superior.jpg', 0),
+(13, 7, '/uploads/seed-room-superior-1.jpg', 1),
+(14, 7, '/uploads/seed-bath-superior.jpg', 0),
+(15, 8, '/uploads/seed-room-deluxe-1.jpg', 1),
+(16, 8, '/uploads/seed-bath-deluxe.jpg', 0),
+(17, 9, '/uploads/seed-room-deluxe-2.jpg', 1),
+(18, 9, '/uploads/seed-bath-deluxe.jpg', 0),
+(19, 10, '/uploads/seed-room-deluxe-1.jpg', 1),
+(20, 10, '/uploads/seed-bath-deluxe.jpg', 0),
+(21, 11, '/uploads/seed-room-family-1.jpg', 1),
+(22, 11, '/uploads/seed-bath-family.jpg', 0),
+(23, 12, '/uploads/seed-room-family-2.jpg', 1),
+(24, 12, '/uploads/seed-bath-family.jpg', 0);
 
 -- ============================================================
 -- Mã giảm giá: used_count bằng số đơn đang dùng mã trong file này
@@ -97,32 +97,32 @@ INSERT INTO vouchers (id, code, discount_type, discount_value, min_amount, max_u
 -- ============================================================
 
 INSERT INTO services (id, name, category, description, price, image_url, is_active) VALUES
-(1, 'Restaurant breakfast', 'breakfast', 'Breakfast buffet from 6:30 to 9:30, priced per person.', 150000.00, 'https://placehold.co/800x600?text=Breakfast', 1),
-(2, 'Seafood dinner buffet', 'buffet', 'Seafood buffet from 18:00 to 21:00, priced per person.', 450000.00, 'https://placehold.co/800x600?text=Buffet', 1),
-(3, '60-minute relaxing massage', 'massage', 'Full-body massage with natural essential oils, priced per person.', 500000.00, 'https://placehold.co/800x600?text=Massage', 1),
-(4, 'Laundry by the kilogram', 'laundry', 'Washing, drying and ironing, returned to your room within 24 hours.', 60000.00, 'https://placehold.co/800x600?text=Laundry', 1),
-(5, 'On-demand housekeeping', 'housekeeping', 'Room cleaning and fresh towels and bed linen at a time you choose.', 100000.00, 'https://placehold.co/800x600?text=Housekeeping', 1),
-(6, 'Daily motorbike rental', 'motorbike_rental', 'Automatic scooter with two helmets. Priced per bike for each 24 hours.', 150000.00, 'https://placehold.co/800x600?text=Motorbike', 1),
-(7, 'Da Nang airport pickup', 'airport_pickup', 'A 4-seat car from the airport to the hotel, priced per trip.', 350000.00, 'https://placehold.co/800x600?text=Airport+Pickup', 1),
-(8, 'City center shuttle', 'shuttle', 'Shuttle between the hotel and the city center, priced per person.', 80000.00, 'https://placehold.co/800x600?text=Shuttle', 1);
+(1, 'Restaurant breakfast', 'breakfast', 'Breakfast buffet from 6:30 to 9:30, priced per person.', 150000.00, '/uploads/seed-service-breakfast.jpg', 1),
+(2, 'Seafood dinner buffet', 'buffet', 'Seafood buffet from 18:00 to 21:00, priced per person.', 450000.00, '/uploads/seed-service-buffet.jpg', 1),
+(3, '60-minute relaxing massage', 'massage', 'Full-body massage with natural essential oils, priced per person.', 500000.00, '/uploads/seed-service-massage.jpg', 1),
+(4, 'Laundry by the kilogram', 'laundry', 'Washing, drying and ironing, returned to your room within 24 hours.', 60000.00, '/uploads/seed-service-laundry.jpg', 1),
+(5, 'On-demand housekeeping', 'housekeeping', 'Room cleaning and fresh towels and bed linen at a time you choose.', 100000.00, '/uploads/seed-service-housekeeping.jpg', 1),
+(6, 'Daily motorbike rental', 'motorbike_rental', 'Automatic scooter with two helmets. Priced per bike for each 24 hours.', 150000.00, '/uploads/seed-service-motorbike.jpg', 1),
+(7, 'Da Nang airport pickup', 'airport_pickup', 'A 4-seat car from the airport to the hotel, priced per trip.', 350000.00, '/uploads/seed-service-airport.jpg', 1),
+(8, 'City center shuttle', 'shuttle', 'Shuttle between the hotel and the city center, priced per person.', 80000.00, '/uploads/seed-service-shuttle.jpg', 1);
 
 INSERT INTO menu_items (id, name, category, price, image_url, is_available) VALUES
-(1, 'Pho Bo (beef noodle soup)', 'food', 75000.00, 'https://placehold.co/800x600?text=Pho+Bo', 1),
-(2, 'Seafood fried rice', 'food', 95000.00, 'https://placehold.co/800x600?text=Seafood+Fried+Rice', 1),
-(3, 'Mi Quang with chicken', 'food', 70000.00, 'https://placehold.co/800x600?text=Mi+Quang', 1),
-(4, 'Grilled pork Banh Mi', 'food', 45000.00, 'https://placehold.co/800x600?text=Banh+Mi', 1),
-(5, 'Goi Cuon (fresh spring rolls)', 'food', 60000.00, 'https://placehold.co/800x600?text=Goi+Cuon', 0),
-(6, 'Ca Phe Sua Da (iced milk coffee)', 'coffee', 35000.00, 'https://placehold.co/800x600?text=Iced+Milk+Coffee', 1),
-(7, 'Black coffee', 'coffee', 30000.00, 'https://placehold.co/800x600?text=Black+Coffee', 1),
-(8, 'Bac Xiu (Vietnamese white coffee)', 'coffee', 40000.00, 'https://placehold.co/800x600?text=Bac+Xiu', 1),
-(9, 'Orange juice', 'drink', 50000.00, 'https://placehold.co/800x600?text=Orange+Juice', 1),
-(10, 'Peach lemongrass tea', 'drink', 55000.00, 'https://placehold.co/800x600?text=Peach+Lemongrass+Tea', 1);
+(1, 'Pho Bo (beef noodle soup)', 'food', 75000.00, '/uploads/seed-menu-pho-bo.jpg', 1),
+(2, 'Seafood fried rice', 'food', 95000.00, '/uploads/seed-menu-fried-rice.jpg', 1),
+(3, 'Mi Quang with chicken', 'food', 70000.00, '/uploads/seed-menu-mi-quang.jpg', 1),
+(4, 'Grilled pork Banh Mi', 'food', 45000.00, '/uploads/seed-menu-banh-mi.jpg', 1),
+(5, 'Goi Cuon (fresh spring rolls)', 'food', 60000.00, '/uploads/seed-menu-goi-cuon.jpg', 0),
+(6, 'Ca Phe Sua Da (iced milk coffee)', 'coffee', 35000.00, '/uploads/seed-menu-ca-phe-sua-da.jpg', 1),
+(7, 'Black coffee', 'coffee', 30000.00, '/uploads/seed-menu-black-coffee.jpg', 1),
+(8, 'Bac Xiu (Vietnamese white coffee)', 'coffee', 40000.00, '/uploads/seed-menu-bac-xiu.jpg', 1),
+(9, 'Orange juice', 'drink', 50000.00, '/uploads/seed-menu-orange-juice.jpg', 1),
+(10, 'Peach lemongrass tea', 'drink', 55000.00, '/uploads/seed-menu-peach-tea.jpg', 1);
 
 INSERT INTO tours (id, name, description, location, duration, price, image_url, is_active) VALUES
-(1, 'Ba Na Hills Discovery', 'Visit the Golden Bridge and the French Village and ride the cable car, with a buffet lunch.', 'Da Nang', '1 day', 1250000.00, 'https://placehold.co/800x600?text=Ba+Na+Hills', 1),
-(2, 'Hoi An Ancient Town by Night', 'Walk the ancient town, release lanterns on the Hoai River and taste local specialties.', 'Hoi An', 'Half day', 650000.00, 'https://placehold.co/800x600?text=Hoi+An', 1),
-(3, 'My Son Sanctuary', 'Explore the Cham temple complex with a tour guide.', 'Quang Nam', 'Half day', 750000.00, 'https://placehold.co/800x600?text=My+Son', 1),
-(4, 'Marble Mountains and Non Nuoc Beach', 'Climb Thuy Son Mountain, visit the stone carving village and swim at Non Nuoc Beach.', 'Da Nang', 'Half day', 450000.00, 'https://placehold.co/800x600?text=Marble+Mountains', 1);
+(1, 'Ba Na Hills Discovery', 'Visit the Golden Bridge and the French Village and ride the cable car, with a buffet lunch.', 'Da Nang', '1 day', 1250000.00, '/uploads/seed-tour-ba-na.jpg', 1),
+(2, 'Hoi An Ancient Town by Night', 'Walk the ancient town, release lanterns on the Hoai River and taste local specialties.', 'Hoi An', 'Half day', 650000.00, '/uploads/seed-tour-hoi-an.jpg', 1),
+(3, 'My Son Sanctuary', 'Explore the Cham temple complex with a tour guide.', 'Quang Nam', 'Half day', 750000.00, '/uploads/seed-tour-my-son.jpg', 1),
+(4, 'Marble Mountains and Non Nuoc Beach', 'Climb Thuy Son Mountain, visit the stone carving village and swim at Non Nuoc Beach.', 'Da Nang', 'Half day', 450000.00, '/uploads/seed-tour-marble.jpg', 1);
 
 -- ============================================================
 -- Đặt phòng: total_price = số đêm x price_per_night - discount_amount

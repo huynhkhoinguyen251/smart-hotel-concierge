@@ -35,6 +35,15 @@ export const hasActiveFilters = (filters) =>
     key === 'sort' ? false : Array.isArray(value) ? value.length > 0 : value !== '',
   );
 
+// Số bộ lọc đang bật: hai ngày tính là một, hai ô giá tính là một, mỗi tiện nghi tính là một.
+export const countActiveFilters = (filters) =>
+  [
+    filters.check_in || filters.check_out,
+    filters.guests,
+    filters.room_type_id,
+    filters.min_price || filters.max_price,
+  ].filter(Boolean).length + filters.amenity_ids.length;
+
 // Kiểm tra giá ở trình duyệt. Trả object lỗi theo tên ô.
 export const getPriceErrors = ({ min_price, max_price }) => {
   const errors = {};

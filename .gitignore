@@ -37,8 +37,9 @@ bower_components
 # Compiled binary addons (https://nodejs.org/api/addons.html)
 build/Release
 
-# Uploaded images
-server/uploads/
+# Uploaded images (the seed-* sample photos are kept in the repository)
+server/uploads/*
+!server/uploads/seed-*.jpg
 
 # Dependency directories
 node_modules/

@@ -35,7 +35,7 @@ import { multiplyPrice } from '../../utils/price.js';
 const BOOKINGS_LIMIT = 50;
 
 const LINK_CLASS =
-  'inline-block rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50';
+  'inline-block rounded-control border border-line bg-white px-4 py-2 text-sm font-semibold text-ink hover:bg-ground';
 
 // Không có đơn nào phù hợp với loại dịch vụ này.
 function NoEligibleBooking({ category }) {
@@ -184,14 +184,14 @@ function RequestFields({ service, category, bookings, initialBookingId }) {
         disabled={submitting}
       />
 
-      <div className="flex items-start justify-between gap-4 border-t border-slate-100 pt-4">
+      <div className="flex items-start justify-between gap-4 border-t border-line-soft pt-4">
         <div>
-          <p className="font-semibold text-slate-900">Total</p>
-          <p className="text-xs text-slate-500">
+          <p className="font-semibold text-ink">Total</p>
+          <p className="text-xs text-ink-soft">
             {formatCurrency(service.price)} × {formatQuantity(quantity, service.category)}
           </p>
         </div>
-        <p className="text-right text-lg font-bold text-teal-700">
+        <p className="text-right text-lg font-bold text-ink">
           {formatCurrency(multiplyPrice(service.price, quantity))}
         </p>
       </div>
@@ -202,7 +202,7 @@ function RequestFields({ service, category, bookings, initialBookingId }) {
       <Button type="submit" fullWidth loading={submitting}>
         Send request
       </Button>
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-ink-soft">
         The hotel confirms your request. You can cancel it while it is pending.
       </p>
     </form>
@@ -224,8 +224,8 @@ export default function ServiceRequestForm({ service, initialBookingId = '' }) {
 
   if (bookingsRequest.loading) {
     return (
-      <p className="flex items-center gap-2 text-sm text-slate-600">
-        <Spinner size="sm" className="text-teal-700" /> Loading your bookings...
+      <p className="flex items-center gap-2 text-sm text-ink-soft">
+        <Spinner size="sm" className="text-sea" /> Loading your bookings...
       </p>
     );
   }

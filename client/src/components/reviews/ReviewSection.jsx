@@ -1,11 +1,12 @@
 import { useId, useRef, useState } from 'react';
 import useFetch from '../../hooks/useFetch.js';
-import formatDate from '../../utils/formatDate.js';
+import useReducedMotion from '../../hooks/useReducedMotion.js';
 import EmptyState from '../ui/EmptyState.jsx';
 import ErrorState from '../ui/ErrorState.jsx';
 import Pagination from '../ui/Pagination.jsx';
 import RatingStars from '../ui/RatingStars.jsx';
 import Spinner from '../ui/Spinner.jsx';
+import ReviewItem from './ReviewItem.jsx';
 
 const DEFAULT_PAGE_SIZE = 5;
 
@@ -23,6 +24,7 @@ export default function ReviewSection({
   className = 'mt-12',
 }) {
   const headingId = useId();
+  const reducedMotion = useReducedMotion();
   const [page, setPage] = useState(1);
   const sectionRef = useRef(null);
   const request = useFetch(() => loadPage({ page, limit: pageSize }), [resourceKey, page]);
@@ -31,7 +33,7 @@ export default function ReviewSection({
 
   const goToPage = (nextPage) => {
     setPage(nextPage);
-    sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    sectionRef.current?.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' });
   };
 
   const renderBody = () => {
@@ -40,7 +42,7 @@ export default function ReviewSection({
     }
     if (!data) {
       return (
-        <div className="flex justify-center py-6 text-teal-700">
+        <div className="flex py-6 text-sea">
           <Spinner />
         </div>
       );
@@ -50,20 +52,9 @@ export default function ReviewSection({
     }
     return (
       <>
-        <ul className={`space-y-4 transition-opacity ${request.loading ? 'opacity-60' : ''}`}>
+        <ul className={`divide-y divide-line-soft border-y border-line-soft transition-opacity ${request.loading ? 'opacity-60' : ''}`}>
           {data.reviews.map((review) => (
-            <li key={review.id} className="rounded-2xl border border-slate-200 bg-white p-5">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="font-semibold text-slate-900">{review.reviewer.full_name}</p>
-                <p className="text-sm text-slate-500">{formatDate(review.created_at)}</p>
-              </div>
-              <RatingStars rating={review.rating} showValue={false} className="mt-1.5" />
-              {review.comment && (
-                <p className="mt-2 whitespace-pre-line break-words text-sm text-slate-700">
-                  {review.comment}
-                </p>
-              )}
-            </li>
+            <ReviewItem key={review.id} review={review} />
           ))}
         </ul>
         <Pagination
@@ -78,14 +69,14 @@ export default function ReviewSection({
   };
 
   return (
-    <section ref={sectionRef} aria-labelledby={headingId} className={`scroll-mt-24 ${className}`}>
-      <h2 id={headingId} className="text-xl font-semibold text-slate-900">
+    <section ref={sectionRef} aria-labelledby={headingId} className={`max-w-3xl scroll-mt-24 ${className}`}>
+      <h2 id={headingId} className="text-xl font-semibold text-ink">
         {title}
       </h2>
       {data && data.summary.review_count > 0 && (
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <RatingStars rating={data.summary.average_rating} size="md" />
-          <span className="text-sm text-slate-500">
+          <span className="text-sm text-ink-soft">
             from {data.summary.review_count} {data.summary.review_count === 1 ? 'review' : 'reviews'}
           </span>
         </div>

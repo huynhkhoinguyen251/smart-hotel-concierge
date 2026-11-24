@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Checkbox } from 'antd';
 import { getPriceErrors, SORT_OPTIONS } from '../../utils/roomFilters.js';
 import {
   getStayDateLimits,
@@ -56,7 +57,7 @@ export default function RoomFilters({ initialFilters, roomTypes, amenities, cata
   return (
     <form onSubmit={handleSubmit} noValidate aria-label="Room filters" className="space-y-5">
       <fieldset className="space-y-3">
-        <legend className="mb-2 text-sm font-semibold text-slate-900">Dates</legend>
+        <legend className="mb-2 text-sm font-semibold text-ink">Dates</legend>
         <Input
           label="Check-in"
           name="check_in"
@@ -87,7 +88,7 @@ export default function RoomFilters({ initialFilters, roomTypes, amenities, cata
       />
 
       <fieldset>
-        <legend className="mb-2 text-sm font-semibold text-slate-900">Price per night (VND)</legend>
+        <legend className="mb-2 text-sm font-semibold text-ink">Price per night (VND)</legend>
         <div className="grid grid-cols-2 gap-3">
           <Input
             label="Min"
@@ -117,21 +118,20 @@ export default function RoomFilters({ initialFilters, roomTypes, amenities, cata
       </fieldset>
 
       <fieldset>
-        <legend className="mb-2 text-sm font-semibold text-slate-900">Amenities</legend>
-        {catalogError && <p className="text-xs text-red-600">Could not load amenities.</p>}
+        <legend className="mb-2 text-sm font-semibold text-ink">Amenities</legend>
+        {catalogError && <p className="text-xs text-danger">Could not load amenities.</p>}
         <div className="space-y-2">
           {amenities.map((amenity) => {
             const id = String(amenity.id);
             return (
-              <label key={id} className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
-                <input
-                  type="checkbox"
-                  checked={form.amenity_ids.includes(id)}
-                  onChange={() => toggleAmenity(id)}
-                  className="h-4 w-4 rounded border-slate-300 accent-teal-700"
-                />
+              <Checkbox
+                key={id}
+                checked={form.amenity_ids.includes(id)}
+                onChange={() => toggleAmenity(id)}
+                className="flex"
+              >
                 {amenity.name}
-              </label>
+              </Checkbox>
             );
           })}
         </div>

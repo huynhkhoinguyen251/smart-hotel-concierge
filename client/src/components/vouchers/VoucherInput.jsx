@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import { Input as AntInput } from 'antd';
 import { validateVoucher } from '../../api/vouchers.api.js';
 import { MAX_VOUCHER_CODE_LENGTH, normalizeVoucherCode, VOUCHER_CODE_PATTERN } from '../../config/vouchers.js';
 import formatCurrency from '../../utils/formatCurrency.js';
@@ -88,7 +89,7 @@ export default function VoucherInput({ subtotal, applied, onChange, disabled = f
 
   if (applied) {
     return (
-      <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800" role="status">
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-control bg-success-tint px-3 py-2 text-sm text-success-deep" role="status">
         <span>
           <span className="font-semibold">{applied.code}</span> applied: −{formatCurrency(applied.discount_amount)}
         </span>
@@ -97,7 +98,7 @@ export default function VoucherInput({ subtotal, applied, onChange, disabled = f
           onClick={handleRemove}
           disabled={disabled}
           aria-label={`Remove voucher ${applied.code}`}
-          className="font-semibold text-emerald-900 underline hover:no-underline disabled:opacity-60"
+          className="font-semibold text-success-deep underline hover:no-underline disabled:opacity-60"
         >
           Remove
         </button>
@@ -107,11 +108,11 @@ export default function VoucherInput({ subtotal, applied, onChange, disabled = f
 
   return (
     <div>
-      <label htmlFor={inputId} className="mb-1.5 block text-sm font-medium text-slate-700">
+      <label htmlFor={inputId} className="mb-1.5 block text-sm font-medium text-ink">
         Voucher code (optional)
       </label>
       <div className="flex gap-2">
-        <input
+        <AntInput
           id={inputId}
           value={text}
           maxLength={MAX_VOUCHER_CODE_LENGTH}
@@ -130,16 +131,15 @@ export default function VoucherInput({ subtotal, applied, onChange, disabled = f
           aria-invalid={Boolean(error)}
           aria-describedby={error ? messageId : undefined}
           disabled={disabled || checking}
-          className={`block w-full min-w-0 rounded-lg border bg-white px-3 py-2.5 text-sm uppercase text-slate-900 placeholder:normal-case placeholder:text-slate-400 focus:outline-none focus:ring-2 disabled:bg-slate-100 ${
-            error ? 'border-red-400 focus:border-red-500 focus:ring-red-200' : 'border-slate-300 focus:border-teal-600 focus:ring-teal-100'
-          }`}
+          status={error ? 'error' : undefined}
+          className="min-w-0 uppercase placeholder:normal-case"
         />
         <Button variant="secondary" loading={checking} disabled={disabled || !ready || !text.trim()} onClick={handleApply}>
           Apply
         </Button>
       </div>
       {error && (
-        <p id={messageId} className="mt-1 text-xs text-red-600" aria-live="polite">
+        <p id={messageId} className="mt-1 text-xs text-danger" aria-live="polite">
           {error}
         </p>
       )}

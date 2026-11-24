@@ -127,7 +127,7 @@ Test từng API bằng Postman ngay sau khi viết xong.
 Hướng thiết kế "Da Nang coast" với Ant Design và Tailwind (xem `PRODUCT.md`, `DESIGN.md`). Giữ nguyên đường dẫn, API và nghiệp vụ.
 
 - [x] U1: Nền tảng Ant Design (theme, font, 22 component dùng chung trong `client/src/components/ui`)
-- [ ] U2: Ảnh thật, khung trang khách, trang chủ, phòng, đồ ăn, dịch vụ, tour
+- [x] U2: Ảnh thật, khung trang khách, trang chủ, phòng, đồ ăn, dịch vụ, tour
 - [ ] U3: Khung admin, dashboard, bảng danh sách
 - [ ] U4: Trang chi tiết, form, đăng nhập, giảm dung lượng tải, rà soát cuối
 

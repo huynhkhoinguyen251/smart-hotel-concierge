@@ -5,6 +5,7 @@ import AdminLayout from '../layouts/AdminLayout.jsx';
 import MainLayout from '../layouts/MainLayout.jsx';
 import BookingDetailPage from '../pages/BookingDetailPage.jsx';
 import BookPage from '../pages/BookPage.jsx';
+import CreditsPage from '../pages/CreditsPage.jsx';
 import FoodMenuPage from '../pages/FoodMenuPage.jsx';
 import FoodOrderDetailPage from '../pages/FoodOrderDetailPage.jsx';
 import HomePage from '../pages/HomePage.jsx';
@@ -81,6 +82,7 @@ export default function AppRoutes() {
         <Route path="tours" element={<ToursPage />} />
         <Route path="tours/:id" element={<TourDetailPage />} />
         <Route path="transport/:id" element={<TransportDetailPage />} />
+        <Route path="credits" element={<CreditsPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
 

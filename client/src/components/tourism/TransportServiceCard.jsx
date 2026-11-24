@@ -1,32 +1,35 @@
-import { Link } from 'react-router-dom';
-import formatCurrency from '../../utils/formatCurrency.js';
 import { getTransportCategory } from '../../utils/tourismHelpers.js';
-import RoomImage from '../rooms/RoomImage.jsx';
+import ButtonLink from '../ui/ButtonLink.jsx';
+import PhotoFrame from '../ui/PhotoFrame.jsx';
+import Price from '../ui/Price.jsx';
 
-// Thẻ dịch vụ vận chuyển (thuê xe máy, đón sân bay, xe đưa đón) trong tab Transport.
+// Một dòng gọn trong danh sách vận chuyển (thuê xe máy, đón sân bay, xe đưa đón):
+// ảnh nhỏ, cách tính giá, giá và nút đặt. Cả dòng bấm được.
 export default function TransportServiceCard({ service }) {
   const category = getTransportCategory(service.category);
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <RoomImage src={service.image_url} alt={service.name} className="aspect-[4/3] w-full" />
-      <div className="flex flex-1 flex-col p-5">
-        <p className="text-xs font-semibold uppercase tracking-wide text-teal-700">{category.label}</p>
-        <h3 className="mt-1 text-lg font-semibold break-words text-slate-900">{service.name}</h3>
-        {service.description && <p className="mt-2 text-sm text-slate-600">{service.description}</p>}
-        <p className="mt-2 text-xs text-slate-500">{category.pricing}</p>
-
-        <div className="mt-auto pt-4">
-          <p>
-            <span className="text-lg font-bold text-teal-700">{formatCurrency(service.price)}</span>
-            <span className="text-sm text-slate-500"> {category.priceUnit}</span>
-          </p>
-          <Link
+    <article className="group relative flex gap-4 py-5 sm:gap-6">
+      <PhotoFrame src={service.image_url} alt={service.name} className="aspect-square w-24 shrink-0 self-start sm:w-36" />
+      <div className="flex min-w-0 flex-1 flex-col gap-4 md:flex-row md:items-center md:justify-between md:gap-10">
+        <div className="min-w-0">
+          <h3 className="text-lg font-semibold break-words text-ink transition-colors duration-150 group-hover:text-sea">
+            {service.name}
+          </h3>
+          <p className="text-sm text-ink-soft">{category.label}</p>
+          {service.description && <p className="mt-2 max-w-prose text-ink">{service.description}</p>}
+          <p className="mt-1 max-w-prose text-sm text-ink-soft">{category.pricing}</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 md:shrink-0 md:flex-col md:items-end">
+          <Price amount={service.price} unit={category.priceUnit} />
+          <ButtonLink
             to={`/transport/${service.id}`}
-            className="mt-3 flex w-full items-center justify-center rounded-lg bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800"
+            variant="secondary"
+            aria-label={`Book: ${service.name}`}
+            className="static! after:absolute after:inset-0 after:content-['']"
           >
             Book
-          </Link>
+          </ButtonLink>
         </div>
       </div>
     </article>
