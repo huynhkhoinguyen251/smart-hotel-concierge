@@ -155,8 +155,8 @@ Chỉ bắt đầu khi toàn bộ tính năng Core đã chạy ổn.
 - [x] Payment Simulation (QR giả lập cho cả 5 loại đơn theo phương án A, giữ đơn 15 phút, quy tắc ở `api.md` mục 11; backend 19/11, giao diện 20/11/2026)
 - [x] Invoice Generation (tự tạo khi thanh toán, trang hóa đơn in được; backend 19/11, giao diện 20/11/2026)
 - [x] Voucher & Discount (áp cho đặt phòng và đồ ăn, khóa dòng khi dùng, hủy đơn trả lại lượt; admin quản lý mã; xong 22/11/2026)
-- [ ] So sánh phòng và dịch vụ (làm sau khi xong Làm lại giao diện U1–U4)
-- [ ] Smart Recommendation (gợi ý; làm sau khi xong Làm lại giao diện U1–U4)
+- Không làm: So sánh phòng và dịch vụ (bạn quyết định dừng ngày 25/11/2026; đưa vào hướng phát triển trong báo cáo)
+- Không làm: Smart Recommendation (bạn quyết định dừng ngày 25/11/2026; đưa vào hướng phát triển trong báo cáo)
 
 **Optional (chỉ làm khi còn thời gian; phải hỏi bạn trước khi bắt đầu):**
 
