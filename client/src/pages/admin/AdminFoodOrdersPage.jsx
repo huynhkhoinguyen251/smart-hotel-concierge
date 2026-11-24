@@ -1,5 +1,5 @@
 import { getAdminFoodOrders, updateAdminFoodOrderStatus } from '../../api/adminFoodOrders.api.js';
-import { GuestCell, MoneyCell, TitleCell } from '../../components/admin/AdminCells.jsx';
+import { BadgesCell, GuestCell, MoneyCell, StackCell, TitleCell } from '../../components/admin/AdminCells.jsx';
 import AdminRequestListPage from '../../components/admin/AdminRequestListPage.jsx';
 import AdminSubNav from '../../components/admin/AdminSubNav.jsx';
 import AdminStatusActions from '../../components/admin/AdminStatusActions.jsx';
@@ -9,7 +9,6 @@ import { FOOD_ORDER_STATUS_TABS } from '../../config/statuses.js';
 import { formatItemCount } from '../../utils/foodCart.js';
 import formatDate from '../../utils/formatDate.js';
 import { getConfirmDisabledReason } from '../../utils/paymentHelpers.js';
-import { PaymentBadge } from '../../components/payments/PaymentInfoCard.jsx';
 
 const itemLabel = (order) => `food order #${order.id}`;
 
@@ -19,37 +18,48 @@ const COLUMNS = [
   {
     key: 'order',
     header: 'Order',
-    render: (order) => (
+    render: (order, link) => (
       <TitleCell
-        status={order.status}
+        link={link}
         title={`Order #${order.id}`}
         detail={formatDate(order.created_at, { withTime: true })}
       />
     ),
   },
-  { key: 'guest', header: 'Guest', render: (order) => <GuestCell user={order.user} /> },
+  { key: 'guest', header: 'Guest', wide: true, render: (order) => <GuestCell user={order.user} /> },
   {
     key: 'room',
     header: 'Deliver to',
     render: (order) => (
-      <>
-        <p className="text-slate-900">Room {order.booking?.room?.room_number}</p>
-        <p className="text-xs text-slate-500">Booking #{order.booking?.id}</p>
-      </>
+      <StackCell
+        main={`Room ${order.booking?.room?.room_number}`}
+        detail={`Booking #${order.booking?.id}`}
+      />
     ),
   },
   {
     key: 'items',
     header: 'Items',
     render: (order) => (
-      <>
-        <p className="text-slate-900">{formatItemCount(order.item_count)}</p>
-        {order.note && <p className="truncate text-xs text-slate-500" title={order.note}>Note: {order.note}</p>}
-      </>
+      <StackCell
+        main={formatItemCount(order.item_count)}
+        detail={
+          order.note && (
+            <span className="block truncate" title={order.note}>
+              Note: {order.note}
+            </span>
+          )
+        }
+      />
     ),
   },
   { key: 'total', header: 'Total', align: 'right', render: (order) => <MoneyCell amount={order.total_price} /> },
-  { key: 'payment', header: 'Payment', render: (order) => <PaymentBadge payment={order.payment} /> },
+  {
+    key: 'status',
+    header: 'Status',
+    badges: true,
+    render: (order) => <BadgesCell status={order.status} payment={order.payment} />,
+  },
 ];
 
 // /admin/food-orders: đơn đồ ăn của khách.
@@ -58,7 +68,7 @@ export default function AdminFoodOrdersPage() {
     <AdminRequestListPage
       title="Food orders"
       subtitle="Food and drink orders for room delivery, newest first."
-      header={<AdminSubNav {...FOOD_SECTION_NAV} />}
+      subNav={<AdminSubNav {...FOOD_SECTION_NAV} />}
       basePath="/admin/food-orders"
       statusTabs={FOOD_ORDER_STATUS_TABS}
       load={getAdminFoodOrders}

@@ -4,17 +4,16 @@ import {
   replyToAdminTicket,
   updateAdminTicketStatus,
 } from '../../api/adminTickets.api.js';
-import AdminDetailLayout, { AdminActionsCard, AdminGuestCard } from '../../components/admin/AdminDetailLayout.jsx';
+import AdminDetailLayout, { AdminGuestSection, AdminSection } from '../../components/admin/AdminDetailLayout.jsx';
 import DetailLoader from '../../components/ui/DetailLoader.jsx';
 import AdminStatusActions from '../../components/admin/AdminStatusActions.jsx';
-import ChatMessage from '../../components/support/ChatMessage.jsx';
+import TicketMessage from '../../components/admin/TicketMessage.jsx';
 import Alert from '../../components/ui/Alert.jsx';
 import Button from '../../components/ui/Button.jsx';
-import Card from '../../components/ui/Card.jsx';
 import Textarea from '../../components/ui/Textarea.jsx';
 import { getActions, TICKET_ADMIN_ACTIONS } from '../../config/adminRequests.js';
 import { TICKET_STEPS } from '../../config/statuses.js';
-import { CLOSED_TICKET_STATUS, RECEPTION_LABEL, TICKET_MESSAGE_MAX_LENGTH } from '../../config/support.js';
+import { CLOSED_TICKET_STATUS, TICKET_MESSAGE_MAX_LENGTH } from '../../config/support.js';
 import useAdminItem from '../../hooks/useAdminItem.js';
 import useAuth from '../../hooks/useAuth.js';
 
@@ -45,11 +44,11 @@ function ReplyBox({ ticketId, onSent }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-3" aria-label="Reply to the guest">
+    <form onSubmit={handleSubmit} noValidate className="space-y-2" aria-label="Reply to the guest">
       <Textarea
         label="Your reply"
         name="message"
-        rows={3}
+        rows={2}
         value={message}
         maxLength={TICKET_MESSAGE_MAX_LENGTH}
         onChange={(event) => {
@@ -89,17 +88,6 @@ function TicketDetails({ initialTicket }) {
     }
   };
 
-  // Góc nhìn của admin: tin của admin bên phải (của mình ghi "You"), tin của khách bên trái.
-  const chatProps = (msg) => {
-    const fromAdmin = msg.sender?.role === 'admin';
-    const isMe = msg.sender?.id === user?.id;
-    return {
-      isOwn: fromAdmin,
-      label: isMe ? null : fromAdmin ? `${RECEPTION_LABEL} · ${msg.sender.full_name}` : msg.sender?.full_name,
-      footerPrefix: isMe ? 'You · ' : '',
-    };
-  };
-
   return (
     <AdminDetailLayout
       backTo="/admin/tickets"
@@ -111,48 +99,45 @@ function TicketDetails({ initialTicket }) {
       message={message}
       steps={TICKET_STEPS}
       progressLabel="Request progress"
+      actions={
+        actions.length > 0 && (
+          <AdminStatusActions
+            actions={actions}
+            update={(action) => updateAdminTicketStatus(ticket.id, action.status)}
+            itemLabel={`support request #${ticket.id}`}
+            note={ticket.status === 'open' ? 'Replying also marks the request as in progress.' : undefined}
+            // Nút vàng duy nhất của trang là "Send reply".
+            nextVariant="secondary"
+            {...actionProps}
+          />
+        )
+      }
+      actionsEmptyText="This request is resolved."
       main={
-        <Card>
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-slate-900">Conversation</h2>
+        <AdminSection
+          title="Conversation"
+          action={
             <Button variant="secondary" size="sm" loading={refreshing} onClick={refresh}>
               Refresh
             </Button>
-          </div>
-          <ul className="space-y-4" aria-label="Messages">
+          }
+        >
+          <ul className="space-y-5" aria-label="Messages">
             {ticket.messages.map((msg) => (
-              <ChatMessage key={msg.id} message={msg} {...chatProps(msg)} />
+              <TicketMessage key={msg.id} message={msg} currentUserId={user?.id} />
             ))}
           </ul>
-          <div className="mt-6 border-t border-slate-100 pt-4">
+          {/* Ô trả lời dính ở đáy màn hình, nên luôn với tới được khi hội thoại dài. */}
+          <div className="sticky bottom-0 z-10 mt-6 border-t border-line-soft bg-white pt-4 pb-4">
             {isClosed ? (
-              <p className="text-sm text-slate-600">This request is resolved. No more messages can be sent.</p>
+              <p className="text-sm text-ink-soft">This request is resolved. No more messages can be sent.</p>
             ) : (
               <ReplyBox ticketId={ticket.id} onSent={setTicket} />
             )}
           </div>
-        </Card>
+        </AdminSection>
       }
-      side={
-        <>
-          <AdminGuestCard user={ticket.guest} />
-          <AdminActionsCard emptyText="This request is resolved.">
-            {actions.length > 0 && (
-              <>
-                {ticket.status === 'open' && (
-                  <p className="mb-3 text-xs text-slate-500">Replying also marks the request as in progress.</p>
-                )}
-                <AdminStatusActions
-                  actions={actions}
-                  update={(action) => updateAdminTicketStatus(ticket.id, action.status)}
-                  itemLabel={`support request #${ticket.id}`}
-                  {...actionProps}
-                />
-              </>
-            )}
-          </AdminActionsCard>
-        </>
-      }
+      side={<AdminGuestSection user={ticket.guest} />}
     />
   );
 }

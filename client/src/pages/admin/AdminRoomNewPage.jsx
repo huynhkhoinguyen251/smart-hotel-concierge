@@ -1,11 +1,13 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { createAdminRoom } from '../../api/adminRooms.api.js';
 import { getRoomTypes } from '../../api/catalog.api.js';
+import AdminFormPanel from '../../components/admin/AdminFormPanel.jsx';
+import AdminPageHeader from '../../components/admin/AdminPageHeader.jsx';
 import RoomForm from '../../components/admin/rooms/RoomForm.jsx';
-import Card from '../../components/ui/Card.jsx';
+import BackLink from '../../components/ui/BackLink.jsx';
+import ButtonLink from '../../components/ui/ButtonLink.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
 import ErrorState from '../../components/ui/ErrorState.jsx';
-import PageTitle from '../../components/ui/PageTitle.jsx';
 import { PageSpinner } from '../../components/ui/Spinner.jsx';
 import useFetch from '../../hooks/useFetch.js';
 
@@ -30,29 +32,24 @@ export default function AdminRoomNewPage() {
           title="No room types yet"
           message="Create a room type first, then add rooms of that type."
           action={
-            <Link
-              to="/admin/rooms/types/new"
-              className="inline-block rounded-lg bg-teal-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal-800"
-            >
-              Add room type
-            </Link>
+            <ButtonLink to="/admin/rooms/types/new">Add room type</ButtonLink>
           }
         />
       );
     }
     return (
-      <Card>
+      <AdminFormPanel>
         <RoomForm roomTypes={roomTypes.data} onSubmit={handleSubmit} submitLabel="Create room" />
-      </Card>
+      </AdminFormPanel>
     );
   };
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <Link to="/admin/rooms" className="text-sm font-medium text-teal-700 hover:text-teal-800">
-        ← Back to rooms
-      </Link>
-      <PageTitle className="mt-3" title="Add room" subtitle="You can add images after the room is created." />
+    <div className="max-w-3xl">
+      <BackLink to="/admin/rooms">Back to rooms</BackLink>
+      <div className="mt-3">
+        <AdminPageHeader title="Add room" subtitle="You can add images after the room is created." />
+      </div>
       {renderBody()}
     </div>
   );

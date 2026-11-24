@@ -1,4 +1,5 @@
 import { useId, useState } from 'react';
+import { Checkbox } from 'antd';
 import { toCatalogForm, toCatalogPayload, validateCatalogForm } from '../../../utils/catalogValidation.js';
 import Alert from '../../ui/Alert.jsx';
 import Button from '../../ui/Button.jsx';
@@ -48,7 +49,6 @@ function CatalogItemForm({ formId, item, catalog, onSaved, onSavingChange, onUpl
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState('');
   const [saving, setSaving] = useState(false);
-  const flagId = useId();
 
   const changeSaving = (value) => {
     setSaving(value);
@@ -86,8 +86,8 @@ function CatalogItemForm({ formId, item, catalog, onSaved, onSavingChange, onUpl
   const itemName = form.name?.trim() || item?.name || '';
 
   return (
-    <form id={formId} onSubmit={handleSubmit} noValidate className="space-y-4" aria-label={item ? `Edit ${item.name}` : `Add ${catalog.noun}`}>
-      <div className="grid gap-4 sm:grid-cols-2">
+    <form id={formId} onSubmit={handleSubmit} noValidate className="space-y-5" aria-label={item ? `Edit ${item.name}` : `Add ${catalog.noun}`}>
+      <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
         {catalog.fields.map((field) => (
           <div key={field.name} className={field.half ? 'min-w-0' : 'min-w-0 sm:col-span-2'}>
             <CatalogField
@@ -102,20 +102,14 @@ function CatalogItemForm({ formId, item, catalog, onSaved, onSavingChange, onUpl
           </div>
         ))}
       </div>
-      <label htmlFor={flagId} className="flex items-start gap-2 text-sm text-slate-700">
-        <input
-          id={flagId}
-          type="checkbox"
-          checked={form[catalog.flag]}
-          onChange={(event) => handleChange(catalog.flag, event.target.checked)}
-          disabled={saving}
-          className="mt-0.5 h-4 w-4 rounded border-slate-300 text-teal-700 focus:ring-teal-600"
-        />
-        <span>
-          <span className="font-medium text-slate-900">{catalog.flagLabels.on}</span>
-          <span className="block text-xs text-slate-500">{catalog.flagHint}</span>
-        </span>
-      </label>
+      <Checkbox
+        checked={form[catalog.flag]}
+        onChange={(event) => handleChange(catalog.flag, event.target.checked)}
+        disabled={saving}
+      >
+        <span className="block font-medium text-ink">{catalog.flagLabels.on}</span>
+        <span className="block text-xs text-ink-soft">{catalog.flagHint}</span>
+      </Checkbox>
       <div aria-live="polite" className="empty:hidden">
         <Alert type="error">{apiError}</Alert>
       </div>

@@ -1,11 +1,12 @@
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { createAdminRoomType, updateAdminRoomType } from '../../api/adminRoomTypes.api.js';
 import { getAmenities, getRoomTypes } from '../../api/catalog.api.js';
+import AdminFormPanel from '../../components/admin/AdminFormPanel.jsx';
+import AdminPageHeader from '../../components/admin/AdminPageHeader.jsx';
 import RoomTypeForm from '../../components/admin/rooms/RoomTypeForm.jsx';
-import Card from '../../components/ui/Card.jsx';
+import BackLink from '../../components/ui/BackLink.jsx';
 import ErrorState from '../../components/ui/ErrorState.jsx';
 import NotFoundView from '../../components/ui/NotFoundView.jsx';
-import PageTitle from '../../components/ui/PageTitle.jsx';
 import { PageSpinner } from '../../components/ui/Spinner.jsx';
 import useFetch from '../../hooks/useFetch.js';
 
@@ -43,16 +44,15 @@ export default function AdminRoomTypeFormPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <Link to="/admin/rooms/types" className="text-sm font-medium text-teal-700 hover:text-teal-800">
-        ← Back to room types
-      </Link>
-      <PageTitle
-        className="mt-3"
-        title={isEdit ? `Edit ${roomType.name}` : 'Add room type'}
-        subtitle={isEdit ? 'Changes apply to every room of this type.' : 'Rooms of this type share its price and amenities.'}
-      />
-      <Card>
+    <div className="max-w-3xl">
+      <BackLink to="/admin/rooms/types">Back to room types</BackLink>
+      <div className="mt-3">
+        <AdminPageHeader
+          title={isEdit ? `Edit ${roomType.name}` : 'Add room type'}
+          subtitle={isEdit ? 'Changes apply to every room of this type.' : 'Rooms of this type share its price and amenities.'}
+        />
+      </div>
+      <AdminFormPanel>
         <RoomTypeForm
           key={roomType?.id ?? 'new'}
           roomType={roomType}
@@ -60,7 +60,7 @@ export default function AdminRoomTypeFormPage() {
           onSubmit={handleSubmit}
           submitLabel={isEdit ? 'Save changes' : 'Create room type'}
         />
-      </Card>
+      </AdminFormPanel>
     </div>
   );
 }

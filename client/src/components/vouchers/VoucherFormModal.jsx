@@ -1,4 +1,5 @@
 import { useId, useState } from 'react';
+import { Checkbox } from 'antd';
 import { adminVouchersApi } from '../../api/vouchers.api.js';
 import { DISCOUNT_TYPE_OPTIONS, MAX_VOUCHER_CODE_LENGTH } from '../../config/vouchers.js';
 import { toVoucherForm, toVoucherPayload, validateVoucherForm } from '../../utils/voucherForm.js';
@@ -14,7 +15,6 @@ function VoucherForm({ formId, voucher, onSaved, onSavingChange }) {
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState('');
   const [saving, setSaving] = useState(false);
-  const activeId = useId();
 
   const change = (name, value) => {
     setForm((current) => ({ ...current, [name]: value }));
@@ -54,8 +54,8 @@ function VoucherForm({ formId, voucher, onSaved, onSavingChange }) {
   const percent = form.discount_type === 'percent';
 
   return (
-    <form id={formId} onSubmit={handleSubmit} noValidate className="space-y-4" aria-label={voucher ? `Edit ${voucher.code}` : 'Add voucher'}>
-      <div className="grid gap-4 sm:grid-cols-2">
+    <form id={formId} onSubmit={handleSubmit} noValidate className="space-y-5" aria-label={voucher ? `Edit ${voucher.code}` : 'Add voucher'}>
+      <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
         <Input
           label="Code"
           {...field('code')}
@@ -82,20 +82,14 @@ function VoucherForm({ formId, voucher, onSaved, onSavingChange }) {
         <Input label="Starts at" type="datetime-local" {...field('starts_at')} />
         <Input label="Ends at" type="datetime-local" {...field('ends_at')} />
       </div>
-      <label htmlFor={activeId} className="flex items-start gap-2 text-sm text-slate-700">
-        <input
-          id={activeId}
-          type="checkbox"
-          checked={form.is_active}
-          onChange={(event) => change('is_active', event.target.checked)}
-          disabled={saving}
-          className="mt-0.5 h-4 w-4 rounded border-slate-300 text-teal-700 focus:ring-teal-600"
-        />
-        <span>
-          <span className="font-medium text-slate-900">Active</span>
-          <span className="block text-xs text-slate-500">Guests can use this code between the start and end times.</span>
-        </span>
-      </label>
+      <Checkbox
+        checked={form.is_active}
+        onChange={(event) => change('is_active', event.target.checked)}
+        disabled={saving}
+      >
+        <span className="block font-medium text-ink">Active</span>
+        <span className="block text-xs text-ink-soft">Guests can use this code between the start and end times.</span>
+      </Checkbox>
       <div aria-live="polite" className="empty:hidden">
         <Alert type="error">{apiError}</Alert>
       </div>

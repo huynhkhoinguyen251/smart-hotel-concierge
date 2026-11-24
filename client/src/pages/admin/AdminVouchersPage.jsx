@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { adminVouchersApi } from '../../api/vouchers.api.js';
+import { EmptyCell } from '../../components/admin/AdminCells.jsx';
+import AdminListPanel, { AdminListBody } from '../../components/admin/AdminListPanel.jsx';
+import AdminPageHeader from '../../components/admin/AdminPageHeader.jsx';
 import AdminRequestTable from '../../components/admin/AdminRequestTable.jsx';
+import RowActions from '../../components/admin/RowActions.jsx';
 import SearchBox from '../../components/admin/SearchBox.jsx';
 import Alert from '../../components/ui/Alert.jsx';
 import Button from '../../components/ui/Button.jsx';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.jsx';
-import EmptyState from '../../components/ui/EmptyState.jsx';
 import FilterTabs from '../../components/ui/FilterTabs.jsx';
-import LoadError from '../../components/ui/LoadError.jsx';
-import Pagination from '../../components/ui/Pagination.jsx';
-import { PageSpinner } from '../../components/ui/Spinner.jsx';
 import StatusBadge from '../../components/ui/StatusBadge.jsx';
 import VoucherFormModal from '../../components/vouchers/VoucherFormModal.jsx';
 import {
@@ -30,31 +30,31 @@ const COLUMNS = [
   {
     key: 'code',
     header: 'Code',
-    render: (voucher) => (
-      <p className="flex flex-wrap items-center gap-2 font-semibold break-all text-slate-900">
-        {voucher.code}
-        <StatusBadge status={voucher.status} />
-      </p>
-    ),
+    render: (voucher) => <p className="font-semibold wrap-anywhere text-ink">{voucher.code}</p>,
   },
   { key: 'discount', header: 'Discount', render: (voucher) => formatVoucherDiscount(voucher) },
   {
     key: 'min',
     header: 'Min spend',
-    render: (voucher) => (voucher.min_amount > 0 ? formatCurrency(voucher.min_amount) : <span className="text-slate-400">None</span>),
+    align: 'right',
+    labelled: true,
+    render: (voucher) =>
+      voucher.min_amount > 0 ? formatCurrency(voucher.min_amount) : <EmptyCell>None</EmptyCell>,
   },
   { key: 'uses', header: 'Uses', render: (voucher) => <span className="whitespace-nowrap">{formatVoucherUses(voucher)}</span> },
   {
     key: 'valid',
     header: 'Valid',
+    wide: true,
     render: (voucher) => (
-      <span className="text-sm">
+      <>
         <span className="whitespace-nowrap">{formatDate(voucher.starts_at, { withTime: true })}</span>
-        <span className="text-slate-400"> to </span>
+        <span className="text-ink-soft"> to </span>
         <span className="whitespace-nowrap">{formatDate(voucher.ends_at, { withTime: true })}</span>
-      </span>
+      </>
     ),
   },
+  { key: 'status', header: 'Status', badges: true, render: (voucher) => <StatusBadge status={voucher.status} /> },
 ];
 
 // /admin/vouchers: tìm theo mã, tab trạng thái và trang nằm trên địa chỉ trang. Sửa trong hộp thoại,
@@ -109,100 +109,97 @@ export default function AdminVouchersPage() {
     }
   };
 
-  const renderActions = (voucher) => {
-    const rowBusy = busyId !== null;
-    return (
-      <>
-        <Button size="sm" variant="secondary" aria-label={`Edit ${voucher.code}`} disabled={rowBusy} onClick={() => setEditing({ open: true, voucher })}>
-          Edit
-        </Button>
+  const rowBusy = busyId !== null;
+
+  const renderActions = (voucher) => (
+    <RowActions
+      itemLabel={voucher.code}
+      disabled={rowBusy}
+      primary={
         <Button
           size="sm"
           variant="secondary"
-          aria-label={`${voucher.is_active ? 'Switch off' : 'Switch on'} ${voucher.code}`}
-          loading={busyId === voucher.id && !deleting && !switchingOff}
+          aria-label={`Edit ${voucher.code}`}
           disabled={rowBusy}
-          onClick={() => (voucher.is_active ? setSwitchingOff(voucher) : setActive(voucher, true))}
+          onClick={() => setEditing({ open: true, voucher })}
         >
-          {voucher.is_active ? 'Switch off' : 'Switch on'}
+          Edit
         </Button>
-        <Button size="sm" variant="danger" aria-label={`Delete ${voucher.code}`} disabled={rowBusy} onClick={() => setDeleting(voucher)}>
-          Delete
-        </Button>
-      </>
-    );
-  };
+      }
+      items={[
+        {
+          key: 'active',
+          label: voucher.is_active ? 'Switch off' : 'Switch on',
+          onClick: () => (voucher.is_active ? setSwitchingOff(voucher) : setActive(voucher, true)),
+        },
+        { key: 'delete', label: 'Delete', danger: true, onClick: () => setDeleting(voucher) },
+      ]}
+    />
+  );
 
-  const renderList = () => {
-    if (list.loading && !list.data) return <PageSpinner />;
-    if (list.error) return <LoadError error={list.error} onRetry={list.retry} />;
-    if (list.data.items.length === 0) {
-      const filtered = search || status;
-      return (
-        <EmptyState
-          title={filtered ? 'No vouchers match these filters' : 'No vouchers yet'}
-          message={filtered ? 'Try another code or status.' : 'Add the first voucher.'}
-        />
-      );
-    }
-    return (
-      <>
-        <AdminRequestTable
-          caption="Vouchers"
-          items={list.data.items}
-          columns={COLUMNS}
-          getItemLabel={(voucher) => voucher.code}
-          renderActions={renderActions}
-        />
-        <Pagination
-          className="mt-8"
-          page={page}
-          limit={ADMIN_VOUCHERS_PAGE_SIZE}
-          total={list.data.pagination?.total ?? 0}
-          onPageChange={goToPage}
-        />
-      </>
-    );
-  };
+  const filtered = search || status;
 
   return (
-    <div className="mx-auto max-w-6xl">
-      <div className="flex flex-wrap items-start justify-between gap-x-4">
-        <div className="mb-4 min-w-0">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Vouchers</h1>
-          <p className="mt-1.5 text-slate-600">Discount codes for room bookings and food orders.</p>
-        </div>
-        <Button className="mb-4" onClick={() => setEditing({ open: true, voucher: null })}>
-          Add voucher
-        </Button>
-      </div>
-      <FilterTabs
-        label="Filter by status"
-        className="mb-4"
-        tabs={VOUCHER_STATUS_TABS}
-        active={status}
-        getLink={(value) => `/admin/vouchers${toQueryString({ search, status: value })}`}
+    <>
+      <AdminPageHeader
+        title="Vouchers"
+        subtitle="Discount codes for room bookings and food orders."
+        action={<Button onClick={() => setEditing({ open: true, voucher: null })}>Add voucher</Button>}
       />
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end">
-        <SearchBox
-          key={search}
-          label="Code"
-          value={search}
-          maxLength={MAX_VOUCHER_CODE_LENGTH}
-          placeholder="For example: WELCOME"
-          className="w-full sm:w-56"
-          onSearch={(value) => updateUrl({ search: value.toUpperCase(), page: '' })}
-        />
-        {search && (
-          <Button variant="secondary" onClick={() => setSearchParams(cleanParams({ status }))}>
-            Reset
-          </Button>
-        )}
-      </div>
       <div className="mb-4 empty:hidden" aria-live="polite">
         <Alert type={message.type}>{message.text}</Alert>
       </div>
-      {renderList()}
+      <AdminListPanel
+        tabs={
+          <FilterTabs
+            label="Filter by status"
+            tabs={VOUCHER_STATUS_TABS}
+            active={status}
+            getLink={(value) => `/admin/vouchers${toQueryString({ search, status: value })}`}
+          />
+        }
+        toolbar={
+          <>
+            <SearchBox
+              key={search}
+              label="Code"
+              value={search}
+              maxLength={MAX_VOUCHER_CODE_LENGTH}
+              placeholder="For example: WELCOME"
+              className="w-full sm:w-56"
+              onSearch={(value) => updateUrl({ search: value.toUpperCase(), page: '' })}
+            />
+            {search && (
+              <Button variant="secondary" onClick={() => setSearchParams(cleanParams({ status }))}>
+                Reset
+              </Button>
+            )}
+          </>
+        }
+      >
+        <AdminListBody
+          list={list}
+          items={list.data?.items ?? []}
+          empty={{
+            title: filtered ? 'No vouchers match these filters' : 'No vouchers yet',
+            message: filtered ? 'Try another code or status.' : 'Add the first voucher.',
+          }}
+          pagination={{
+            page,
+            limit: ADMIN_VOUCHERS_PAGE_SIZE,
+            total: list.data?.pagination?.total ?? 0,
+            onPageChange: goToPage,
+          }}
+        >
+          <AdminRequestTable
+            caption="Vouchers"
+            items={list.data?.items ?? []}
+            columns={COLUMNS}
+            getItemLabel={(voucher) => voucher.code}
+            renderActions={renderActions}
+          />
+        </AdminListBody>
+      </AdminListPanel>
 
       <VoucherFormModal
         open={editing.open}
@@ -235,6 +232,6 @@ export default function AdminVouchersPage() {
         onConfirm={handleDelete}
         onClose={() => setDeleting(null)}
       />
-    </div>
+    </>
   );
 }

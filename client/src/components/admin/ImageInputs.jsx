@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import { Progress, Segmented } from 'antd';
 import { uploadAdminImage } from '../../api/adminUploads.api.js';
 import { IMAGE_ACCEPT, IMAGE_URL_MAX_LENGTH } from '../../config/adminCatalog.js';
 import { formatFileSize, validateImageFile, validateImageUrl } from '../../utils/catalogValidation.js';
@@ -11,27 +12,21 @@ import Input from '../ui/Input.jsx';
 // Không dùng thẻ <form>, vì ImageUrlField nằm bên trong form của hộp thoại (form lồng form không hợp lệ).
 
 const IMAGE_MODES = [
-  { value: '', label: 'Upload a file' },
+  { value: 'file', label: 'Upload a file' },
   { value: 'url', label: 'Paste a URL' },
 ];
 
-// Hai nút chọn cách thêm ảnh.
+// Chọn cách thêm ảnh. mode: '' (upload file) hoặc 'url'.
 export function ImageModeSwitch({ mode, onChange, disabled }) {
   return (
-    <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="How to add the image">
-      {IMAGE_MODES.map((item) => (
-        <Button
-          key={item.value || 'file'}
-          size="sm"
-          variant={mode === item.value ? 'primary' : 'secondary'}
-          aria-pressed={mode === item.value}
-          disabled={disabled}
-          onClick={() => onChange(item.value)}
-        >
-          {item.label}
-        </Button>
-      ))}
-    </div>
+    <Segmented
+      aria-label="How to add the image"
+      className="mb-4"
+      options={IMAGE_MODES}
+      value={mode || 'file'}
+      disabled={disabled}
+      onChange={(value) => onChange(value === 'file' ? '' : value)}
+    />
   );
 }
 
@@ -98,7 +93,7 @@ export function ImageFileInput({ onUploaded, renderExtra, onBusyChange, submitLa
   return (
     <div className="space-y-3">
       <div>
-        <label htmlFor={inputId} className="mb-1.5 block text-sm font-medium text-slate-700">
+        <label htmlFor={inputId} className="mb-1.5 block text-sm font-medium text-ink">
           Image file
         </label>
         <input
@@ -108,36 +103,32 @@ export function ImageFileInput({ onUploaded, renderExtra, onBusyChange, submitLa
           accept={IMAGE_ACCEPT}
           onChange={handleFile}
           disabled={busy}
-          className="block w-full text-sm text-slate-700 file:mr-3 file:rounded-lg file:border-0 file:bg-teal-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-teal-800 hover:file:bg-teal-100"
+          className="block w-full text-sm text-ink file:mr-3 file:h-10 file:cursor-pointer file:rounded-control file:border file:border-solid file:border-line file:bg-white file:px-4 file:text-sm file:font-semibold file:text-ink hover:file:border-sea hover:file:text-sea"
         />
-        <p className="mt-1 text-xs text-slate-500">JPEG, PNG or WebP, up to 5 MB.</p>
+        <p className="mt-1 text-xs text-ink-soft">JPEG, PNG or WebP, up to 5 MB.</p>
       </div>
 
       {file && (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-          <img src={previewUrl} alt="Preview of the chosen image" className="aspect-[4/3] w-full rounded-lg object-cover sm:w-40" />
+          <img src={previewUrl} alt="Preview of the chosen image" className="aspect-[4/3] w-full rounded-control object-cover sm:w-40" />
           <div className="min-w-0 space-y-3 text-sm">
-            <p className="break-all text-slate-700">
-              {file.name} <span className="text-slate-500">({formatFileSize(file.size)})</span>
+            <p className="break-all text-ink">
+              {file.name} <span className="text-ink-soft">({formatFileSize(file.size)})</span>
             </p>
             {renderExtra?.(busy)}
             {busy && (
               <div>
-                <div
-                  className="h-2 w-full overflow-hidden rounded-full bg-slate-100"
-                  role="progressbar"
+                <Progress
+                  percent={progress}
+                  showInfo={false}
+                  size="small"
                   aria-label="Upload progress"
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-valuenow={progress}
-                >
-                  <div className="h-full bg-teal-600 transition-all" style={{ width: `${progress}%` }} />
-                </div>
-                <p className="mt-1 text-xs text-slate-500">{progress < 100 ? `Uploading ${progress}%` : 'Saving...'}</p>
+                />
+                <p className="mt-1 text-xs text-ink-soft">{progress < 100 ? `Uploading ${progress}%` : 'Saving...'}</p>
               </div>
             )}
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" loading={busy} onClick={handleUpload}>
+              <Button size="sm" variant="secondary" loading={busy} onClick={handleUpload}>
                 {submitLabel}
               </Button>
               <Button size="sm" variant="secondary" disabled={busy} onClick={reset}>
@@ -199,7 +190,7 @@ export function ImageUrlInput({ onSubmit, renderExtra, submitLabel = 'Add image'
         disabled={busy}
       />
       {renderExtra?.(busy)}
-      <Button size="sm" loading={busy} onClick={submit}>
+      <Button size="sm" variant="secondary" loading={busy} onClick={submit}>
         {submitLabel}
       </Button>
     </div>

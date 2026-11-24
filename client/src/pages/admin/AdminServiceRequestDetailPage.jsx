@@ -3,12 +3,16 @@ import {
   getAdminServiceBooking,
   updateAdminServiceBookingStatus,
 } from '../../api/adminServiceBookings.api.js';
-import AdminDetailLayout, { AdminActionsCard, AdminGuestCard } from '../../components/admin/AdminDetailLayout.jsx';
+import AdminDetailLayout, {
+  AdminFact,
+  AdminFacts,
+  AdminGuestSection,
+  AdminPriceSection,
+  AdminSection,
+} from '../../components/admin/AdminDetailLayout.jsx';
 import AdminSubNav from '../../components/admin/AdminSubNav.jsx';
 import DetailLoader from '../../components/ui/DetailLoader.jsx';
 import AdminStatusActions from '../../components/admin/AdminStatusActions.jsx';
-import Card from '../../components/ui/Card.jsx';
-import DetailRow from '../../components/ui/DetailRow.jsx';
 import { SERVICE_SECTION_NAV } from '../../config/adminCatalog.js';
 import { getActions, SERVICE_REQUEST_ADMIN_ACTIONS } from '../../config/adminRequests.js';
 import { SERVICE_REQUEST_STEPS } from '../../config/statuses.js';
@@ -37,64 +41,56 @@ function ServiceRequestDetails({ initialRequest }) {
       steps={SERVICE_REQUEST_STEPS}
       progressLabel="Request progress"
       cancelledMessage="This service request was cancelled."
+      actions={
+        actions.length > 0 && (
+          <AdminStatusActions
+            actions={actions}
+            update={(action) => updateAdminServiceBookingStatus(request.id, action.status)}
+            getDisabledReason={getConfirmDisabledReason(request)}
+            itemLabel={label}
+            {...actionProps}
+          />
+        )
+      }
+      actionsEmptyText="No more actions for this request."
       main={
         <>
-          <Card>
-            <p className="text-xs font-semibold uppercase tracking-wide text-teal-700">
-              {getCategoryLabel(service.category)}
-            </p>
-            <h2 className="mt-1 text-xl font-semibold text-slate-900">{service.name}</h2>
-            <dl className="mt-4 divide-y divide-slate-100 border-t border-slate-100 text-sm">
-              <DetailRow label="Scheduled for">{formatDate(request.scheduled_at, { withTime: true })}</DetailRow>
-              <DetailRow label="Quantity">{formatQuantity(request.quantity, service.category)}</DetailRow>
-              <DetailRow label="Note">
+          <AdminSection title={service.name} subtitle={getCategoryLabel(service.category)}>
+            <AdminFacts>
+              <AdminFact label="Scheduled for">{formatDate(request.scheduled_at, { withTime: true })}</AdminFact>
+              <AdminFact label="Quantity">{formatQuantity(request.quantity, service.category)}</AdminFact>
+              <AdminFact label="Note">
                 <span className="whitespace-pre-line">{request.note || '-'}</span>
-              </DetailRow>
-            </dl>
-          </Card>
-          <Card>
-            <h2 className="text-lg font-semibold text-slate-900">Room booking</h2>
-            <dl className="mt-2 divide-y divide-slate-100 text-sm">
-              <DetailRow label="Room">{booking?.room?.room_number ? `Room ${booking.room.room_number}` : '-'}</DetailRow>
-              <DetailRow label="Booking">
+              </AdminFact>
+            </AdminFacts>
+          </AdminSection>
+          <AdminSection title="Room booking">
+            <AdminFacts>
+              <AdminFact label="Room">{booking?.room?.room_number ? `Room ${booking.room.room_number}` : '-'}</AdminFact>
+              <AdminFact label="Booking">
                 {booking ? (
-                  <Link to={`/admin/bookings/${booking.id}`} className="text-teal-700 hover:text-teal-800">
+                  <Link to={`/admin/bookings/${booking.id}`} className="text-sea hover:text-sea-hover hover:underline">
                     Booking #{booking.id}
                   </Link>
                 ) : (
                   '-'
                 )}
-              </DetailRow>
-            </dl>
-          </Card>
+              </AdminFact>
+            </AdminFacts>
+          </AdminSection>
         </>
       }
       side={
         <>
-          <AdminGuestCard user={request.user} />
-          <Card>
-            <h2 className="text-lg font-semibold text-slate-900">Price</h2>
-            <dl className="mt-2 divide-y divide-slate-100 text-sm">
-              <DetailRow label="Unit price">{formatCurrency(request.unit_price)}</DetailRow>
-              <DetailRow label="Quantity">{formatQuantity(request.quantity, service.category)}</DetailRow>
-              <div className="flex items-start justify-between gap-4 py-2.5">
-                <dt className="font-semibold text-slate-900">Total</dt>
-                <dd className="text-right text-lg font-bold text-teal-700">{formatCurrency(request.total_price)}</dd>
-              </div>
-            </dl>
-          </Card>
+          <AdminGuestSection user={request.user} />
+          <AdminPriceSection
+            rows={[
+              { label: 'Unit price', value: formatCurrency(request.unit_price) },
+              { label: 'Quantity', value: formatQuantity(request.quantity, service.category) },
+            ]}
+            total={request.total_price}
+          />
           <PaymentInfoCard order={request} />
-          <AdminActionsCard emptyText="No more actions for this request.">
-            {actions.length > 0 && (
-              <AdminStatusActions
-                actions={actions}
-                update={(action) => updateAdminServiceBookingStatus(request.id, action.status)}
-                getDisabledReason={getConfirmDisabledReason(request)}
-                itemLabel={label}
-                {...actionProps}
-              />
-            )}
-          </AdminActionsCard>
         </>
       }
     />

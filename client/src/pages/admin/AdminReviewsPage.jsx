@@ -1,13 +1,12 @@
-import { Link } from 'react-router-dom';
 import { getAdminReviews } from '../../api/adminReviews.api.js';
 import { getFeedbackStats } from '../../api/adminStats.api.js';
-import EmptyState from '../../components/ui/EmptyState.jsx';
-import LoadError from '../../components/ui/LoadError.jsx';
+import { CellLink, EmptyCell, GuestCell, TitleCell } from '../../components/admin/AdminCells.jsx';
+import AdminListPanel, { AdminListBody } from '../../components/admin/AdminListPanel.jsx';
+import AdminPageHeader from '../../components/admin/AdminPageHeader.jsx';
+import AdminRequestTable from '../../components/admin/AdminRequestTable.jsx';
 import FilterTabs from '../../components/ui/FilterTabs.jsx';
-import Pagination from '../../components/ui/Pagination.jsx';
 import RatingStars from '../../components/ui/RatingStars.jsx';
 import Select from '../../components/ui/Select.jsx';
-import { PageSpinner } from '../../components/ui/Spinner.jsx';
 import {
   ADMIN_REVIEWS_NOTE,
   ADMIN_REVIEWS_PAGE_SIZE,
@@ -21,8 +20,6 @@ import useUrlFilters from '../../hooks/useUrlFilters.js';
 import formatDate from '../../utils/formatDate.js';
 import { toQueryString } from '../../utils/queryString.js';
 
-const LINK = 'font-medium text-teal-700 hover:text-teal-800';
-
 // Dòng tóm tắt từ GET /admin/stats/feedback (cùng API với Dashboard). Lỗi thì không hiện gì,
 // vì danh sách bên dưới vẫn dùng được.
 function FeedbackLine() {
@@ -30,7 +27,7 @@ function FeedbackLine() {
   if (!stats.data) return null;
   const { average_rating: average, review_count: count } = stats.data;
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-2 text-sm text-slate-600">
+    <div className="mb-4 flex flex-wrap items-center gap-2 text-sm text-ink-soft">
       {count > 0 ? (
         <>
           <RatingStars rating={average} />
@@ -45,64 +42,65 @@ function FeedbackLine() {
   );
 }
 
-// Một đánh giá. Đánh giá 1-2 sao có viền trái màu hổ phách và nhãn "Low rating" để lễ tân liên hệ lại.
-function ReviewCard({ review }) {
-  const type = getReviewType(review.target?.type);
-  const low = review.rating <= LOW_RATING_MAX;
-  const { reviewer, target } = review;
-
-  return (
-    <li
-      className={`rounded-2xl border bg-white p-4 shadow-sm ${
-        low ? 'border-amber-200 border-l-4 border-l-amber-400 bg-amber-50/40' : 'border-slate-200'
-      }`}
-    >
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <RatingStars rating={review.rating} showValue={false} />
-          {low && (
-            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-900">Low rating</span>
-          )}
-        </div>
-        <span className="text-xs text-slate-500">{formatDate(review.created_at, { withTime: true })}</span>
-      </div>
-
-      {review.comment ? (
-        <p className="mt-3 text-sm whitespace-pre-line wrap-anywhere text-slate-800">{review.comment}</p>
+// Cột đầu dẫn tới đơn được đánh giá. Đánh giá 1-2 sao có nhãn "Low rating" để lễ tân liên hệ lại.
+const COLUMNS = [
+  {
+    key: 'target',
+    header: 'Reviewed item',
+    render: ({ target }) => {
+      const type = getReviewType(target?.type);
+      const name = target?.name || (target?.id ? `#${target.id}` : '-');
+      return (
+        <TitleCell
+          title={type && target?.id ? <CellLink to={type.adminPath(target.id)}>{name}</CellLink> : name}
+          detail={type?.label ?? 'Reviewed item'}
+        />
+      );
+    },
+  },
+  {
+    key: 'rating',
+    header: 'Rating',
+    badges: true,
+    render: (review) => (
+      <span className="inline-flex items-center gap-2">
+        <RatingStars rating={review.rating} showValue={false} />
+        {review.rating <= LOW_RATING_MAX && (
+          <span className="rounded-sm bg-warning-tint px-2 py-0.5 text-xs font-semibold text-warning-deep">
+            Low rating
+          </span>
+        )}
+      </span>
+    ),
+  },
+  {
+    key: 'comment',
+    header: 'Comment',
+    wide: true,
+    free: true,
+    render: (review) =>
+      review.comment ? (
+        <p className="whitespace-pre-line wrap-anywhere text-ink lg:w-80">{review.comment}</p>
       ) : (
-        <p className="mt-3 text-sm text-slate-400 italic">No comment</p>
-      )}
-
-      <dl className="mt-3 grid gap-x-4 gap-y-2 border-t border-slate-100 pt-3 text-sm sm:grid-cols-2">
-        <div className="min-w-0">
-          <dt className="text-xs font-medium text-slate-500">{type?.label ?? 'Reviewed item'}</dt>
-          <dd className="break-words">
-            {type && target?.id ? (
-              <Link to={type.adminPath(target.id)} className={LINK}>
-                {target.name || `#${target.id}`}
-              </Link>
-            ) : (
-              (target?.name ?? '-')
-            )}
-          </dd>
-        </div>
-        <div className="min-w-0">
-          <dt className="text-xs font-medium text-slate-500">Guest</dt>
-          <dd className="break-words">
-            {reviewer?.id ? (
-              <Link to={`/admin/users/${reviewer.id}`} className={LINK}>
-                {reviewer.full_name}
-              </Link>
-            ) : (
-              (reviewer?.full_name ?? '-')
-            )}
-            {reviewer?.email && <span className="block text-xs break-all text-slate-500">{reviewer.email}</span>}
-          </dd>
-        </div>
-      </dl>
-    </li>
-  );
-}
+        <EmptyCell>No comment</EmptyCell>
+      ),
+  },
+  {
+    key: 'guest',
+    header: 'Guest',
+    wide: true,
+    render: ({ reviewer }) => (
+      <GuestCell user={reviewer} to={reviewer?.id ? `/admin/users/${reviewer.id}` : undefined} />
+    ),
+  },
+  {
+    key: 'date',
+    header: 'Posted',
+    render: (review) => (
+      <span className="whitespace-nowrap">{formatDate(review.created_at, { withTime: true })}</span>
+    ),
+  },
+];
 
 // /admin/reviews: mọi đánh giá của khách, chỉ đọc. Số sao, loại và trang nằm trên địa chỉ trang.
 export default function AdminReviewsPage() {
@@ -118,61 +116,48 @@ export default function AdminReviewsPage() {
     ['admin-reviews', rating, type, page],
   );
 
-  const renderList = () => {
-    if (list.loading) return <PageSpinner />;
-    if (list.error) {
-      return <LoadError error={list.error} onRetry={list.retry} />;
-    }
-    if (list.data.items.length === 0) {
-      const filtered = rating || type;
-      return (
-        <EmptyState
-          title={filtered ? 'No reviews match these filters' : 'No reviews yet'}
-          message={filtered ? 'Try another rating or type.' : 'Guest reviews appear here after they are posted.'}
-        />
-      );
-    }
-    return (
-      <>
-        <ul className="space-y-4" aria-label="Reviews">
-          {list.data.items.map((review) => (
-            <ReviewCard key={review.id} review={review} />
-          ))}
-        </ul>
-        <Pagination
-          className="mt-8"
-          page={page}
-          limit={ADMIN_REVIEWS_PAGE_SIZE}
-          total={list.data.pagination?.total ?? 0}
-          onPageChange={goToPage}
-        />
-      </>
-    );
-  };
+  const filtered = rating || type;
 
   return (
-    <div className="mx-auto max-w-4xl">
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Reviews</h1>
-      <p className="mt-1.5 text-slate-600">Guest reviews, newest first.</p>
-      <p className="mt-1 mb-4 text-sm text-slate-500">{ADMIN_REVIEWS_NOTE}</p>
+    <>
+      <AdminPageHeader title="Reviews" subtitle={`Guest reviews, newest first. ${ADMIN_REVIEWS_NOTE}`} />
       <FeedbackLine />
-      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <FilterTabs
-          label="Filter by rating"
-          className="min-w-0 lg:mx-0 lg:px-0"
-          tabs={REVIEW_RATING_TABS}
-          active={rating}
-          getLink={(value) => `/admin/reviews${toQueryString({ type, rating: value })}`}
-        />
-        <Select
-          label="Type"
-          className="sm:w-56"
-          value={type}
-          onChange={(event) => updateUrl({ type: event.target.value, page: '' })}
-          options={REVIEW_TYPE_OPTIONS}
-        />
-      </div>
-      {renderList()}
-    </div>
+      <AdminListPanel
+        tabs={
+          <FilterTabs
+            label="Filter by rating"
+            tabs={REVIEW_RATING_TABS}
+            active={rating}
+            getLink={(value) => `/admin/reviews${toQueryString({ type, rating: value })}`}
+          />
+        }
+        toolbar={
+          <Select
+            label="Type"
+            className="sm:w-56"
+            value={type}
+            onChange={(event) => updateUrl({ type: event.target.value, page: '' })}
+            options={REVIEW_TYPE_OPTIONS}
+          />
+        }
+      >
+        <AdminListBody
+          list={list}
+          items={list.data?.items ?? []}
+          empty={{
+            title: filtered ? 'No reviews match these filters' : 'No reviews yet',
+            message: filtered ? 'Try another rating or type.' : 'Guest reviews appear here after they are posted.',
+          }}
+          pagination={{
+            page,
+            limit: ADMIN_REVIEWS_PAGE_SIZE,
+            total: list.data?.pagination?.total ?? 0,
+            onPageChange: goToPage,
+          }}
+        >
+          <AdminRequestTable caption="Reviews" items={list.data?.items ?? []} columns={COLUMNS} />
+        </AdminListBody>
+      </AdminListPanel>
+    </>
   );
 }

@@ -11,6 +11,7 @@ const CATALOG = {
   fields: TOUR_FIELDS,
   flag: 'is_active',
   flagLabels: { on: 'Active', off: 'Inactive' },
+  flagStatuses: { on: 'active', off: 'inactive' },
   flagHint: 'Guests can see and book this tour. Switch it off to hide it.',
   api: adminToursApi,
 };
@@ -27,7 +28,7 @@ const COLUMNS = [
   {
     key: 'tour',
     header: 'Tour',
-    render: (tour) => <CatalogItemCell item={tour} status={tour.is_active ? 'active' : 'inactive'} />,
+    render: (tour) => <CatalogItemCell item={tour} />,
   },
   { key: 'location', header: 'Location', render: (tour) => tour.location },
   { key: 'duration', header: 'Duration', render: (tour) => tour.duration },

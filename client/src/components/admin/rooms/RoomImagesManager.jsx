@@ -3,8 +3,8 @@ import { deleteAdminRoomImage, setAdminRoomImagePrimary } from '../../../api/adm
 import RoomImage from '../../rooms/RoomImage.jsx';
 import Alert from '../../ui/Alert.jsx';
 import Button from '../../ui/Button.jsx';
-import Card from '../../ui/Card.jsx';
 import ConfirmDialog from '../../ui/ConfirmDialog.jsx';
+import { AdminSection } from '../AdminDetailLayout.jsx';
 import RoomImageUploader from './RoomImageUploader.jsx';
 
 // Ảnh của một phòng: lưới ảnh (ảnh chính đứng đầu, có nhãn "Primary"), đặt ảnh chính, xóa ảnh,
@@ -55,36 +55,30 @@ export default function RoomImagesManager({ room, onChanged }) {
   const position = (image) => images.findIndex((item) => item.id === image.id) + 1;
 
   return (
-    <Card>
-      <h2 className="text-lg font-semibold text-slate-900">Images</h2>
-      <p className="mt-1 text-sm text-slate-500">
-        The primary image is shown first on the room list and the room page.
-      </p>
-      <div className="mt-3 empty:hidden" aria-live="polite">
+    <AdminSection title="Images" subtitle="The primary image is shown first on the room list and the room page.">
+      <div className="mb-3 empty:hidden" aria-live="polite">
         <Alert type={message.type}>{message.text}</Alert>
       </div>
 
       {images.length === 0 ? (
-        <p className="mt-4 rounded-lg bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
-          This room has no images yet. Guests see a grey placeholder.
-        </p>
+        <p className="text-sm text-ink-soft">This room has no images yet. Guests see a drawing instead.</p>
       ) : (
-        <ul className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-label={`Images of room ${room.room_number}`}>
+        <ul className="grid gap-x-5 gap-y-6 sm:grid-cols-2" aria-label={`Images of room ${room.room_number}`}>
           {images.map((image, index) => (
-            <li key={image.id} className="overflow-hidden rounded-xl border border-slate-200">
+            <li key={image.id}>
               <div className="relative">
                 <RoomImage
                   src={image.image_url}
                   alt={`Room ${room.room_number}, image ${index + 1}`}
-                  className="aspect-[4/3] w-full"
+                  className="aspect-[4/3] w-full rounded-panel"
                 />
                 {image.is_primary && (
-                  <span className="absolute top-2 left-2 rounded-full bg-teal-700 px-2.5 py-0.5 text-xs font-semibold text-white">
+                  <span className="absolute top-2 left-2 rounded-sm bg-white px-2 py-0.5 text-xs font-semibold text-ink">
                     Primary
                   </span>
                 )}
               </div>
-              <div className="flex flex-wrap gap-2 p-3">
+              <div className="mt-2 flex flex-wrap gap-2">
                 {!image.is_primary && (
                   <Button
                     size="sm"
@@ -99,7 +93,8 @@ export default function RoomImagesManager({ room, onChanged }) {
                 )}
                 <Button
                   size="sm"
-                  variant="danger"
+                  variant="secondary"
+                  danger
                   disabled={busyId !== null}
                   aria-label={`Delete image ${index + 1} of room ${room.room_number}`}
                   onClick={() => setDeleting(image)}
@@ -131,6 +126,6 @@ export default function RoomImagesManager({ room, onChanged }) {
         onConfirm={handleDelete}
         onClose={() => setDeleting(null)}
       />
-    </Card>
+    </AdminSection>
   );
 }

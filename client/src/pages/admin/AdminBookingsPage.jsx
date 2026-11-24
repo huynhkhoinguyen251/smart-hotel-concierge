@@ -1,16 +1,13 @@
 import { useState } from 'react';
 import { getAdminBookings } from '../../api/adminBookings.api.js';
 import AdminBookingList from '../../components/admin/AdminBookingList.jsx';
+import AdminListPanel, { AdminListBody } from '../../components/admin/AdminListPanel.jsx';
+import AdminPageHeader from '../../components/admin/AdminPageHeader.jsx';
 import UserFilterChip from '../../components/admin/UserFilterChip.jsx';
 import Alert from '../../components/ui/Alert.jsx';
 import Button from '../../components/ui/Button.jsx';
-import EmptyState from '../../components/ui/EmptyState.jsx';
-import LoadError from '../../components/ui/LoadError.jsx';
 import FilterTabs from '../../components/ui/FilterTabs.jsx';
 import Input from '../../components/ui/Input.jsx';
-import PageTitle from '../../components/ui/PageTitle.jsx';
-import Pagination from '../../components/ui/Pagination.jsx';
-import { PageSpinner } from '../../components/ui/Spinner.jsx';
 import { ADMIN_BOOKINGS_PAGE_SIZE } from '../../config/adminBookings.js';
 import { BOOKING_STATUS_TABS } from '../../config/statuses.js';
 import useFetch from '../../hooks/useFetch.js';
@@ -45,34 +42,36 @@ function DateFilter({ from, to, onApply, onReset }) {
       onSubmit={handleSubmit}
       noValidate
       aria-label="Filter by check-in date"
-      className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+      className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-end"
     >
-      <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-        <Input
-          label="Check-in from"
-          type="date"
-          name="check_in_from"
-          value={values.from}
-          max={values.to || undefined}
-          onChange={(event) => setValues((current) => ({ ...current, from: event.target.value }))}
-        />
-        <Input
-          label="Check-in to"
-          type="date"
-          name="check_in_to"
-          value={values.to}
-          min={values.from || undefined}
-          onChange={(event) => setValues((current) => ({ ...current, to: event.target.value }))}
-        />
-        <div className="flex gap-2">
-          <Button type="submit">Apply</Button>
-          <Button variant="secondary" onClick={onReset}>
-            Reset
-          </Button>
-        </div>
+      <Input
+        label="Check-in from"
+        type="date"
+        name="check_in_from"
+        value={values.from}
+        max={values.to || undefined}
+        onChange={(event) => setValues((current) => ({ ...current, from: event.target.value }))}
+        className="sm:w-44"
+      />
+      <Input
+        label="Check-in to"
+        type="date"
+        name="check_in_to"
+        value={values.to}
+        min={values.from || undefined}
+        onChange={(event) => setValues((current) => ({ ...current, to: event.target.value }))}
+        className="sm:w-44"
+      />
+      <div className="flex gap-2">
+        <Button type="submit" variant="secondary">
+          Apply
+        </Button>
+        <Button variant="secondary" onClick={onReset}>
+          Reset
+        </Button>
       </div>
       {error && (
-        <p className="mt-2 text-sm text-red-600" role="alert">
+        <p className="w-full text-sm text-danger" role="alert">
           {error}
         </p>
       )}
@@ -114,61 +113,58 @@ export default function AdminBookingsPage() {
     onError: (text) => setMessage({ type: 'error', text }),
   };
 
-  const renderList = () => {
-    if (list.loading) return <PageSpinner />;
-    if (list.error) {
-      return <LoadError error={list.error} onRetry={list.retry} />;
-    }
-    if (list.data.bookings.length === 0) {
-      const filtered = status || from || to || userId;
-      return (
-        <EmptyState
-          title={filtered ? 'No bookings match these filters' : 'No bookings yet'}
-          message={filtered ? 'Try another status or date range.' : 'Bookings appear here when guests book a room.'}
-        />
-      );
-    }
-    return (
-      <>
-        <AdminBookingList bookings={list.data.bookings} actionProps={actionProps} />
-        <Pagination
-          className="mt-8"
-          page={page}
-          limit={ADMIN_BOOKINGS_PAGE_SIZE}
-          total={list.data.pagination?.total ?? 0}
-          onPageChange={goToPage}
-        />
-      </>
-    );
-  };
+  const filtered = status || from || to || userId;
 
   return (
-    <div className="mx-auto max-w-6xl">
-      <PageTitle title="Bookings" subtitle="All room bookings, newest first." />
-      <FilterTabs
-        label="Filter by status"
-        className="mb-4"
-        tabs={BOOKING_STATUS_TABS}
-        active={status}
-        getLink={(value) =>
-          `/admin/bookings${toQueryString({ status: value, check_in_from: from, check_in_to: to, user_id: userId })}`
-        }
-      />
-      <DateFilter
-        key={`${from}|${to}`}
-        from={from}
-        to={to}
-        onApply={(values) => updateUrl({ check_in_from: values.from, check_in_to: values.to, page: '' })}
-        onReset={() => setSearchParams(cleanParams({ status, user_id: userId }))}
-      />
-      <UserFilterChip
-        userId={userId}
-        clearTo={`/admin/bookings${toQueryString({ status, check_in_from: from, check_in_to: to })}`}
-      />
+    <>
+      <AdminPageHeader title="Bookings" subtitle="All room bookings, newest first." />
       <div className="mb-4 empty:hidden" aria-live="polite">
         <Alert type={message.type}>{message.text}</Alert>
       </div>
-      {renderList()}
-    </div>
+      <AdminListPanel
+        tabs={
+          <FilterTabs
+            label="Filter by status"
+            tabs={BOOKING_STATUS_TABS}
+            active={status}
+            getLink={(value) =>
+              `/admin/bookings${toQueryString({ status: value, check_in_from: from, check_in_to: to, user_id: userId })}`
+            }
+          />
+        }
+        toolbar={
+          <>
+            <DateFilter
+              key={`${from}|${to}`}
+              from={from}
+              to={to}
+              onApply={(dates) => updateUrl({ check_in_from: dates.from, check_in_to: dates.to, page: '' })}
+              onReset={() => setSearchParams(cleanParams({ status, user_id: userId }))}
+            />
+            <UserFilterChip
+              userId={userId}
+              clearTo={`/admin/bookings${toQueryString({ status, check_in_from: from, check_in_to: to })}`}
+            />
+          </>
+        }
+      >
+        <AdminListBody
+          list={list}
+          items={list.data?.bookings ?? []}
+          empty={{
+            title: filtered ? 'No bookings match these filters' : 'No bookings yet',
+            message: filtered ? 'Try another status or date range.' : 'Bookings appear here when guests book a room.',
+          }}
+          pagination={{
+            page,
+            limit: ADMIN_BOOKINGS_PAGE_SIZE,
+            total: list.data?.pagination?.total ?? 0,
+            onPageChange: goToPage,
+          }}
+        >
+          <AdminBookingList bookings={list.data?.bookings ?? []} actionProps={actionProps} />
+        </AdminListBody>
+      </AdminListPanel>
+    </>
   );
 }

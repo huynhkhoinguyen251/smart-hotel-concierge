@@ -1,15 +1,14 @@
 import { useState } from 'react';
 import { deleteAdminRoomType } from '../../api/adminRoomTypes.api.js';
 import { getRoomTypes } from '../../api/catalog.api.js';
+import AdminListPanel, { AdminListBody } from '../../components/admin/AdminListPanel.jsx';
 import AdminRequestTable from '../../components/admin/AdminRequestTable.jsx';
-import { MoneyCell } from '../../components/admin/AdminCells.jsx';
+import { MoneyCell, TitleCell } from '../../components/admin/AdminCells.jsx';
+import RowActions from '../../components/admin/RowActions.jsx';
 import RoomCatalogHeader from '../../components/admin/rooms/RoomCatalogHeader.jsx';
 import Alert from '../../components/ui/Alert.jsx';
-import Button from '../../components/ui/Button.jsx';
+import ButtonLink from '../../components/ui/ButtonLink.jsx';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.jsx';
-import EmptyState from '../../components/ui/EmptyState.jsx';
-import ErrorState from '../../components/ui/ErrorState.jsx';
-import { PageSpinner } from '../../components/ui/Spinner.jsx';
 import { ROOM_TYPE_IN_USE_NOTE } from '../../config/adminCatalog.js';
 import useFetch from '../../hooks/useFetch.js';
 import useFlashMessage from '../../hooks/useFlashMessage.js';
@@ -28,13 +27,14 @@ const COLUMNS = [
   {
     key: 'name',
     header: 'Room type',
-    render: (type) => <p className="font-semibold break-words text-slate-900">{type.name}</p>,
+    render: (type, link) => <TitleCell title={type.name} link={link} />,
   },
   { key: 'price', header: 'Price per night', align: 'right', render: (type) => <MoneyCell amount={type.price_per_night} /> },
   { key: 'capacity', header: 'Capacity', render: (type) => `Up to ${type.capacity} guests` },
   {
     key: 'amenities',
     header: 'Amenities',
+    wide: true,
     render: (type) => (
       <span title={type.amenities?.map((amenity) => amenity.name).join(', ')}>{shortAmenities(type.amenities)}</span>
     ),
@@ -66,31 +66,8 @@ export default function AdminRoomTypesPage() {
     }
   };
 
-  const renderList = () => {
-    if (list.loading) return <PageSpinner />;
-    if (list.error) return <ErrorState message={list.error.message} onRetry={list.retry} />;
-    if (list.data.length === 0) {
-      return <EmptyState title="No room types yet" message="Add a room type with its price, capacity and amenities." />;
-    }
-    return (
-      <AdminRequestTable
-        caption="Room types"
-        items={list.data}
-        columns={COLUMNS}
-        viewLabel="Edit"
-        getViewPath={(type) => `/admin/rooms/types/${type.id}`}
-        getItemLabel={(type) => `room type ${type.name}`}
-        renderActions={(type) => (
-          <Button size="sm" variant="danger" aria-label={`Delete room type ${type.name}`} onClick={() => setDeleting(type)}>
-            Delete
-          </Button>
-        )}
-      />
-    );
-  };
-
   return (
-    <div className="mx-auto max-w-6xl">
+    <>
       <RoomCatalogHeader
         title="Room types"
         subtitle="Price, capacity and amenities are set per room type and shared by its rooms."
@@ -99,7 +76,41 @@ export default function AdminRoomTypesPage() {
       <div className="mb-4 empty:hidden" aria-live="polite">
         <Alert type={message.type}>{message.text}</Alert>
       </div>
-      {renderList()}
+      <AdminListPanel>
+        <AdminListBody
+          list={list}
+          items={list.data ?? []}
+          empty={{
+            title: 'No room types yet',
+            message: 'Add a room type with its price, capacity and amenities.',
+          }}
+        >
+          <AdminRequestTable
+            caption="Room types"
+            items={list.data ?? []}
+            columns={COLUMNS}
+            viewLabel="Edit"
+            getViewPath={(type) => `/admin/rooms/types/${type.id}`}
+            getItemLabel={(type) => `room type ${type.name}`}
+            renderActions={(type) => (
+              <RowActions
+                itemLabel={`room type ${type.name}`}
+                primary={
+                  <ButtonLink
+                    to={`/admin/rooms/types/${type.id}`}
+                    variant="secondary"
+                    size="sm"
+                    aria-label={`Edit room type ${type.name}`}
+                  >
+                    Edit
+                  </ButtonLink>
+                }
+                items={[{ key: 'delete', label: 'Delete', danger: true, onClick: () => setDeleting(type) }]}
+              />
+            )}
+          />
+        </AdminListBody>
+      </AdminListPanel>
       <ConfirmDialog
         open={Boolean(deleting)}
         title={deleting ? `Delete room type "${deleting.name}"?` : ''}
@@ -111,6 +122,6 @@ export default function AdminRoomTypesPage() {
         onConfirm={handleDelete}
         onClose={() => setDeleting(null)}
       />
-    </div>
+    </>
   );
 }

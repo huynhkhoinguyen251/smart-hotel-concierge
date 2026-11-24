@@ -1,10 +1,14 @@
 import { getAdminTransportBooking, updateAdminTransportBookingStatus } from '../../api/adminTourism.api.js';
-import AdminDetailLayout, { AdminActionsCard, AdminGuestCard } from '../../components/admin/AdminDetailLayout.jsx';
+import AdminDetailLayout, {
+  AdminFact,
+  AdminFacts,
+  AdminGuestSection,
+  AdminPriceSection,
+  AdminSection,
+} from '../../components/admin/AdminDetailLayout.jsx';
 import AdminSubNav from '../../components/admin/AdminSubNav.jsx';
 import DetailLoader from '../../components/ui/DetailLoader.jsx';
 import AdminStatusActions from '../../components/admin/AdminStatusActions.jsx';
-import Card from '../../components/ui/Card.jsx';
-import DetailRow from '../../components/ui/DetailRow.jsx';
 import { TOURISM_SECTION_NAV } from '../../config/adminCatalog.js';
 import { getActions, PLATE_REQUIRED_CATEGORIES, TRANSPORT_BOOKING_ADMIN_ACTIONS } from '../../config/adminRequests.js';
 import { SERVICE_REQUEST_STEPS } from '../../config/statuses.js';
@@ -48,63 +52,57 @@ function TransportDetails({ initialBooking }) {
       steps={SERVICE_REQUEST_STEPS}
       progressLabel="Request progress"
       cancelledMessage="This transport request was cancelled."
+      actions={
+        actions.length > 0 && (
+          <AdminStatusActions
+            actions={actions}
+            update={(action, plate) => updateAdminTransportBookingStatus(booking.id, action.status, plate)}
+            getDisabledReason={getConfirmDisabledReason(booking)}
+            getExtraField={getPlateField(service.category)}
+            itemLabel={`transport request #${booking.id}`}
+            {...actionProps}
+          />
+        )
+      }
+      actionsEmptyText="No more actions for this request."
       main={
-        <Card>
-          <p className="text-xs font-semibold uppercase tracking-wide text-teal-700">
-            {getTransportLabel(service.category)}
-          </p>
-          <h2 className="mt-1 text-xl font-semibold break-words text-slate-900">{service.name}</h2>
-          <dl className="mt-4 divide-y divide-slate-100 border-t border-slate-100 text-sm">
-            {booking.flight_number && <DetailRow label="Flight number">{booking.flight_number}</DetailRow>}
-            <DetailRow label={fields.start}>{formatDate(booking.start_at, { withTime: true })}</DetailRow>
+        <AdminSection title={service.name} subtitle={getTransportLabel(service.category)}>
+          <AdminFacts>
+            {booking.flight_number && <AdminFact label="Flight number">{booking.flight_number}</AdminFact>}
+            <AdminFact label={fields.start}>{formatDate(booking.start_at, { withTime: true })}</AdminFact>
             {booking.end_at && (
-              <DetailRow label={fields.end ?? 'End time'}>{formatDate(booking.end_at, { withTime: true })}</DetailRow>
+              <AdminFact label={fields.end ?? 'End time'}>{formatDate(booking.end_at, { withTime: true })}</AdminFact>
             )}
-            {isMotorbike && <DetailRow label="Rental days">{rentalDays ? formatDays(rentalDays) : '-'}</DetailRow>}
-            {quantityText && <DetailRow label={category.quantity.label}>{quantityText}</DetailRow>}
-            <DetailRow label={fields.pickup}>{booking.pickup_location}</DetailRow>
-            <DetailRow label={fields.dropoff}>{booking.dropoff_location}</DetailRow>
-            <DetailRow label="Licence plate">
+            {isMotorbike && <AdminFact label="Rental days">{rentalDays ? formatDays(rentalDays) : '-'}</AdminFact>}
+            {quantityText && <AdminFact label={category.quantity.label}>{quantityText}</AdminFact>}
+            <AdminFact label={fields.pickup}>{booking.pickup_location}</AdminFact>
+            <AdminFact label={fields.dropoff}>{booking.dropoff_location}</AdminFact>
+            <AdminFact label="Licence plate">
               {booking.vehicle_plate ||
                 (plateRequired && booking.status === 'pending' ? 'Entered when you confirm' : '-')}
-            </DetailRow>
-            <DetailRow label="Note">
+            </AdminFact>
+            <AdminFact label="Note">
               <span className="whitespace-pre-line">{booking.note || '-'}</span>
-            </DetailRow>
-          </dl>
-        </Card>
+            </AdminFact>
+          </AdminFacts>
+        </AdminSection>
       }
       side={
         <>
-          <AdminGuestCard user={booking.user} />
-          <Card>
-            <h2 className="text-lg font-semibold text-slate-900">Price</h2>
-            <dl className="mt-2 divide-y divide-slate-100 text-sm">
-              <DetailRow label="Unit price">
-                {formatCurrency(booking.unit_price)} {category?.priceUnit ?? ''}
-              </DetailRow>
-              <DetailRow label={isMotorbike ? 'Rental days' : 'Quantity'}>
-                {isMotorbike ? formatDays(rentalDays) : quantityText || booking.quantity}
-              </DetailRow>
-              <div className="flex items-start justify-between gap-4 py-2.5">
-                <dt className="font-semibold text-slate-900">Total</dt>
-                <dd className="text-right text-lg font-bold text-teal-700">{formatCurrency(booking.total_price)}</dd>
-              </div>
-            </dl>
-          </Card>
+          <AdminGuestSection user={booking.user} />
+          <AdminPriceSection
+            rows={[
+              {
+                label: 'Unit price',
+                value: `${formatCurrency(booking.unit_price)} ${category?.priceUnit ?? ''}`.trim(),
+              },
+              isMotorbike
+                ? { label: 'Rental days', value: formatDays(rentalDays) }
+                : { label: 'Quantity', value: quantityText || booking.quantity },
+            ]}
+            total={booking.total_price}
+          />
           <PaymentInfoCard order={booking} />
-          <AdminActionsCard emptyText="No more actions for this request.">
-            {actions.length > 0 && (
-              <AdminStatusActions
-                actions={actions}
-                update={(action, plate) => updateAdminTransportBookingStatus(booking.id, action.status, plate)}
-                getDisabledReason={getConfirmDisabledReason(booking)}
-                getExtraField={getPlateField(service.category)}
-                itemLabel={`transport request #${booking.id}`}
-                {...actionProps}
-              />
-            )}
-          </AdminActionsCard>
         </>
       }
     />

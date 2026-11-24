@@ -52,10 +52,10 @@ export const REVIEW_CREATED_MESSAGE = 'Thank you! Your review has been posted.';
 export const REVIEW_DUPLICATE_MESSAGE = 'You have already reviewed this.';
 
 // ---- Trang đánh giá của admin ----
-// Tab số sao: All, 5★ ... 1★ (giá trị là chuỗi trên địa chỉ trang).
+// Tab số sao: All, 5 stars ... 1 star (giá trị là chuỗi trên địa chỉ trang).
 export const REVIEW_RATING_TABS = [
   { value: '', label: 'All' },
-  ...[5, 4, 3, 2, 1].map((rating) => ({ value: String(rating), label: `${rating}★` })),
+  ...[5, 4, 3, 2, 1].map((rating) => ({ value: String(rating), label: `${rating} ${rating === 1 ? 'star' : 'stars'}` })),
 ];
 export const REVIEW_TYPE_OPTIONS = [
   { value: '', label: 'All types' },

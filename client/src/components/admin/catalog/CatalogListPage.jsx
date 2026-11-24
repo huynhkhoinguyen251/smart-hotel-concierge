@@ -6,24 +6,34 @@ import { toCatalogPayload } from '../../../utils/catalogValidation.js';
 import Alert from '../../ui/Alert.jsx';
 import Button from '../../ui/Button.jsx';
 import ConfirmDialog from '../../ui/ConfirmDialog.jsx';
-import EmptyState from '../../ui/EmptyState.jsx';
-import LoadError from '../../ui/LoadError.jsx';
-import Pagination from '../../ui/Pagination.jsx';
 import Select from '../../ui/Select.jsx';
-import { PageSpinner } from '../../ui/Spinner.jsx';
+import StatusBadge from '../../ui/StatusBadge.jsx';
+import AdminListPanel, { AdminListBody } from '../AdminListPanel.jsx';
+import AdminPageHeader from '../AdminPageHeader.jsx';
 import AdminRequestTable from '../AdminRequestTable.jsx';
+import RowActions from '../RowActions.jsx';
 import SearchBox from '../SearchBox.jsx';
 import CatalogItemFormModal from './CatalogItemFormModal.jsx';
 
-// Khung trang danh mục của admin (dịch vụ, món ăn, tour): tiêu đề, tab phụ, ô lọc trên địa chỉ trang,
-// nút "Add ...", danh sách (bảng từ xl, thẻ khi nhỏ hơn), phân trang và thông báo.
-// Mỗi dòng: Edit (mở hộp thoại form), bật/tắt nhanh, Delete. Sau mỗi thay đổi tải lại danh sách.
-// - catalog: { noun, nounPlural, fields, flag, flagLabels: { on, off }, flagHint, api: { list, create, update, remove } }
+// Khung trang danh mục của admin (dịch vụ, món ăn, tour): tiêu đề, thanh chuyển mục, ô lọc trên địa chỉ trang,
+// nút "Add ...", danh sách, phân trang và thông báo.
+// Mỗi dòng: Edit (mở hộp thoại form); bật/tắt và Delete nằm trong "More". Sau mỗi thay đổi tải lại danh sách.
+// - catalog: { noun, nounPlural, fields, flag, flagLabels: { on, off }, flagStatuses: { on, off }, flagHint, api: { list, create, update, remove } }
 // - filters: [{ name, label, options: [{ value, label }] }], value '' = tất cả.
 // - search: { name, label, placeholder, maxLength } tùy chọn (ô chữ + nút Search).
 // - columns: cột của AdminRequestTable; cột đầu là tiêu đề của thẻ.
 export default function CatalogListPage({ title, subtitle, subNav, note, catalog, filters = [], search, columns }) {
-  const { flag, flagLabels } = catalog;
+  const { flag, flagLabels, flagStatuses } = catalog;
+  // Cột trạng thái bật/tắt luôn nằm sau các cột riêng của từng danh mục.
+  const allColumns = [
+    ...columns,
+    {
+      key: 'flag',
+      header: 'Status',
+      badges: true,
+      render: (item) => <StatusBadge status={item[flag] ? flagStatuses.on : flagStatuses.off} />,
+    },
+  ];
 
   // Ô lọc bật/tắt luôn có, sau các ô lọc riêng của từng danh mục.
   const allFilters = [
@@ -94,112 +104,106 @@ export default function CatalogListPage({ title, subtitle, subNav, note, catalog
     }
   };
 
+  const rowBusy = busyId !== null;
+
   const renderActions = (item) => {
     const on = Boolean(item[flag]);
-    const rowBusy = busyId !== null;
     return (
-      <>
-        <Button size="sm" variant="secondary" aria-label={`Edit ${item.name}`} disabled={rowBusy} onClick={() => setEditing({ open: true, item })}>
-          Edit
-        </Button>
-        <Button
-          size="sm"
-          variant="secondary"
-          aria-label={`${on ? 'Switch off' : 'Switch on'} ${item.name}`}
-          loading={busyId === item.id && !deleting && !switchingOff}
-          disabled={rowBusy}
-          onClick={() => (on ? setSwitchingOff(item) : setFlag(item, true))}
-        >
-          {on ? 'Switch off' : 'Switch on'}
-        </Button>
-        <Button size="sm" variant="danger" aria-label={`Delete ${item.name}`} disabled={rowBusy} onClick={() => setDeleting(item)}>
-          Delete
-        </Button>
-      </>
-    );
-  };
-
-  const renderList = () => {
-    if (list.loading) return <PageSpinner />;
-    if (list.error) {
-      return <LoadError error={list.error} onRetry={list.retry} />;
-    }
-    if (list.data.items.length === 0) {
-      const filtered = Object.values(values).some(Boolean);
-      return (
-        <EmptyState
-          title={filtered ? `No ${catalog.nounPlural} match these filters` : `No ${catalog.nounPlural} yet`}
-          message={filtered ? 'Try another filter.' : `Add the first ${catalog.noun}.`}
-        />
-      );
-    }
-    return (
-      <>
-        <AdminRequestTable
-          caption={title}
-          items={list.data.items}
-          columns={columns}
-          getItemLabel={(item) => item.name}
-          renderActions={renderActions}
-        />
-        <Pagination
-          className="mt-8"
-          page={page}
-          limit={CATALOG_PAGE_SIZE}
-          total={list.data.pagination?.total ?? 0}
-          onPageChange={goToPage}
-        />
-      </>
+      <RowActions
+        itemLabel={item.name}
+        disabled={rowBusy}
+        primary={
+          <Button
+            size="sm"
+            variant="secondary"
+            aria-label={`Edit ${item.name}`}
+            disabled={rowBusy}
+            onClick={() => setEditing({ open: true, item })}
+          >
+            Edit
+          </Button>
+        }
+        items={[
+          {
+            key: 'flag',
+            label: on ? 'Switch off' : 'Switch on',
+            onClick: () => (on ? setSwitchingOff(item) : setFlag(item, true)),
+          },
+          { key: 'delete', label: 'Delete', danger: true, onClick: () => setDeleting(item) },
+        ]}
+      />
     );
   };
 
   const filtered = Object.values(values).some(Boolean);
 
   return (
-    <div className="mx-auto max-w-6xl">
-      <div className="flex flex-wrap items-start justify-between gap-x-4">
-        <div className="mb-4 min-w-0">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">{title}</h1>
-          {subtitle && <p className="mt-1.5 text-slate-600">{subtitle}</p>}
-        </div>
-        <Button className="mb-4" onClick={() => setEditing({ open: true, item: null })}>
-          Add {catalog.noun}
-        </Button>
-      </div>
-      {subNav}
-      {note && <p className="mb-4 rounded-lg bg-sky-50 px-4 py-3 text-sm text-sky-900">{note}</p>}
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-        {allFilters.map((filter) => (
-          <Select
-            key={filter.name}
-            label={filter.label}
-            className="sm:w-64"
-            value={values[filter.name]}
-            onChange={(event) => updateUrl({ [filter.name]: event.target.value, page: '' })}
-            options={filter.options}
-          />
-        ))}
-        {search && (
-          <SearchBox
-            key={values[search.name]}
-            label={search.label}
-            value={values[search.name]}
-            maxLength={search.maxLength}
-            placeholder={search.placeholder}
-            className="w-full sm:w-56"
-            onSearch={(value) => updateUrl({ [search.name]: value, page: '' })}
-          />
-        )}
-        {filtered && (
-          <Button variant="secondary" onClick={() => setSearchParams({})}>
-            Reset
-          </Button>
-        )}
-      </div>
+    <>
+      <AdminPageHeader
+        title={title}
+        subtitle={subtitle}
+        action={<Button onClick={() => setEditing({ open: true, item: null })}>Add {catalog.noun}</Button>}
+        subNav={subNav}
+      />
+      {note && <p className="mb-4 max-w-prose text-sm text-ink-soft">{note}</p>}
       <div className="mb-4 empty:hidden" aria-live="polite">
         <Alert type={message.type}>{message.text}</Alert>
       </div>
-      {renderList()}
+      <AdminListPanel
+        toolbar={
+          <>
+            {allFilters.map((filter) => (
+              <Select
+                key={filter.name}
+                label={filter.label}
+                className="sm:w-56"
+                value={values[filter.name]}
+                onChange={(event) => updateUrl({ [filter.name]: event.target.value, page: '' })}
+                options={filter.options}
+              />
+            ))}
+            {search && (
+              <SearchBox
+                key={values[search.name]}
+                label={search.label}
+                value={values[search.name]}
+                maxLength={search.maxLength}
+                placeholder={search.placeholder}
+                className="w-full sm:w-56"
+                onSearch={(value) => updateUrl({ [search.name]: value, page: '' })}
+              />
+            )}
+            {filtered && (
+              <Button variant="secondary" onClick={() => setSearchParams({})}>
+                Reset
+              </Button>
+            )}
+          </>
+        }
+      >
+        <AdminListBody
+          list={list}
+          items={list.data?.items ?? []}
+          empty={{
+            title: filtered ? `No ${catalog.nounPlural} match these filters` : `No ${catalog.nounPlural} yet`,
+            message: filtered ? 'Try another filter.' : `Add the first ${catalog.noun}.`,
+          }}
+          pagination={{
+            page,
+            limit: CATALOG_PAGE_SIZE,
+            total: list.data?.pagination?.total ?? 0,
+            onPageChange: goToPage,
+          }}
+        >
+          <AdminRequestTable
+            caption={title}
+            items={list.data?.items ?? []}
+            columns={allColumns}
+            getItemLabel={(item) => item.name}
+            renderActions={renderActions}
+          />
+        </AdminListBody>
+      </AdminListPanel>
 
       <CatalogItemFormModal
         open={editing.open}
@@ -233,6 +237,6 @@ export default function CatalogListPage({ title, subtitle, subNav, note, catalog
         onConfirm={handleDelete}
         onClose={() => setDeleting(null)}
       />
-    </div>
+    </>
   );
 }

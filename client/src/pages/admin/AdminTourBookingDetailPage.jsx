@@ -1,11 +1,15 @@
-import { Link } from 'react-router-dom';
 import { getAdminTourBooking, updateAdminTourBookingStatus } from '../../api/adminTourism.api.js';
-import AdminDetailLayout, { AdminActionsCard, AdminGuestCard } from '../../components/admin/AdminDetailLayout.jsx';
+import AdminDetailLayout, {
+  AdminFact,
+  AdminFacts,
+  AdminGuestSection,
+  AdminPriceSection,
+  AdminSection,
+} from '../../components/admin/AdminDetailLayout.jsx';
 import AdminSubNav from '../../components/admin/AdminSubNav.jsx';
+import MoreLink from '../../components/ui/MoreLink.jsx';
 import DetailLoader from '../../components/ui/DetailLoader.jsx';
 import AdminStatusActions from '../../components/admin/AdminStatusActions.jsx';
-import Card from '../../components/ui/Card.jsx';
-import DetailRow from '../../components/ui/DetailRow.jsx';
 import { TOURISM_SECTION_NAV } from '../../config/adminCatalog.js';
 import { getActions, TOUR_BOOKING_ADMIN_ACTIONS } from '../../config/adminRequests.js';
 import { SERVICE_REQUEST_STEPS } from '../../config/statuses.js';
@@ -34,53 +38,43 @@ function TourBookingDetails({ initialBooking }) {
       steps={SERVICE_REQUEST_STEPS}
       progressLabel="Booking progress"
       cancelledMessage="This tour booking was cancelled."
+      actions={
+        actions.length > 0 && (
+          <AdminStatusActions
+            actions={actions}
+            update={(action) => updateAdminTourBookingStatus(booking.id, action.status)}
+            getDisabledReason={getConfirmDisabledReason(booking)}
+            itemLabel={`tour booking #${booking.id}`}
+            {...actionProps}
+          />
+        )
+      }
+      actionsEmptyText="No more actions for this booking."
       main={
-        <Card>
-          <p className="text-xs font-semibold uppercase tracking-wide text-teal-700">
-            {tour.location} · {tour.duration}
-          </p>
-          <h2 className="mt-1 text-xl font-semibold break-words text-slate-900">{tour.name}</h2>
-          <Link
-            to={`/tours/${tour.id}`}
-            className="mt-2 inline-block text-sm font-semibold text-teal-700 hover:text-teal-800"
-          >
-            View public tour page →
-          </Link>
-          <dl className="mt-4 divide-y divide-slate-100 border-t border-slate-100 text-sm">
-            <DetailRow label="Tour date">{formatDate(booking.tour_date)}</DetailRow>
-            <DetailRow label="Participants">{formatParticipants(booking.participants)}</DetailRow>
-            <DetailRow label="Note">
+        <AdminSection title={tour.name} subtitle={`${tour.location} · ${tour.duration}`}>
+          <AdminFacts>
+            <AdminFact label="Tour date">{formatDate(booking.tour_date)}</AdminFact>
+            <AdminFact label="Participants">{formatParticipants(booking.participants)}</AdminFact>
+            <AdminFact label="Note">
               <span className="whitespace-pre-line">{booking.note || '-'}</span>
-            </DetailRow>
-          </dl>
-        </Card>
+            </AdminFact>
+          </AdminFacts>
+          <MoreLink to={`/tours/${tour.id}`} className="mt-2">
+            View public tour page
+          </MoreLink>
+        </AdminSection>
       }
       side={
         <>
-          <AdminGuestCard user={booking.user} />
-          <Card>
-            <h2 className="text-lg font-semibold text-slate-900">Price</h2>
-            <dl className="mt-2 divide-y divide-slate-100 text-sm">
-              <DetailRow label="Price per person">{formatCurrency(booking.unit_price)}</DetailRow>
-              <DetailRow label="Participants">{formatParticipants(booking.participants)}</DetailRow>
-              <div className="flex items-start justify-between gap-4 py-2.5">
-                <dt className="font-semibold text-slate-900">Total</dt>
-                <dd className="text-right text-lg font-bold text-teal-700">{formatCurrency(booking.total_price)}</dd>
-              </div>
-            </dl>
-          </Card>
+          <AdminGuestSection user={booking.user} />
+          <AdminPriceSection
+            rows={[
+              { label: 'Price per person', value: formatCurrency(booking.unit_price) },
+              { label: 'Participants', value: formatParticipants(booking.participants) },
+            ]}
+            total={booking.total_price}
+          />
           <PaymentInfoCard order={booking} />
-          <AdminActionsCard emptyText="No more actions for this booking.">
-            {actions.length > 0 && (
-              <AdminStatusActions
-                actions={actions}
-                update={(action) => updateAdminTourBookingStatus(booking.id, action.status)}
-                getDisabledReason={getConfirmDisabledReason(booking)}
-                itemLabel={`tour booking #${booking.id}`}
-                {...actionProps}
-              />
-            )}
-          </AdminActionsCard>
         </>
       }
     />

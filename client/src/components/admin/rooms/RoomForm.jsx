@@ -77,17 +77,18 @@ export default function RoomForm({ room = null, roomTypes, onSubmit, submitLabel
   };
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-4" aria-label={isEdit ? 'Edit room' : 'New room'}>
-      <Select
-        label="Room type"
-        name="room_type_id"
-        value={form.room_type_id}
-        onChange={handleChange}
-        options={typeOptions}
-        error={errors.room_type_id}
-        disabled={saving}
-      />
-      <div className="grid gap-4 sm:grid-cols-2">
+    <form onSubmit={handleSubmit} noValidate className="space-y-5" aria-label={isEdit ? 'Edit room' : 'New room'}>
+      <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
+        <Select
+          className={isEdit ? 'sm:col-span-2' : ''}
+          label="Room type"
+          name="room_type_id"
+          value={form.room_type_id}
+          onChange={handleChange}
+          options={typeOptions}
+          error={errors.room_type_id}
+          disabled={saving}
+        />
         <Input
           label="Room number"
           name="room_number"
@@ -111,17 +112,17 @@ export default function RoomForm({ room = null, roomTypes, onSubmit, submitLabel
           error={errors.floor}
           disabled={saving}
         />
+        {!isEdit && (
+          <Select
+            label="Initial status"
+            name="status"
+            value={form.status}
+            onChange={handleChange}
+            options={STATUS_OPTIONS}
+            disabled={saving}
+          />
+        )}
       </div>
-      {!isEdit && (
-        <Select
-          label="Initial status"
-          name="status"
-          value={form.status}
-          onChange={handleChange}
-          options={STATUS_OPTIONS}
-          disabled={saving}
-        />
-      )}
       <div aria-live="polite" className="space-y-2 empty:hidden">
         <Alert type="error">{submitError}</Alert>
         <Alert type="info">{notice}</Alert>

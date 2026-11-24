@@ -1,48 +1,82 @@
+import { Link } from 'react-router-dom';
 import formatCurrency from '../../utils/formatCurrency.js';
+import { PaymentBadge } from '../payments/PaymentInfoCard.jsx';
 import RoomImage from '../rooms/RoomImage.jsx';
 import StatusBadge from '../ui/StatusBadge.jsx';
 
 // Các ô dùng chung trong danh sách của admin.
 
-// Ô đầu tiên (cũng là tiêu đề của thẻ trên điện thoại): mã đơn, trạng thái và một dòng phụ.
-export function TitleCell({ title, status, detail, marker }) {
+const LINK = 'font-semibold text-sea underline-offset-2 hover:text-sea-hover hover:underline';
+
+export function CellLink({ to, label, children }) {
+  return (
+    <Link to={to} aria-label={label} className={LINK}>
+      {children}
+    </Link>
+  );
+}
+
+// Ô đầu tiên (cũng là tiêu đề của khối trên điện thoại): tên mục dẫn tới trang chi tiết và một dòng phụ.
+// link: { to, label } do AdminRequestTable truyền vào; không có thì tên chỉ là chữ.
+export function TitleCell({ title, detail, marker, link }) {
   return (
     <div>
-      <p className="flex flex-wrap items-center gap-2 font-semibold text-slate-900">
+      <p className="flex flex-wrap items-center gap-2 font-semibold text-ink">
         {marker}
-        {title}
-        <StatusBadge status={status} />
+        {link ? (
+          <CellLink to={link.to} label={link.label}>
+            {title}
+          </CellLink>
+        ) : (
+          title
+        )}
       </p>
-      {detail && <p className="mt-0.5 text-xs text-slate-500">{detail}</p>}
+      {detail && <p className="mt-0.5 text-xs text-ink-soft">{detail}</p>}
     </div>
   );
 }
 
-export function GuestCell({ user }) {
+// Hai dòng: giá trị chính và một dòng phụ nhỏ.
+export function StackCell({ main, detail }) {
   return (
     <>
-      <p className="font-medium break-words text-slate-900">{user?.full_name ?? '-'}</p>
-      {user?.email && <p className="text-xs break-all text-slate-500">{user.email}</p>}
+      <p className="text-ink">{main}</p>
+      {detail && <p className="text-xs text-ink-soft">{detail}</p>}
     </>
   );
 }
 
-export function MoneyCell({ amount }) {
-  return <span className="font-semibold whitespace-nowrap text-slate-900">{formatCurrency(amount)}</span>;
+// Email dài bị cắt ở giữa ký tự, nên dùng wrap-anywhere thay vì cho tràn.
+export function GuestCell({ user, to }) {
+  const name = user?.full_name ?? '-';
+  return (
+    <>
+      <p className="font-medium text-ink">{to ? <CellLink to={to}>{name}</CellLink> : name}</p>
+      {user?.email && <p className="text-xs wrap-anywhere text-ink-soft">{user.email}</p>}
+    </>
+  );
 }
 
-// Ô đầu của danh mục (dịch vụ, món ăn, tour): ảnh nhỏ, tên, nhãn bật/tắt và một dòng phụ.
-export function CatalogItemCell({ item, status, detail }) {
+// Nhãn trạng thái của đơn và của thanh toán: trong bảng xếp dọc để cột hẹp lại. payment undefined: không có nhãn thanh toán.
+export function BadgesCell({ status, payment }) {
   return (
-    <div className="flex items-center gap-3">
-      <RoomImage src={item.image_url} alt={item.name} className="h-12 w-16 shrink-0 rounded-lg" />
-      <div className="min-w-0">
-        <p className="flex flex-wrap items-center gap-2 font-semibold break-words text-slate-900">
-          <span className="min-w-0 break-words">{item.name}</span>
-          <StatusBadge status={status} />
-        </p>
-        {detail && <p className="text-xs text-slate-500">{detail}</p>}
-      </div>
+    <span className="inline-flex flex-wrap items-center gap-1.5 lg:flex-col lg:items-start lg:gap-1">
+      <StatusBadge status={status} />
+      {payment !== undefined && <PaymentBadge payment={payment} />}
+    </span>
+  );
+}
+
+export function MoneyCell({ amount }) {
+  return <span className="font-semibold whitespace-nowrap text-ink">{formatCurrency(amount)}</span>;
+}
+
+// Ô đầu của danh mục (dịch vụ, món ăn, tour): ảnh nhỏ và tên.
+export function CatalogItemCell({ item }) {
+  return (
+    <div className="flex items-start gap-3">
+      <RoomImage src={item.image_url} alt={item.name} className="h-12 w-16 shrink-0 rounded-control" />
+      <p className="min-w-0 font-semibold wrap-anywhere text-ink">{item.name}</p>
     </div>
   );
 }
@@ -52,7 +86,12 @@ export function PriceCell({ amount, unit }) {
   return (
     <>
       <MoneyCell amount={amount} />
-      {unit && <p className="text-xs text-slate-500">{unit}</p>}
+      {unit && <p className="text-xs text-ink-soft">{unit}</p>}
     </>
   );
+}
+
+// Giá trị trống trong bảng.
+export function EmptyCell({ children = '-' }) {
+  return <span className="text-ink-soft">{children}</span>;
 }

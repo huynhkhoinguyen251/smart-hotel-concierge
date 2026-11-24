@@ -19,31 +19,31 @@ export default function ImageUrlField({ label = 'Image', itemName, value, onChan
 
   return (
     <fieldset className="min-w-0" disabled={disabled}>
-      <legend className="mb-1.5 text-sm font-medium text-slate-700">{label}</legend>
+      <legend className="mb-1.5 text-sm font-medium text-ink">{label}</legend>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-        <RoomImage src={value || null} alt={alt} className="aspect-[4/3] w-full shrink-0 rounded-lg sm:w-40" />
+        <RoomImage src={value || null} alt={alt} className="aspect-[4/3] w-full shrink-0 rounded-control sm:w-40" />
         <div className="min-w-0 space-y-2 text-sm">
           {value ? (
             <>
-              <p className="break-all text-slate-600">{value}</p>
+              <p className="break-all text-ink-soft">{value}</p>
               <Button size="sm" variant="secondary" onClick={() => choose('', 'The image will be removed when you save.')}>
                 Remove image
               </Button>
             </>
           ) : (
-            <p className="text-slate-500">No image. Guests see a grey placeholder.</p>
+            <p className="text-ink-soft">No image. Guests see a drawing instead.</p>
           )}
           {note && (
-            <p className="text-xs text-teal-800" aria-live="polite">
+            <p className="text-xs text-sea" aria-live="polite">
               {note}
             </p>
           )}
-          {error && <p className="text-xs text-red-600">{error}</p>}
+          {error && <p className="text-xs text-danger">{error}</p>}
         </div>
       </div>
 
-      <div className="mt-4 rounded-xl border border-dashed border-slate-300 p-4">
-        <p className="mb-3 text-sm font-semibold text-slate-900">{value ? 'Replace the image' : 'Add an image'}</p>
+      <div className="mt-4 rounded-control bg-ground p-4">
+        <p className="mb-3 text-sm font-semibold text-ink">{value ? 'Replace the image' : 'Add an image'}</p>
         <ImageModeSwitch mode={mode} onChange={setMode} />
         {mode === 'url' ? (
           <ImageUrlInput

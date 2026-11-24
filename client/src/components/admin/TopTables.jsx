@@ -14,13 +14,13 @@ function TopTable({ caption, headers, rows }) {
       <table className="w-full text-sm">
         <caption className="sr-only">{caption}</caption>
         <thead>
-          <tr className="border-b border-slate-200 text-left text-slate-500">
+          <tr className="border-b border-line-soft text-left text-ink-soft">
             <th scope="col" className={TH}>{headers[0]}</th>
             <th scope="col" className={`${TH} text-right`}>{headers[1]}</th>
             <th scope="col" className="py-2 text-right font-medium">{headers[2]}</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">{rows}</tbody>
+        <tbody className="divide-y divide-line-soft">{rows}</tbody>
       </table>
     </div>
   );
@@ -38,11 +38,11 @@ export function TopRoomsTable({ items }) {
       rows={items.map(({ room, booking_count, revenue }) => (
         <tr key={room.id}>
           <td className="py-2.5 pr-3">
-            <p className="font-medium text-slate-900">Room {room.room_number}</p>
-            <p className="text-xs text-slate-500">{room.room_type.name}</p>
+            <p className="font-medium text-ink">Room {room.room_number}</p>
+            <p className="text-xs text-ink-soft">{room.room_type.name}</p>
           </td>
-          <td className="py-2.5 pr-3 text-right text-slate-900">{booking_count}</td>
-          <td className="py-2.5 text-right whitespace-nowrap text-slate-700">{formatCurrency(revenue)}</td>
+          <td className="py-2.5 pr-3 text-right text-ink">{booking_count}</td>
+          <td className="py-2.5 text-right whitespace-nowrap text-ink">{formatCurrency(revenue)}</td>
         </tr>
       ))}
     />
@@ -61,11 +61,11 @@ export function TopServicesTable({ items }) {
       rows={items.map(({ service, usage_count, revenue }) => (
         <tr key={service.id}>
           <td className="py-2.5 pr-3">
-            <p className="font-medium break-words text-slate-900">{service.name}</p>
-            <p className="text-xs text-slate-500">{getAnyServiceLabel(service.category)}</p>
+            <p className="font-medium wrap-anywhere text-ink">{service.name}</p>
+            <p className="text-xs text-ink-soft">{getAnyServiceLabel(service.category)}</p>
           </td>
-          <td className="py-2.5 pr-3 text-right text-slate-900">{usage_count}</td>
-          <td className="py-2.5 text-right whitespace-nowrap text-slate-700">{formatCurrency(revenue)}</td>
+          <td className="py-2.5 pr-3 text-right text-ink">{usage_count}</td>
+          <td className="py-2.5 text-right whitespace-nowrap text-ink">{formatCurrency(revenue)}</td>
         </tr>
       ))}
     />

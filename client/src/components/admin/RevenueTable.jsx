@@ -12,19 +12,19 @@ export default function RevenueTable({ months, year }) {
   );
 
   return (
-    <div className="mt-4 border-t border-slate-100 pt-4">
-      <p className="text-sm text-slate-700">
-        Total for {year}: <span className="font-bold text-teal-700">{formatCurrency(totals.total)}</span>
+    <div className="mt-4">
+      <p className="text-sm text-ink">
+        Total for {year}: <span className="font-bold text-ink">{formatCurrency(totals.total)}</span>
       </p>
       <details className="mt-2 text-sm">
-        <summary className="cursor-pointer font-medium text-teal-700 hover:text-teal-800">
+        <summary className="cursor-pointer font-medium text-sea hover:text-sea-hover">
           Show monthly table
         </summary>
         <div className="mt-3 overflow-x-auto">
-          <table className="w-full min-w-[640px] text-right">
+          <table className="w-full min-w-[44rem] text-right">
             <caption className="sr-only">Revenue by month and source in {year}</caption>
             <thead>
-              <tr className="border-b border-slate-200 text-slate-500">
+              <tr className="border-b border-line-soft text-ink-soft">
                 <th scope="col" className="py-2 pr-3 text-left font-medium">Month</th>
                 {REVENUE_SOURCES.map((source) => (
                   <th key={source.key} scope="col" className="py-2 pr-3 font-medium">
@@ -34,25 +34,25 @@ export default function RevenueTable({ months, year }) {
                 <th scope="col" className="py-2 font-medium">Total</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-line-soft">
               {months.map((month) => (
                 <tr key={month.month}>
-                  <th scope="row" className="py-1.5 pr-3 text-left font-medium text-slate-700">
+                  <th scope="row" className="py-1.5 pr-3 text-left font-medium text-ink">
                     {MONTH_LABELS[month.month - 1]}
                   </th>
                   {REVENUE_SOURCES.map((source) => (
-                    <td key={source.key} className="py-1.5 pr-3 whitespace-nowrap text-slate-600">
+                    <td key={source.key} className="py-1.5 pr-3 whitespace-nowrap text-ink-soft">
                       {formatCurrency(month[source.key])}
                     </td>
                   ))}
-                  <td className="py-1.5 font-semibold whitespace-nowrap text-slate-900">
+                  <td className="py-1.5 font-semibold whitespace-nowrap text-ink">
                     {formatCurrency(month.total)}
                   </td>
                 </tr>
               ))}
             </tbody>
             <tfoot>
-              <tr className="border-t border-slate-200 font-semibold text-slate-900">
+              <tr className="border-t border-line-soft font-semibold text-ink">
                 <th scope="row" className="py-2 pr-3 text-left">Year</th>
                 {REVENUE_SOURCES.map((source) => (
                   <td key={source.key} className="py-2 pr-3 whitespace-nowrap">

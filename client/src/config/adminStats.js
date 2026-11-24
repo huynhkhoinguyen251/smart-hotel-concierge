@@ -1,12 +1,13 @@
 // Thống kê cho admin (mục 9 của docs/api.md). Thẻ số liệu và biểu đồ dùng chung tên và màu ở đây.
 
+// Màu đã được kiểm tra cho người mù màu; thứ tự và màu của mỗi nguồn không đổi ở mọi nơi.
 // 5 nguồn doanh thu, theo đúng thứ tự backend trả (server/src/config/stats.js).
 export const REVENUE_SOURCES = [
-  { key: 'rooms', label: 'Rooms', color: '#0f766e' },
-  { key: 'services', label: 'Services', color: '#0ea5e9' },
-  { key: 'food', label: 'Food', color: '#f59e0b' },
-  { key: 'tours', label: 'Tours', color: '#8b5cf6' },
-  { key: 'transport', label: 'Transport', color: '#f43f5e' },
+  { key: 'rooms', label: 'Rooms', color: '#1b7fa8' },
+  { key: 'services', label: 'Services', color: '#e0921a' },
+  { key: 'food', label: 'Food', color: '#1b8a5a' },
+  { key: 'tours', label: 'Tours', color: '#7a5cc7' },
+  { key: 'transport', label: 'Transport', color: '#cf4f3a' },
 ];
 
 export const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];

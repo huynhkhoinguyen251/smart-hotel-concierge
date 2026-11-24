@@ -14,7 +14,7 @@ export default function SearchBox({ label, value, onSearch, maxLength, placehold
         onSearch(text.trim());
       }}
       role="search"
-      className="flex items-end gap-2"
+      className="flex w-full items-end gap-2 sm:w-auto"
     >
       <Input
         label={label}

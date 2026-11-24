@@ -12,6 +12,7 @@ const CATALOG = {
   fields: MENU_ITEM_FIELDS,
   flag: 'is_available',
   flagLabels: { on: 'Available', off: 'Unavailable' },
+  flagStatuses: { on: 'available', off: 'unavailable' },
   flagHint: 'Guests can see and order this item. Switch it off when it runs out.',
   api: adminMenuItemsApi,
 };
@@ -24,7 +25,7 @@ const COLUMNS = [
   {
     key: 'item',
     header: 'Menu item',
-    render: (item) => <CatalogItemCell item={item} status={item.is_available ? 'available' : 'unavailable'} />,
+    render: (item) => <CatalogItemCell item={item} />,
   },
   { key: 'category', header: 'Category', render: (item) => getMenuCategoryLabel(item.category) },
   { key: 'price', header: 'Price', align: 'right', render: (item) => <PriceCell amount={item.price} /> },

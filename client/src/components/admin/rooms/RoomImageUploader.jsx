@@ -1,22 +1,14 @@
-import { useId, useState } from 'react';
+import { useState } from 'react';
+import { Checkbox } from 'antd';
 import { addAdminRoomImage } from '../../../api/adminRooms.api.js';
 import { ImageFileInput, ImageModeSwitch, ImageUrlInput } from '../ImageInputs.jsx';
 
 // Ô "Use as primary image" dùng chung cho hai cách thêm ảnh.
 function PrimaryCheckbox({ checked, onChange, disabled }) {
-  const id = useId();
   return (
-    <label htmlFor={id} className="flex items-center gap-2 text-sm text-slate-700">
-      <input
-        id={id}
-        type="checkbox"
-        checked={checked}
-        onChange={(event) => onChange(event.target.checked)}
-        disabled={disabled}
-        className="h-4 w-4 rounded border-slate-300 text-teal-700 focus:ring-teal-600"
-      />
+    <Checkbox checked={checked} onChange={(event) => onChange(event.target.checked)} disabled={disabled}>
       Use as primary image
-    </label>
+    </Checkbox>
   );
 }
 
@@ -36,8 +28,8 @@ export default function RoomImageUploader({ room, onAdded }) {
   const renderPrimary = (busy) => <PrimaryCheckbox checked={primary} onChange={setPrimary} disabled={busy} />;
 
   return (
-    <div className="rounded-xl border border-dashed border-slate-300 p-4">
-      <h3 className="mb-3 text-sm font-semibold text-slate-900">Add an image</h3>
+    <div className="rounded-control bg-ground p-4">
+      <h3 className="mb-3 text-sm font-semibold text-ink">Add an image</h3>
       <ImageModeSwitch
         mode={mode}
         onChange={(value) => {

@@ -15,7 +15,9 @@ export default defineConfig({
           groups: [
             { name: 'react', test: /node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/, priority: 3 },
             { name: 'antd-picker', test: /node_modules[\\/](dayjs|@rc-component[\\/]picker|antd[\\/]es[\\/](date-picker|time-picker|calendar))[\\/]/, priority: 2 },
-            { name: 'antd', test: /node_modules[\\/](antd|@ant-design|@rc-component|@emotion|stylis)[\\/]/, priority: 1 },
+            // Phần antd mà trang khách dùng; phần chỉ khu admin dùng (Table, Dropdown...) nằm ở file riêng.
+            { name: 'antd', tags: ['$initial'], test: /node_modules[\\/](antd|@ant-design|@rc-component|@emotion|stylis)[\\/]/, priority: 1 },
+            { name: 'antd-admin', test: /node_modules[\\/](antd|@ant-design|@rc-component|@emotion|stylis)[\\/]/, priority: 0 },
           ],
         },
       },

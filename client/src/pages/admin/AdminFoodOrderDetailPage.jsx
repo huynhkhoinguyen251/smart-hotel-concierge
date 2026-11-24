@@ -1,12 +1,16 @@
 import { Link } from 'react-router-dom';
 import { getAdminFoodOrder, updateAdminFoodOrderStatus } from '../../api/adminFoodOrders.api.js';
-import AdminDetailLayout, { AdminActionsCard, AdminGuestCard } from '../../components/admin/AdminDetailLayout.jsx';
+import AdminDetailLayout, {
+  AdminFact,
+  AdminFacts,
+  AdminGuestSection,
+  AdminPriceSection,
+  AdminSection,
+} from '../../components/admin/AdminDetailLayout.jsx';
+import OrderItemsTable from '../../components/admin/OrderItemsTable.jsx';
 import AdminSubNav from '../../components/admin/AdminSubNav.jsx';
 import DetailLoader from '../../components/ui/DetailLoader.jsx';
 import AdminStatusActions from '../../components/admin/AdminStatusActions.jsx';
-import FoodOrderItems from '../../components/food/FoodOrderItems.jsx';
-import Card from '../../components/ui/Card.jsx';
-import DetailRow from '../../components/ui/DetailRow.jsx';
 import { FOOD_SECTION_NAV } from '../../config/adminCatalog.js';
 import { FOOD_ORDER_ADMIN_ACTIONS, getActions } from '../../config/adminRequests.js';
 import { FOOD_ORDER_STEPS } from '../../config/food.js';
@@ -38,56 +42,51 @@ function FoodOrderDetails({ initialOrder }) {
       steps={FOOD_ORDER_STEPS}
       progressLabel="Order progress"
       cancelledMessage="This order was cancelled."
+      actions={
+        actions.length > 0 && (
+          <AdminStatusActions
+            actions={actions}
+            update={(action) => updateAdminFoodOrderStatus(order.id, action.status)}
+            getDisabledReason={getConfirmDisabledReason(order)}
+            itemLabel={`food order #${order.id}`}
+            {...actionProps}
+          />
+        )
+      }
+      actionsEmptyText="No more actions for this order."
       main={
         <>
-          <Card>
-            <h2 className="mb-3 text-lg font-semibold text-slate-900">
-              Items <span className="text-sm font-normal text-slate-500">({formatItemCount(items.length)})</span>
-            </h2>
-            <FoodOrderItems items={items} />
-          </Card>
-          <Card>
-            <h2 className="text-lg font-semibold text-slate-900">Delivery</h2>
-            <dl className="mt-2 divide-y divide-slate-100 text-sm">
-              <DetailRow label="Room">Room {booking?.room?.room_number}</DetailRow>
-              <DetailRow label="Booking">
-                <Link to={`/admin/bookings/${booking?.id}`} className="text-teal-700 hover:text-teal-800">
+          <AdminSection title="Items" subtitle={formatItemCount(items.length)}>
+            <OrderItemsTable items={items} />
+          </AdminSection>
+          <AdminSection title="Delivery">
+            <AdminFacts>
+              <AdminFact label="Room">Room {booking?.room?.room_number}</AdminFact>
+              <AdminFact label="Booking">
+                <Link to={`/admin/bookings/${booking?.id}`} className="text-sea hover:text-sea-hover hover:underline">
                   Booking #{booking?.id}
                 </Link>
-              </DetailRow>
-              <DetailRow label="Note">
+              </AdminFact>
+              <AdminFact label="Note">
                 <span className="whitespace-pre-line">{order.note || '-'}</span>
-              </DetailRow>
-            </dl>
-          </Card>
+              </AdminFact>
+            </AdminFacts>
+          </AdminSection>
         </>
       }
       side={
         <>
-          <AdminGuestCard user={order.user} />
-          <Card>
-            <h2 className="text-lg font-semibold text-slate-900">Price</h2>
-            <dl className="mt-2 divide-y divide-slate-100 text-sm">
-              <DetailRow label="Subtotal">{formatCurrency(subtotal)}</DetailRow>
-              {discount > 0 && <DetailRow label={getDiscountLabel(order.voucher?.code)}>- {formatCurrency(discount)}</DetailRow>}
-              <div className="flex items-start justify-between gap-4 py-2.5">
-                <dt className="font-semibold text-slate-900">Total</dt>
-                <dd className="text-right text-lg font-bold text-teal-700">{formatCurrency(order.total_price)}</dd>
-              </div>
-            </dl>
-          </Card>
+          <AdminGuestSection user={order.user} />
+          <AdminPriceSection
+            rows={[
+              { label: 'Subtotal', value: formatCurrency(subtotal) },
+              ...(discount > 0
+                ? [{ label: getDiscountLabel(order.voucher?.code), value: `- ${formatCurrency(discount)}` }]
+                : []),
+            ]}
+            total={order.total_price}
+          />
           <PaymentInfoCard order={order} />
-          <AdminActionsCard emptyText="No more actions for this order.">
-            {actions.length > 0 && (
-              <AdminStatusActions
-                actions={actions}
-                update={(action) => updateAdminFoodOrderStatus(order.id, action.status)}
-                getDisabledReason={getConfirmDisabledReason(order)}
-                itemLabel={`food order #${order.id}`}
-                {...actionProps}
-              />
-            )}
-          </AdminActionsCard>
         </>
       }
     />

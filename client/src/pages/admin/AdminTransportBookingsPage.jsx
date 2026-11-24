@@ -1,5 +1,6 @@
+import { ArrowRightOutlined } from '@ant-design/icons';
 import { getAdminTransportBookings, updateAdminTransportBookingStatus } from '../../api/adminTourism.api.js';
-import { GuestCell, MoneyCell, TitleCell } from '../../components/admin/AdminCells.jsx';
+import { BadgesCell, GuestCell, MoneyCell, StackCell, TitleCell } from '../../components/admin/AdminCells.jsx';
 import AdminRequestListPage from '../../components/admin/AdminRequestListPage.jsx';
 import AdminStatusActions from '../../components/admin/AdminStatusActions.jsx';
 import AdminSubNav from '../../components/admin/AdminSubNav.jsx';
@@ -11,7 +12,6 @@ import formatDate from '../../utils/formatDate.js';
 import { formatTransportQuantity, getTransportLabel } from '../../utils/tourismHelpers.js';
 import { getPlateField } from '../../utils/vehiclePlate.js';
 import { getConfirmDisabledReason } from '../../utils/paymentHelpers.js';
-import { PaymentBadge } from '../../components/payments/PaymentInfoCard.jsx';
 
 const CATEGORY_FILTER = {
   name: 'category',
@@ -28,51 +28,59 @@ const COLUMNS = [
   {
     key: 'request',
     header: 'Request',
-    render: (booking) => (
-      <TitleCell status={booking.status} title={`Request #${booking.id}`} detail={`Created ${formatDate(booking.created_at)}`} />
+    render: (booking, link) => (
+      <TitleCell link={link} title={`Request #${booking.id}`} detail={`Created ${formatDate(booking.created_at)}`} />
     ),
   },
-  { key: 'guest', header: 'Guest', render: (booking) => <GuestCell user={booking.user} /> },
+  { key: 'guest', header: 'Guest', wide: true, render: (booking) => <GuestCell user={booking.user} /> },
   {
     key: 'service',
     header: 'Service',
     render: (booking) => (
-      <>
-        <p className="font-medium text-slate-900">{booking.service.name}</p>
-        <p className="text-xs text-slate-500">
-          {[getTransportLabel(booking.service.category), formatTransportQuantity(booking.quantity, booking.service.category)]
-            .filter(Boolean)
-            .join(' · ')}
-        </p>
-      </>
+      <StackCell
+        main={booking.service.name}
+        detail={[
+          getTransportLabel(booking.service.category),
+          formatTransportQuantity(booking.quantity, booking.service.category),
+        ]
+          .filter(Boolean)
+          .join(' · ')}
+      />
     ),
   },
   {
     key: 'time',
     header: 'Time',
     render: (booking) => (
-      <>
-        <p className="text-slate-900">{formatDate(booking.start_at, { withTime: true })}</p>
-        {booking.end_at && (
-          <p className="text-xs text-slate-500">Return {formatDate(booking.end_at, { withTime: true })}</p>
-        )}
-      </>
+      <StackCell
+        main={formatDate(booking.start_at, { withTime: true })}
+        detail={booking.end_at && `Return ${formatDate(booking.end_at, { withTime: true })}`}
+      />
     ),
   },
   {
     key: 'route',
+    wide: true,
     header: 'Pick-up / drop-off',
     render: (booking) => (
-      <>
-        <p className="text-slate-900">
-          {booking.pickup_location} → {booking.dropoff_location}
-        </p>
-        {booking.vehicle_plate && <p className="text-xs text-slate-500">Plate {booking.vehicle_plate}</p>}
-      </>
+      <StackCell
+        main={
+          <>
+            {booking.pickup_location} <ArrowRightOutlined aria-hidden="true" className="text-xs text-ink-soft" />
+            <span className="sr-only">to</span> {booking.dropoff_location}
+          </>
+        }
+        detail={booking.vehicle_plate && `Plate ${booking.vehicle_plate}`}
+      />
     ),
   },
   { key: 'total', header: 'Total', align: 'right', render: (booking) => <MoneyCell amount={booking.total_price} /> },
-  { key: 'payment', header: 'Payment', render: (booking) => <PaymentBadge payment={booking.payment} /> },
+  {
+    key: 'status',
+    header: 'Status',
+    badges: true,
+    render: (booking) => <BadgesCell status={booking.status} payment={booking.payment} />,
+  },
 ];
 
 // /admin/tourism/transport: đơn vận chuyển của khách (tab "Transport").
@@ -81,7 +89,7 @@ export default function AdminTransportBookingsPage() {
     <AdminRequestListPage
       title="Tourism"
       subtitle="Local tour bookings and transport requests from guests."
-      header={<AdminSubNav {...TOURISM_SECTION_NAV} />}
+      subNav={<AdminSubNav {...TOURISM_SECTION_NAV} />}
       basePath="/admin/tourism/transport"
       statusTabs={SERVICE_REQUEST_STATUS_TABS}
       filters={[CATEGORY_FILTER]}

@@ -16,6 +16,7 @@ const CATALOG = {
   fields: SERVICE_FIELDS,
   flag: 'is_active',
   flagLabels: { on: 'Active', off: 'Inactive' },
+  flagStatuses: { on: 'active', off: 'inactive' },
   flagHint: 'Guests can see and book this service. Switch it off to hide it.',
   api: adminServicesApi,
 };
@@ -28,7 +29,7 @@ const COLUMNS = [
   {
     key: 'service',
     header: 'Service',
-    render: (service) => <CatalogItemCell item={service} status={service.is_active ? 'active' : 'inactive'} />,
+    render: (service) => <CatalogItemCell item={service} />,
   },
   { key: 'category', header: 'Category', render: (service) => getAdminServiceCategoryLabel(service.category) },
   {

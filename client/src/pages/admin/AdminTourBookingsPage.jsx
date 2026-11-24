@@ -1,5 +1,5 @@
 import { getAdminTourBookings, updateAdminTourBookingStatus } from '../../api/adminTourism.api.js';
-import { GuestCell, MoneyCell, TitleCell } from '../../components/admin/AdminCells.jsx';
+import { BadgesCell, GuestCell, MoneyCell, StackCell, TitleCell } from '../../components/admin/AdminCells.jsx';
 import AdminRequestListPage from '../../components/admin/AdminRequestListPage.jsx';
 import AdminStatusActions from '../../components/admin/AdminStatusActions.jsx';
 import AdminSubNav from '../../components/admin/AdminSubNav.jsx';
@@ -9,7 +9,6 @@ import { SERVICE_REQUEST_STATUS_TABS } from '../../config/statuses.js';
 import formatDate from '../../utils/formatDate.js';
 import { formatParticipants } from '../../utils/tourismHelpers.js';
 import { getConfirmDisabledReason } from '../../utils/paymentHelpers.js';
-import { PaymentBadge } from '../../components/payments/PaymentInfoCard.jsx';
 
 const itemLabel = (booking) => `tour booking #${booking.id}`;
 
@@ -17,33 +16,32 @@ const COLUMNS = [
   {
     key: 'booking',
     header: 'Booking',
-    render: (booking) => (
-      <TitleCell status={booking.status} title={`Booking #${booking.id}`} detail={`Created ${formatDate(booking.created_at)}`} />
+    render: (booking, link) => (
+      <TitleCell link={link} title={`Booking #${booking.id}`} detail={`Created ${formatDate(booking.created_at)}`} />
     ),
   },
-  { key: 'guest', header: 'Guest', render: (booking) => <GuestCell user={booking.user} /> },
+  { key: 'guest', header: 'Guest', wide: true, render: (booking) => <GuestCell user={booking.user} /> },
   {
     key: 'tour',
     header: 'Tour',
     render: (booking) => (
-      <>
-        <p className="font-medium text-slate-900">{booking.tour.name}</p>
-        <p className="text-xs text-slate-500">{booking.tour.location}</p>
-      </>
+      <StackCell main={booking.tour.name} detail={booking.tour.location} />
     ),
   },
   {
     key: 'date',
     header: 'Tour date',
     render: (booking) => (
-      <>
-        <p className="whitespace-nowrap text-slate-900">{formatDate(booking.tour_date)}</p>
-        <p className="text-xs text-slate-500">{formatParticipants(booking.participants)}</p>
-      </>
+      <StackCell main={formatDate(booking.tour_date)} detail={formatParticipants(booking.participants)} />
     ),
   },
   { key: 'total', header: 'Total', align: 'right', render: (booking) => <MoneyCell amount={booking.total_price} /> },
-  { key: 'payment', header: 'Payment', render: (booking) => <PaymentBadge payment={booking.payment} /> },
+  {
+    key: 'status',
+    header: 'Status',
+    badges: true,
+    render: (booking) => <BadgesCell status={booking.status} payment={booking.payment} />,
+  },
 ];
 
 // /admin/tourism: đơn tour của khách (tab "Tour bookings").
@@ -52,7 +50,7 @@ export default function AdminTourBookingsPage() {
     <AdminRequestListPage
       title="Tourism"
       subtitle="Local tour bookings and transport requests from guests."
-      header={<AdminSubNav {...TOURISM_SECTION_NAV} />}
+      subNav={<AdminSubNav {...TOURISM_SECTION_NAV} />}
       basePath="/admin/tourism"
       statusTabs={SERVICE_REQUEST_STATUS_TABS}
       load={getAdminTourBookings}

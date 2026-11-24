@@ -1,13 +1,16 @@
 import { useState } from 'react';
+import { RightOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { getAdminUser, updateAdminUserRole, updateAdminUserStatus } from '../../api/adminUsers.api.js';
-import DetailLoader from '../../components/ui/DetailLoader.jsx';
+import AdminDetailLayout, {
+  AdminFact,
+  AdminFacts,
+  AdminSection,
+} from '../../components/admin/AdminDetailLayout.jsx';
 import YouBadge from '../../components/admin/YouBadge.jsx';
-import Alert from '../../components/ui/Alert.jsx';
 import Button from '../../components/ui/Button.jsx';
-import Card from '../../components/ui/Card.jsx';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.jsx';
-import DetailRow from '../../components/ui/DetailRow.jsx';
+import DetailLoader from '../../components/ui/DetailLoader.jsx';
 import StatusBadge from '../../components/ui/StatusBadge.jsx';
 import {
   getRoleBadge,
@@ -95,78 +98,37 @@ function UserDetails({ initialUser }) {
     }
   };
 
+  const badges = (
+    <>
+      <StatusBadge status={getRoleBadge(user.role)} />
+      <StatusBadge status={user.is_active ? 'active' : 'locked'} />
+      {isSelf && <YouBadge />}
+    </>
+  );
+
   return (
-    <div className="mx-auto max-w-5xl">
-      <Link to="/admin/users" className="text-sm font-medium text-teal-700 hover:text-teal-800">
-        ← Back to users
-      </Link>
-      <div className="mt-3 mb-2 flex flex-wrap items-center gap-3">
-        <h1 className="min-w-0 text-2xl font-bold tracking-tight wrap-anywhere text-slate-900 sm:text-3xl">{user.full_name}</h1>
-        <StatusBadge status={getRoleBadge(user.role)} />
-        <StatusBadge status={user.is_active ? 'active' : 'locked'} />
-        {isSelf && <YouBadge />}
-      </div>
-      <p className="mb-6 text-sm break-all text-slate-500">{user.email}</p>
-
-      <div className="mb-6 empty:hidden" aria-live="polite">
-        <Alert type={message.type}>{message.text}</Alert>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px] lg:items-start">
-        <div className="min-w-0 space-y-6">
-          <Card>
-            <h2 className="text-lg font-semibold text-slate-900">Profile</h2>
-            <dl className="mt-2 divide-y divide-slate-100 text-sm">
-              <DetailRow label="Name">{user.full_name}</DetailRow>
-              <DetailRow label="Email">
-                <a href={`mailto:${user.email}`} className="break-all text-teal-700 hover:text-teal-800">
-                  {user.email}
-                </a>
-              </DetailRow>
-              <DetailRow label="Phone">{user.phone || '-'}</DetailRow>
-              <DetailRow label="Role">
-                <StatusBadge status={getRoleBadge(user.role)} />
-              </DetailRow>
-              <DetailRow label="Status">
-                <StatusBadge status={user.is_active ? 'active' : 'locked'} />
-              </DetailRow>
-              <DetailRow label="Joined">{formatDate(user.created_at, { withTime: true })}</DetailRow>
-              <DetailRow label="Last updated">{formatDate(user.updated_at, { withTime: true })}</DetailRow>
-            </dl>
-          </Card>
-
-          {user.role === 'user' && (
-            <Card>
-              <h2 className="text-lg font-semibold text-slate-900">Activity</h2>
-              <p className="mt-1 text-sm text-slate-500">Open the admin lists filtered to this guest.</p>
-              <ul className="mt-3 grid gap-2 sm:grid-cols-2">
-                {USER_ACTIVITY_LINKS.map((link) => (
-                  <li key={link.path}>
-                    <Link
-                      to={`${link.path}?user_id=${user.id}`}
-                      aria-label={`${link.label} of ${user.full_name}`}
-                      className="block rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-teal-700 hover:bg-slate-50 hover:text-teal-800"
-                    >
-                      {link.label} →
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </Card>
-          )}
-        </div>
-
-        <div className="min-w-0 space-y-6">
-          <Card>
-            <h2 className="mb-3 text-lg font-semibold text-slate-900">Account</h2>
-            {isSelf ? (
-              <p className="text-sm text-slate-500">{OWN_ACCOUNT_NOTE}</p>
-            ) : (
-              <div className="flex flex-col gap-3">
+    <>
+      <AdminDetailLayout
+        backTo="/admin/users"
+        backLabel="Back to users"
+        title={user.full_name}
+        badges={badges}
+        meta={user.email}
+        message={message}
+        actionsTitle="Account"
+        actions={
+          isSelf ? (
+            <p className="text-sm text-ink-soft">{OWN_ACCOUNT_NOTE}</p>
+          ) : (
+            <>
+              <div className="flex flex-col gap-2">
                 {actions.map((action) => (
                   <Button
                     key={action.key}
-                    variant={action.variant}
+                    // Thao tác nguy hiểm là nút viền chữ đỏ; nút đỏ đặc chỉ có trong hộp thoại xác nhận.
+                    {...(action.variant === 'danger'
+                      ? { variant: 'secondary', danger: true }
+                      : { variant: action.variant })}
                     fullWidth
                     disabled={saving}
                     aria-label={actionLabel(action, user)}
@@ -175,15 +137,55 @@ function UserDetails({ initialUser }) {
                     {action.label}
                   </Button>
                 ))}
-                <p className="text-xs text-slate-500">
-                  Locked accounts cannot log in, and anyone using them is signed out at once.
-                </p>
               </div>
-            )}
-          </Card>
-        </div>
-      </div>
-
+              <p className="mt-2 text-sm text-ink-soft">
+                Locked accounts cannot log in, and anyone using them is signed out at once.
+              </p>
+            </>
+          )
+        }
+        main={
+          <AdminSection title="Profile">
+            <AdminFacts>
+              <AdminFact label="Name">{user.full_name}</AdminFact>
+              <AdminFact label="Email">
+                <a href={`mailto:${user.email}`} className="text-sea hover:text-sea-hover hover:underline">
+                  {user.email}
+                </a>
+              </AdminFact>
+              <AdminFact label="Phone">{user.phone || '-'}</AdminFact>
+              <AdminFact label="Role">
+                <StatusBadge status={getRoleBadge(user.role)} />
+              </AdminFact>
+              <AdminFact label="Status">
+                <StatusBadge status={user.is_active ? 'active' : 'locked'} />
+              </AdminFact>
+              <AdminFact label="Joined">{formatDate(user.created_at, { withTime: true })}</AdminFact>
+              <AdminFact label="Last updated">{formatDate(user.updated_at, { withTime: true })}</AdminFact>
+            </AdminFacts>
+          </AdminSection>
+        }
+        side={
+          user.role === 'user' && (
+            <AdminSection title="Activity" subtitle="Open the admin lists filtered to this guest.">
+              <ul className="divide-y divide-line-soft border-y border-line-soft">
+                {USER_ACTIVITY_LINKS.map((link) => (
+                  <li key={link.path}>
+                    <Link
+                      to={`${link.path}?user_id=${user.id}`}
+                      aria-label={`${link.label} of ${user.full_name}`}
+                      className="flex items-center justify-between gap-3 py-2.5 text-sm font-medium text-sea hover:text-sea-hover hover:underline"
+                    >
+                      {link.label}
+                      <RightOutlined aria-hidden="true" className="text-xs" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </AdminSection>
+          )
+        }
+      />
       <ConfirmDialog
         open={Boolean(pending)}
         title={pending?.title ?? ''}
@@ -195,7 +197,7 @@ function UserDetails({ initialUser }) {
         onConfirm={confirm}
         onClose={() => setPending(null)}
       />
-    </div>
+    </>
   );
 }
 

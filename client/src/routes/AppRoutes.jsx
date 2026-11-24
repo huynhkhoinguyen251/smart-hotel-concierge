@@ -1,7 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { PageSpinner } from '../components/ui/Spinner.jsx';
-import AdminLayout from '../layouts/AdminLayout.jsx';
 import MainLayout from '../layouts/MainLayout.jsx';
 import BookingDetailPage from '../pages/BookingDetailPage.jsx';
 import BookPage from '../pages/BookPage.jsx';
@@ -39,6 +38,7 @@ import ProtectedRoute from './ProtectedRoute.jsx';
 
 // Các trang admin (Dashboard dùng Chart.js, khá nặng) được tách thành file riêng và chỉ tải
 // khi admin mở, để khách không phải tải phần code của admin.
+const AdminLayout = lazy(() => import('../layouts/AdminLayout.jsx'));
 const DashboardPage = lazy(() => import('../pages/admin/DashboardPage.jsx'));
 const AdminBookingsPage = lazy(() => import('../pages/admin/AdminBookingsPage.jsx'));
 const AdminBookingDetailPage = lazy(() => import('../pages/admin/AdminBookingDetailPage.jsx'));
@@ -111,7 +111,7 @@ export default function AppRoutes() {
       </Route>
 
       <Route path="admin" element={<AdminRoute />}>
-        <Route element={<AdminLayout />}>
+        <Route element={withSuspense(<AdminLayout />)}>
           <Route index element={withSuspense(<DashboardPage />)} />
           <Route path="rooms" element={withSuspense(<AdminRoomsPage />)} />
           <Route path="rooms/new" element={withSuspense(<AdminRoomNewPage />)} />

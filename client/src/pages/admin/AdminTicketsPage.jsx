@@ -1,5 +1,5 @@
 import { getAdminTickets, updateAdminTicketStatus } from '../../api/adminTickets.api.js';
-import { GuestCell, TitleCell } from '../../components/admin/AdminCells.jsx';
+import { BadgesCell, GuestCell, TitleCell } from '../../components/admin/AdminCells.jsx';
 import AdminRequestListPage from '../../components/admin/AdminRequestListPage.jsx';
 import AdminStatusActions from '../../components/admin/AdminStatusActions.jsx';
 import { getActions, TICKET_ADMIN_ACTIONS } from '../../config/adminRequests.js';
@@ -7,29 +7,28 @@ import { TICKET_STATUS_TABS } from '../../config/statuses.js';
 import formatDate from '../../utils/formatDate.js';
 
 const itemLabel = (ticket) => `support request #${ticket.id}`;
+// Link của dòng là tiêu đề yêu cầu, nên nhãn đọc màn hình có cả số và tiêu đề.
+const linkLabel = (ticket) => `${itemLabel(ticket)}: ${ticket.subject}`;
 
-// Chấm cam trước yêu cầu đang open, để lễ tân thấy ngay yêu cầu chưa ai trả lời.
+// Nhãn trước yêu cầu đang open, để lễ tân thấy ngay yêu cầu chưa ai trả lời.
 const NewMarker = () => (
-  <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700">
-    <span className="h-2 w-2 rounded-full bg-amber-500" aria-hidden="true" />
-    New
-  </span>
+  <span className="rounded-sm bg-warning-tint px-1.5 py-0.5 text-xs font-semibold text-warning-deep">New</span>
 );
 
 const COLUMNS = [
   {
     key: 'ticket',
     header: 'Request',
-    render: (ticket) => (
+    render: (ticket, link) => (
       <TitleCell
-        status={ticket.status}
-        title={`#${ticket.id}`}
+        link={link}
+        title={ticket.subject}
         marker={ticket.status === 'open' ? <NewMarker /> : null}
-        detail={ticket.subject}
+        detail={`Request #${ticket.id}`}
       />
     ),
   },
-  { key: 'guest', header: 'Guest', render: (ticket) => <GuestCell user={ticket.guest} /> },
+  { key: 'guest', header: 'Guest', wide: true, render: (ticket) => <GuestCell user={ticket.guest} /> },
   {
     key: 'messages',
     header: 'Messages',
@@ -47,6 +46,7 @@ const COLUMNS = [
       </span>
     ),
   },
+  { key: 'status', header: 'Status', badges: true, render: (ticket) => <BadgesCell status={ticket.status} /> },
 ];
 
 // /admin/tickets: yêu cầu hỗ trợ của khách, cập nhật gần nhất trước (thứ tự của API).
@@ -63,7 +63,7 @@ export default function AdminTicketsPage() {
         caption: 'Support requests',
         columns: COLUMNS,
         getViewPath: (ticket) => `/admin/tickets/${ticket.id}`,
-        getItemLabel: itemLabel,
+        getItemLabel: linkLabel,
         renderActions: (ticket, actionProps) => (
           <AdminStatusActions
             actions={getActions(TICKET_ADMIN_ACTIONS, ticket.status)}

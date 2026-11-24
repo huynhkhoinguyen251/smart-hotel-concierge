@@ -1,4 +1,5 @@
-import { useId, useState } from 'react';
+import { useState } from 'react';
+import { Checkbox } from 'antd';
 import {
   MAX_CAPACITY,
   MIN_CAPACITY,
@@ -21,30 +22,22 @@ const toForm = (roomType) => ({
 
 // Danh sách ô chọn tiện nghi (có thể không chọn gì).
 function AmenityChecklist({ amenities, selected, onToggle, disabled }) {
-  const groupId = useId();
   if (amenities.length === 0) {
-    return <p className="text-sm text-slate-500">No amenities yet. Add them on the Amenities tab.</p>;
+    return <p className="text-sm text-ink-soft">No amenities yet. Add them on the Amenities tab.</p>;
   }
   return (
-    <ul className="grid gap-2 sm:grid-cols-2">
-      {amenities.map((amenity) => {
-        const id = `${groupId}-${amenity.id}`;
-        return (
-          <li key={amenity.id}>
-            <label htmlFor={id} className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-50">
-              <input
-                id={id}
-                type="checkbox"
-                checked={selected.includes(amenity.id)}
-                onChange={() => onToggle(amenity.id)}
-                disabled={disabled}
-                className="h-4 w-4 rounded border-slate-300 text-teal-700 focus:ring-teal-600"
-              />
-              <span className="break-words">{amenity.name}</span>
-            </label>
-          </li>
-        );
-      })}
+    <ul className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
+      {amenities.map((amenity) => (
+        <li key={amenity.id}>
+          <Checkbox
+            checked={selected.includes(amenity.id)}
+            onChange={() => onToggle(amenity.id)}
+            disabled={disabled}
+          >
+            <span className="wrap-anywhere">{amenity.name}</span>
+          </Checkbox>
+        </li>
+      ))}
     </ul>
   );
 }
@@ -100,28 +93,19 @@ export default function RoomTypeForm({ roomType = null, amenities, onSubmit, sub
   };
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-4" aria-label={isEdit ? 'Edit room type' : 'New room type'}>
-      <Input
-        label="Name"
-        name="name"
-        value={form.name}
-        onChange={handleChange}
-        maxLength={ROOM_TYPE_NAME_MAX_LENGTH}
-        placeholder="For example: Family Suite"
-        error={errors.name}
-        disabled={saving}
-      />
-      <Textarea
-        label="Description (optional)"
-        name="description"
-        rows={5}
-        value={form.description}
-        onChange={handleChange}
-        maxLength={ROOM_TYPE_DESCRIPTION_MAX_LENGTH}
-        error={errors.description}
-        disabled={saving}
-      />
-      <div className="grid gap-4 sm:grid-cols-2">
+    <form onSubmit={handleSubmit} noValidate className="space-y-6" aria-label={isEdit ? 'Edit room type' : 'New room type'}>
+      <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
+        <Input
+          label="Name"
+          name="name"
+          value={form.name}
+          onChange={handleChange}
+          maxLength={ROOM_TYPE_NAME_MAX_LENGTH}
+          placeholder="For example: Family Suite"
+          error={errors.name}
+          disabled={saving}
+          className="sm:col-span-2"
+        />
         <Input
           label="Price per night (VND)"
           name="price_per_night"
@@ -149,9 +133,20 @@ export default function RoomTypeForm({ roomType = null, amenities, onSubmit, sub
           hint={`From ${MIN_CAPACITY} to ${MAX_CAPACITY}`}
           disabled={saving}
         />
+        <Textarea
+          label="Description (optional)"
+          name="description"
+          rows={5}
+          value={form.description}
+          onChange={handleChange}
+          maxLength={ROOM_TYPE_DESCRIPTION_MAX_LENGTH}
+          error={errors.description}
+          disabled={saving}
+          className="sm:col-span-2"
+        />
       </div>
       <fieldset>
-        <legend className="mb-1.5 text-sm font-medium text-slate-700">Amenities</legend>
+        <legend className="mb-3 text-sm font-medium text-ink">Amenities</legend>
         <AmenityChecklist amenities={amenities} selected={form.amenity_ids} onToggle={toggleAmenity} disabled={saving} />
       </fieldset>
       <div aria-live="polite" className="space-y-2 empty:hidden">

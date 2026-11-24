@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import Button from '../ui/Button.jsx';
 import ConfirmDialog from '../ui/ConfirmDialog.jsx';
 import Input from '../ui/Input.jsx';
+import RowActions from './RowActions.jsx';
 
 // Các nút đổi trạng thái được phép cho một đơn, dùng chung cho mọi loại yêu cầu của khách.
 // - actions: các thao tác của trạng thái hiện tại (xem config/adminRequests.js).
@@ -11,11 +12,12 @@ import Input from '../ui/Input.jsx';
 //   { label, hint, placeholder, maxLength, validate(value) → lỗi hoặc '' }.
 //   Có ô nhập thêm thì lỗi của server hiện ngay trong hộp thoại để admin sửa và thử lại.
 // - onSuccess(updated, message), onError(message): trang cha cập nhật và hiện thông báo.
-// - compact: nút nhỏ cho từng dòng của danh sách.
-// Tùy chọn (dùng cho đơn đặt phòng):
+// - compact: dùng trong từng dòng của danh sách: bước tiếp theo là nút, thao tác hủy nằm trong "More".
+// Tùy chọn:
 // - dialogIntro: câu mở đầu của hộp thoại, mặc định là itemLabel viết hoa chữ đầu.
 // - getSuccessMessage(action): thông báo sau khi đổi, mặc định "<ItemLabel>: <action.success>".
-// - getDisabledReason(action): lý do khóa nút (hiện khi rê chuột), '' nếu bấm được.
+// - getDisabledReason(action): lý do khóa nút (hiện thành chữ dưới nút), '' nếu bấm được.
+// - note: ghi chú thêm; nextVariant: kiểu nút của bước tiếp theo ở trang chi tiết (mặc định theo action).
 export default function AdminStatusActions({
   actions,
   update,
@@ -27,7 +29,10 @@ export default function AdminStatusActions({
   dialogIntro,
   getSuccessMessage,
   getDisabledReason = () => '',
+  note,
+  nextVariant,
 }) {
+  const reasonId = useId();
   const [action, setAction] = useState(null);
   const [extraValue, setExtraValue] = useState('');
   const [fieldError, setFieldError] = useState('');
@@ -79,28 +84,74 @@ export default function AdminStatusActions({
     run(action, extraValue.trim());
   };
 
+  const isDanger = (item) => item.variant === 'danger';
+
+  const renderButton = (item, props) => {
+    const reason = getDisabledReason(item);
+    return (
+      <Button
+        key={item.status}
+        loading={saving && item.confirm === false}
+        disabled={saving || Boolean(reason)}
+        aria-label={compact ? `${item.label}, ${itemLabel}` : undefined}
+        aria-describedby={reason ? reasonId : undefined}
+        onClick={() => open(item)}
+        {...props}
+      >
+        {item.label}
+      </Button>
+    );
+  };
+
+  const reasons = [...new Set(actions.map(getDisabledReason).filter(Boolean))];
+
+  const renderCompact = () => {
+    const next = actions.find((item) => !isDanger(item));
+    const nextReason = next ? getDisabledReason(next) : '';
+    return (
+      <RowActions
+        itemLabel={itemLabel}
+        disabled={saving}
+        primary={next && renderButton(next, { size: 'sm', variant: 'secondary' })}
+        items={actions
+          .filter((item) => item !== next)
+          .map((item) => ({
+            key: item.status,
+            label: item.label,
+            danger: isDanger(item),
+            reason: getDisabledReason(item),
+            onClick: () => open(item),
+          }))}
+        note={nextReason ? <span id={reasonId}>{nextReason}</span> : note}
+      />
+    );
+  };
+
+  // Trang chi tiết: bước tiếp theo là nút vàng, thao tác nguy hiểm là nút viền chữ đỏ.
+  const renderFull = () => (
+    <>
+      <div className="flex flex-col gap-2">
+        {actions.map((item) =>
+          renderButton(item, {
+            fullWidth: true,
+            ...(isDanger(item)
+              ? { variant: 'secondary', danger: true }
+              : { variant: nextVariant ?? item.variant }),
+          }),
+        )}
+      </div>
+      {reasons.length > 0 && (
+        <p id={reasonId} className="mt-2 text-sm text-ink-soft">
+          {reasons.join(' ')}
+        </p>
+      )}
+      {note && <p className="mt-2 text-sm text-ink-soft">{note}</p>}
+    </>
+  );
+
   return (
     <>
-      <div className={`flex flex-wrap gap-2 ${compact ? '' : 'flex-col'}`}>
-        {actions.map((item) => {
-          const disabledReason = getDisabledReason(item);
-          return (
-            <Button
-              key={item.status}
-              variant={item.variant === 'danger' ? 'danger' : compact ? 'secondary' : item.variant}
-              size={compact ? 'sm' : 'md'}
-              className={compact ? '' : 'w-full'}
-              loading={saving && item.confirm === false}
-              disabled={saving || Boolean(disabledReason)}
-              title={disabledReason || undefined}
-              aria-label={compact ? `${item.label}, ${itemLabel}` : undefined}
-              onClick={() => open(item)}
-            >
-              {item.label}
-            </Button>
-          );
-        })}
-      </div>
+      {compact ? renderCompact() : renderFull()}
 
       <ConfirmDialog
         open={Boolean(action)}
@@ -108,7 +159,7 @@ export default function AdminStatusActions({
         message={action ? `${intro}. ${action.message}` : ''}
         confirmLabel={action ? `Yes, ${action.label.toLowerCase()}` : 'Confirm'}
         cancelLabel="Go back"
-        variant={action?.variant === 'danger' ? 'danger' : 'primary'}
+        variant={action && isDanger(action) ? 'danger' : 'primary'}
         loading={saving}
         onConfirm={handleConfirm}
         onClose={() => setAction(null)}

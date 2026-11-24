@@ -1,61 +1,38 @@
-import { Doughnut } from 'react-chartjs-2';
 import { REVENUE_SOURCES } from '../../../config/adminStats.js';
 import formatCurrency from '../../../utils/formatCurrency.js';
-import './registerCharts.js';
 
-// Biểu đồ tròn: phần doanh thu của từng nguồn. Chú thích là danh sách HTML bên cạnh,
-// có số tiền và phần trăm, nên đọc được cả khi không nhìn biểu đồ.
-// Tổng bằng 0 thì trang cha hiện ghi chú thay vì biểu đồ rỗng.
+// Doanh thu của từng nguồn: thanh ngang, số tiền và phần trăm bằng chữ bên cạnh.
+// Trên điện thoại chữ nằm trên, thanh nằm dưới. Tổng bằng 0 thì trang cha hiện ghi chú thay vì biểu đồ rỗng.
 export default function RevenueSourceChart({ revenue }) {
   const total = Number(revenue.total) || 0;
-  const percent = (value) => (total > 0 ? Math.round((Number(value) / total) * 1000) / 10 : 0);
-
-  const data = {
-    labels: REVENUE_SOURCES.map((source) => source.label),
-    datasets: [
-      {
-        data: REVENUE_SOURCES.map((source) => revenue[source.key]),
-        backgroundColor: REVENUE_SOURCES.map((source) => source.color),
-        borderWidth: 2,
-        borderColor: '#ffffff',
-      },
-    ],
-  };
-
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    cutout: '60%',
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: (context) => `${context.label}: ${formatCurrency(context.parsed)} (${percent(context.parsed)}%)`,
-        },
-      },
-    },
-  };
+  const amounts = REVENUE_SOURCES.map((source) => Number(revenue[source.key]) || 0);
+  const max = Math.max(1, ...amounts);
+  const percent = (value) => (total > 0 ? Math.round((value / total) * 1000) / 10 : 0);
 
   return (
-    // Ô ở cột hẹp (2 cột từ lg) thì chú thích xuống dưới biểu đồ, tránh số tiền đè lên tên nguồn.
-    <div className="flex flex-col items-center gap-6 sm:flex-row lg:flex-col 2xl:flex-row">
-      <div className="relative h-48 w-48 shrink-0">
-        <Doughnut data={data} options={options} role="img" aria-label="Doughnut chart of revenue by source" />
-      </div>
-      <ul className="w-full min-w-0 space-y-2 text-sm" aria-label="Revenue by source">
-        {REVENUE_SOURCES.map((source) => (
-          <li key={source.key} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5">
-            <span className="flex min-w-0 items-center gap-2">
-              <span className="h-3 w-3 shrink-0 rounded-sm" style={{ backgroundColor: source.color }} aria-hidden="true" />
-              <span className="text-slate-700">{source.label}</span>
-            </span>
-            <span className="text-right whitespace-nowrap">
-              <span className="font-semibold text-slate-900">{formatCurrency(revenue[source.key])}</span>
-              <span className="ml-1 text-xs text-slate-500">{percent(revenue[source.key])}%</span>
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <ul className="space-y-4" aria-label="Revenue by source">
+      {REVENUE_SOURCES.map((source, index) => (
+        <li
+          key={source.key}
+          className="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-1.5 text-sm sm:grid-cols-[5.5rem_minmax(0,1fr)_11.5rem]"
+        >
+          <span className="text-ink">{source.label}</span>
+          <span aria-hidden="true" className="order-last col-span-2 h-4 sm:order-none sm:col-span-1">
+            <span
+              className="block h-full rounded-r-sm"
+              style={{
+                width: `${(amounts[index] / max) * 100}%`,
+                minWidth: amounts[index] > 0 ? 3 : 0,
+                backgroundColor: source.color,
+              }}
+            />
+          </span>
+          <span className="text-right whitespace-nowrap">
+            <span className="font-semibold text-ink">{formatCurrency(amounts[index])}</span>
+            <span className="text-ink-soft"> {percent(amounts[index])}%</span>
+          </span>
+        </li>
+      ))}
+    </ul>
   );
 }

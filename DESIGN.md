@@ -27,6 +27,11 @@ colors:
   danger-hover: "#A52822"
   danger-active: "#8A1F1A"
   danger-tint: "#FCECEA"
+  chart-rooms: "#1B7FA8"
+  chart-services: "#E0921A"
+  chart-food: "#1B8A5A"
+  chart-tours: "#7A5CC7"
+  chart-transport: "#CF4F3A"
 typography:
   display:
     fontFamily: "'Be Vietnam Pro', ui-sans-serif, system-ui, 'Segoe UI', sans-serif"
@@ -170,9 +175,15 @@ Guest browsing pages persuade: photographs of rooms, food and tours carry them a
 
 Green for success, orange for waiting, red for danger. Each has a tint for backgrounds and a deep tone for text on that tint. Badges put deep text on a tint; they never use a saturated fill.
 
-**The One Sun Rule.** Amber is only the fill of a primary button. It is never text, an icon, a star, a border or a background, and amber text on white is forbidden.
+### Charts
 
-**The Sea Means Something Rule.** Sea blue says "you can go here" or "this is the current one". It is not used to decorate.
+The five revenue sources always have these colours, in this order: Rooms (`chart-rooms`), Services (`chart-services`), Food (`chart-food`), Tours (`chart-tours`), Transport (`chart-transport`). They were checked for colour-blind separation. A source keeps its colour everywhere, and these colours are used for nothing else. Counts of one kind (bookings by status, ratings) are bars in sea blue.
+
+**The Ink Numbers Rule.** Text in a chart is ink, never the colour of its series. The name and the number are written beside the mark, so colour is never the only way to read it.
+
+**The One Sun Rule.** Amber is only the fill of a primary button. It is never text, an icon, a star, a border or a background (the chart colour of Services is a data colour, not this one), and amber text on white is forbidden.
+
+**The Sea Means Something Rule.** Sea blue says "you can go here" or "this is the current one". It is not used to decorate. In the admin area it also fills single-colour bars.
 
 ## Typography
 
@@ -186,7 +197,7 @@ Numbers are tabular, so prices, dates and countdowns line up and do not jump.
 
 ## Layout
 
-Guest browsing pages use one centred column (the `shell` utility): at most 80rem wide, with a gutter of 16px on phones, 24px from 640px and 32px from 1024px. Detail pages use a wide column for content and a narrow column for the action, which stays in view on desktop and follows the content on phones. Admin content sits beside a fixed sidebar.
+Guest browsing pages use one centred column (the `shell` utility): at most 80rem wide, with a gutter of 16px on phones, 24px from 640px and 32px from 1024px. Detail pages use a wide column for content and a narrow column for the action, which stays in view on desktop and follows the content on phones. Admin content sits beside a fixed navy column.
 
 Space is tight inside a group and generous between groups, with more above a heading than below it. The page never scrolls sideways at 375px; wide tables and tab rows scroll inside their own area.
 
@@ -211,6 +222,20 @@ Each page has its own composition, so a photograph of a dish is never framed lik
 
 **The Whole Block Rule.** Where a row or block leads to one page, all of it can be clicked, but there is only one link in it for the keyboard.
 
+### Admin pages
+
+| Part | Composition |
+|---|---|
+| Side column | Ink ground, white text, line icons; the current item is white on sea. Dashboard stands alone, then Front desk, Hotel and Money. It collapses to icons with tooltips (by itself below 1280px, and the choice is remembered). Below 1024px it is a drawer from the left. |
+| Top bar | White: the group and section, Back to site (in the drawer on phones), notifications, and an account menu with Logout. |
+| Content | Ground colour, at most 84rem wide. On every navigation the page starts at the top and keyboard focus moves to the content. |
+| Dashboard | What needs attention first, as a list of counts that are links; a zero is quiet. Then one line of plain figures. Then charts and tables, in white panels divided by lines. |
+| List | One white panel: status tabs, a toolbar with search and filters, the table, the pages. Loading, empty and error states stay inside it. While it reloads, the old rows stay and fade. |
+| Details | One white panel: title, status and date on the left, the actions on the right at the same height, the progress, then content on the left and guest, price and payment on the right, divided by lines. On phones everything follows in one column. |
+| Form | One white panel, two columns on desktop and one on phones. |
+
+**The Two Rows Rule.** Switching between sections (Requests / Catalog) is a solid block with a white chip; filtering by status is a row of underlined tabs. The two never look alike.
+
 ## Elevation & Depth
 
 Surfaces are flat. A card is a thin line on white, with no shadow.
@@ -229,6 +254,16 @@ Controls have a 6px radius, cards, dialogs and photographs 8px, badges and small
 
 Primary is amber with ink text and appears once per view, secondary is white with a line, danger is red with white text. Default height is 40px and small is 32px. Hover and active change the fill; secondary turns its text and border sea blue. While loading, a button shows a spinning icon and cannot be pressed again.
 
+In a table row at most one button is visible: the next step, or Edit. Everything else is in a "More" menu, with destructive actions there in red text. On a details page a destructive action is a white button with red text and line; a filled red button appears only in the dialog that asks again. A disabled action says why in text under it.
+
+### Tables
+
+From 1024px: a quiet header without dividers, rows divided by lines, text at the top of the cell. The first column is the name and the link to the details; the status badges follow it on one line; numbers are right-aligned and never wrap. A table that is too wide scrolls inside its panel with the actions always in view. Below 1024px each row is a compact block: name and amount, badges, labelled values in two columns, then the actions.
+
+### Charts
+
+Revenue by month is a stack of columns at most 24px wide, with a 2px white gap between segments and a 4px radius on the top segment only. Gridlines are solid hairlines, the axis is compact ("20M VND"), the legend is always shown, and the tooltip has every source and the total. The same numbers are in a table below it. Comparisons are horizontal bars with the value as text. There are no doughnuts and no double axes. Charts do not animate, and their skeleton has the same height.
+
 ### Fields
 
 The label is above the field, the hint or error below. An error turns the border red and replaces the hint. Focus turns the border sea blue. Dates read as "10 Jul 2027" and times as "10 Jul 2027, 14:30", so a day is never mistaken for a month. On phones the date and time panel opens at the bottom of the screen.
@@ -237,13 +272,15 @@ The label is above the field, the hint or error below. An error turns the border
 
 Filter tabs are links with a 2px sea underline under the current one. On phones the row scrolls inside its area without a scrollbar and brings the current tab into view.
 
+A choice between two ways of doing the same thing, such as uploading a file or pasting a URL, is a segmented control.
+
 ### Badges and progress
 
 Badges show a status in deep text on a tint. Progress shows the steps of an order, with a check mark for finished steps and a sea circle for the current one; steps stack vertically on phones.
 
 ### Dialogs
 
-Centred, with the title at the top and the buttons at the bottom. Long content scrolls in between. A confirmation starts with the safe button focused. Escape and a click outside close a dialog unless it is saving.
+Centred, with the title at the top and the buttons at the bottom. Long content scrolls in between and the buttons stay in view. A confirmation starts with the safe button focused. Escape and a click outside close a dialog unless it is saving.
 
 ### Loading, empty and error
 
@@ -270,6 +307,7 @@ State changes take 150 to 200 milliseconds. A photograph that leads somewhere gr
 ### Don't:
 
 - **Don't** use amber for anything except a primary button.
+- **Don't** put a red button in every row of a table.
 - **Don't** say the hotel is on the beach; it is on Bach Dang Street.
 - **Don't** put a card in a card, or use cards where a line or space is enough.
 - **Don't** add gradients, glass, glows, pills or coloured side borders.

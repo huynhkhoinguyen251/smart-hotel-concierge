@@ -4,29 +4,25 @@ import useFetch from '../../hooks/useFetch.js';
 import useUrlFilters from '../../hooks/useUrlFilters.js';
 import { readId, toQueryString } from '../../utils/queryString.js';
 import Alert from '../ui/Alert.jsx';
-import EmptyState from '../ui/EmptyState.jsx';
-import LoadError from '../ui/LoadError.jsx';
 import FilterTabs from '../ui/FilterTabs.jsx';
-import PageTitle from '../ui/PageTitle.jsx';
-import Pagination from '../ui/Pagination.jsx';
 import Select from '../ui/Select.jsx';
-import { PageSpinner } from '../ui/Spinner.jsx';
+import AdminListPanel, { AdminListBody } from './AdminListPanel.jsx';
+import AdminPageHeader from './AdminPageHeader.jsx';
 import AdminRequestTable from './AdminRequestTable.jsx';
 import UserFilterChip from './UserFilterChip.jsx';
 
-// Khung trang danh sách của admin: tiêu đề, (tab phụ), tab trạng thái, ô lọc, thông báo, danh sách
-// và phân trang. Trạng thái, các ô lọc và trang đều nằm trên địa chỉ trang.
+// Khung trang danh sách của admin: tiêu đề, (thanh chuyển mục), tab trạng thái, ô lọc, thông báo,
+// danh sách và phân trang. Trạng thái, các ô lọc và trang đều nằm trên địa chỉ trang.
 // - basePath: ví dụ "/admin/food-orders"; statusTabs: [{ value, label }].
 // - filters: [{ name, label, options: [{ value, label }] }], value '' nghĩa là tất cả.
 // - load(params) trả { items, pagination }.
 // - ?user_id= trên địa chỉ trang (từ trang chi tiết người dùng) lọc theo một khách; giá trị lạ bị bỏ qua.
-// - table: props của AdminRequestTable trừ items; renderActions(item, actionProps).
-// - header: phần thêm dưới tiêu đề (ví dụ tab "Tour bookings / Transport"). Bước sau có thể đặt
-//   thanh điều hướng phụ (quản lý danh mục) ở đây.
+// - table: props của AdminRequestTable trừ items; renderActions(item, actionProps) (không bắt buộc).
+// - subNav: thanh chuyển mục (ví dụ Requests / Catalog).
 export default function AdminRequestListPage({
   title,
   subtitle,
-  header,
+  subNav,
   basePath,
   statusTabs,
   filters = [],
@@ -58,66 +54,65 @@ export default function AdminRequestListPage({
     compact: true,
   };
 
-  const renderList = () => {
-    if (list.loading) return <PageSpinner />;
-    if (list.error) {
-      return <LoadError error={list.error} onRetry={list.retry} />;
-    }
-    if (list.data.items.length === 0) {
-      const filtered = status || userId || Object.values(filterValues).some(Boolean);
-      return (
-        <EmptyState
-          title={filtered ? `No ${emptyNoun} match these filters` : `No ${emptyNoun} yet`}
-          message={filtered ? 'Try another status or filter.' : `${emptyNoun.charAt(0).toUpperCase()}${emptyNoun.slice(1)} from guests appear here.`}
-        />
-      );
-    }
-    return (
-      <>
-        <AdminRequestTable
-          {...table}
-          items={list.data.items}
-          renderActions={(item) => table.renderActions(item, actionProps)}
-        />
-        <Pagination
-          className="mt-8"
-          page={page}
-          limit={ADMIN_LIST_PAGE_SIZE}
-          total={list.data.pagination?.total ?? 0}
-          onPageChange={goToPage}
-        />
-      </>
-    );
-  };
+  const filtered = status || userId || Object.values(filterValues).some(Boolean);
+  const hasToolbar = filters.length > 0 || userId;
 
   return (
-    <div className="mx-auto max-w-6xl">
-      <PageTitle title={title} subtitle={subtitle} />
-      {header}
-      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <FilterTabs
-          label="Filter by status"
-          className="min-w-0 lg:mx-0 lg:px-0"
-          tabs={statusTabs}
-          active={status}
-          getLink={(value) => `${basePath}${toQueryString({ ...filterValues, user_id: userId, status: value })}`}
-        />
-        {filters.map((filter) => (
-          <Select
-            key={filter.name}
-            label={filter.label}
-            className="sm:w-64"
-            value={filterValues[filter.name]}
-            onChange={(event) => updateUrl({ [filter.name]: event.target.value, page: '' })}
-            options={filter.options}
-          />
-        ))}
-      </div>
-      <UserFilterChip userId={userId} clearTo={`${basePath}${toQueryString({ status, ...filterValues })}`} />
+    <>
+      <AdminPageHeader title={title} subtitle={subtitle} subNav={subNav} />
       <div className="mb-4 empty:hidden" aria-live="polite">
         <Alert type={message.type}>{message.text}</Alert>
       </div>
-      {renderList()}
-    </div>
+      <AdminListPanel
+        tabs={
+          <FilterTabs
+            label="Filter by status"
+            tabs={statusTabs}
+            active={status}
+            getLink={(value) => `${basePath}${toQueryString({ ...filterValues, user_id: userId, status: value })}`}
+          />
+        }
+        toolbar={
+          hasToolbar && (
+            <>
+              {filters.map((filter) => (
+                <Select
+                  key={filter.name}
+                  label={filter.label}
+                  className="sm:w-56"
+                  value={filterValues[filter.name]}
+                  onChange={(event) => updateUrl({ [filter.name]: event.target.value, page: '' })}
+                  options={filter.options}
+                />
+              ))}
+              <UserFilterChip userId={userId} clearTo={`${basePath}${toQueryString({ status, ...filterValues })}`} />
+            </>
+          )
+        }
+      >
+        <AdminListBody
+          list={list}
+          items={list.data?.items ?? []}
+          empty={{
+            title: filtered ? `No ${emptyNoun} match these filters` : `No ${emptyNoun} yet`,
+            message: filtered
+              ? 'Try another status or filter.'
+              : `${emptyNoun.charAt(0).toUpperCase()}${emptyNoun.slice(1)} from guests appear here.`,
+          }}
+          pagination={{
+            page,
+            limit: ADMIN_LIST_PAGE_SIZE,
+            total: list.data?.pagination?.total ?? 0,
+            onPageChange: goToPage,
+          }}
+        >
+          <AdminRequestTable
+            {...table}
+            items={list.data?.items ?? []}
+            renderActions={table.renderActions && ((item) => table.renderActions(item, actionProps))}
+          />
+        </AdminListBody>
+      </AdminListPanel>
+    </>
   );
 }
