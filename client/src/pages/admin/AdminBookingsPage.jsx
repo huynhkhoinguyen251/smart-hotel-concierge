@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { getAdminBookings } from '../../api/adminBookings.api.js';
 import AdminBookingList from '../../components/admin/AdminBookingList.jsx';
-import AdminListPanel, { AdminListBody } from '../../components/admin/AdminListPanel.jsx';
+import ListPanel, { ListBody } from '../../components/ui/ListPanel.jsx';
 import AdminPageHeader from '../../components/admin/AdminPageHeader.jsx';
 import UserFilterChip from '../../components/admin/UserFilterChip.jsx';
 import Alert from '../../components/ui/Alert.jsx';
@@ -121,7 +121,7 @@ export default function AdminBookingsPage() {
       <div className="mb-4 empty:hidden" aria-live="polite">
         <Alert type={message.type}>{message.text}</Alert>
       </div>
-      <AdminListPanel
+      <ListPanel
         tabs={
           <FilterTabs
             label="Filter by status"
@@ -148,7 +148,7 @@ export default function AdminBookingsPage() {
           </>
         }
       >
-        <AdminListBody
+        <ListBody
           list={list}
           items={list.data?.bookings ?? []}
           empty={{
@@ -163,8 +163,8 @@ export default function AdminBookingsPage() {
           }}
         >
           <AdminBookingList bookings={list.data?.bookings ?? []} actionProps={actionProps} />
-        </AdminListBody>
-      </AdminListPanel>
+        </ListBody>
+      </ListPanel>
     </>
   );
 }

@@ -1,5 +1,9 @@
+import usePageTitle from '../../hooks/usePageTitle.js';
+
 // Phần đầu của mọi trang admin: tiêu đề, mô tả ngắn, nút chính bên phải và thanh chuyển mục (subNav).
-export default function AdminPageHeader({ title, subtitle, action, subNav }) {
+// tabTitle: tiêu đề của tab trình duyệt khi nhiều trang có cùng tiêu đề (ba trang của Tourism).
+export default function AdminPageHeader({ title, tabTitle = title, subtitle, action, subNav }) {
+  usePageTitle(`Admin: ${tabTitle}`);
   return (
     <div className="mb-6">
       <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">

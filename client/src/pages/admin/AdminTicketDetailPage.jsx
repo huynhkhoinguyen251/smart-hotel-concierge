@@ -4,12 +4,13 @@ import {
   replyToAdminTicket,
   updateAdminTicketStatus,
 } from '../../api/adminTickets.api.js';
-import AdminDetailLayout, { AdminGuestSection, AdminSection } from '../../components/admin/AdminDetailLayout.jsx';
-import DetailLoader from '../../components/ui/DetailLoader.jsx';
+import AdminDetailLayout, { AdminGuestSection } from '../../components/admin/AdminDetailLayout.jsx';
 import AdminStatusActions from '../../components/admin/AdminStatusActions.jsx';
-import TicketMessage from '../../components/admin/TicketMessage.jsx';
+import { DetailSection } from '../../components/detail/DetailParts.jsx';
+import TicketMessage from '../../components/support/TicketMessage.jsx';
 import Alert from '../../components/ui/Alert.jsx';
 import Button from '../../components/ui/Button.jsx';
+import DetailLoader from '../../components/ui/DetailLoader.jsx';
 import Textarea from '../../components/ui/Textarea.jsx';
 import { getActions, TICKET_ADMIN_ACTIONS } from '../../config/adminRequests.js';
 import { TICKET_STEPS } from '../../config/statuses.js';
@@ -114,7 +115,7 @@ function TicketDetails({ initialTicket }) {
       }
       actionsEmptyText="This request is resolved."
       main={
-        <AdminSection
+        <DetailSection
           title="Conversation"
           action={
             <Button variant="secondary" size="sm" loading={refreshing} onClick={refresh}>
@@ -135,7 +136,7 @@ function TicketDetails({ initialTicket }) {
               <ReplyBox ticketId={ticket.id} onSent={setTicket} />
             )}
           </div>
-        </AdminSection>
+        </DetailSection>
       }
       side={<AdminGuestSection user={ticket.guest} />}
     />

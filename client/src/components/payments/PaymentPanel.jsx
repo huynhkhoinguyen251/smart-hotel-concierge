@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { payOrder } from '../../api/payments.api.js';
 import {
   COUNTDOWN_WARNING_SECONDS,
@@ -14,8 +13,8 @@ import formatDate from '../../utils/formatDate.js';
 import { isAwaitingPayment, toDemoQrText, toPaymentBody } from '../../utils/paymentHelpers.js';
 import Alert from '../ui/Alert.jsx';
 import Button from '../ui/Button.jsx';
-import Card from '../ui/Card.jsx';
 import DetailRow from '../ui/DetailRow.jsx';
+import MoreLink from '../ui/MoreLink.jsx';
 import StatusBadge from '../ui/StatusBadge.jsx';
 import PaymentQrCode from './PaymentQrCode.jsx';
 
@@ -78,60 +77,58 @@ function AwaitingPayment({ type, order, onPaid, onExpired }) {
 
   if (expired) {
     return (
-      <Card className="border-red-200 bg-red-50">
-        <h2 className="text-lg font-semibold text-red-800">Payment time expired</h2>
-        <p className="mt-1 text-sm text-red-700" role="status">
+      <section>
+        <h2 className="text-lg font-semibold text-danger">Payment time expired</h2>
+        <p className="mt-1 text-sm text-ink" role="status">
           {PAYMENT_EXPIRED_MESSAGE}
         </p>
-      </Card>
+      </section>
     );
   }
 
   const urgent = secondsLeft <= COUNTDOWN_WARNING_SECONDS;
   return (
+    // Điện thoại: số tiền, mã QR, rồi nút. Từ sm: mã QR ở cột trái, phần còn lại ở cột phải.
     <section
       aria-labelledby="payment-panel-title"
-      className="rounded-2xl border-2 border-teal-300 bg-teal-50/40 p-5 shadow-sm sm:p-6"
+      className="grid gap-x-8 gap-y-4 sm:grid-cols-[14rem_minmax(0,26rem)] sm:grid-rows-[auto_1fr]"
     >
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h2 id="payment-panel-title" className="text-lg font-semibold text-slate-900">
-            Pay to complete your {ORDER_NOUNS[type] ?? 'order'}
-          </h2>
-          <p className="mt-1 text-2xl font-bold text-teal-700">{formatCurrency(payment.amount)}</p>
+      <div className="min-w-0 sm:col-start-2">
+        <h2 id="payment-panel-title" className="text-lg font-semibold text-ink">
+          Pay to complete your {ORDER_NOUNS[type] ?? 'order'}
+        </h2>
+        <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+          <p className="text-2xl font-bold whitespace-nowrap text-ink">{formatCurrency(payment.amount)}</p>
+          <p className={`font-semibold whitespace-nowrap tabular-nums ${urgent ? 'text-danger' : 'text-ink'}`}>
+            Time left {label}
+          </p>
         </div>
-        <p
-          className={`rounded-full px-3 py-1 text-sm font-semibold tabular-nums ${
-            urgent ? 'bg-red-100 text-red-700' : 'bg-white text-slate-700 ring-1 ring-slate-200'
-          }`}
-        >
-          Time left {label}
+        <p className="sr-only" aria-live="polite">
+          {announceText(secondsLeft, false)}
         </p>
       </div>
-      <p className="sr-only" aria-live="polite">
-        {announceText(secondsLeft, false)}
-      </p>
 
-      <div className="mt-4 flex flex-col items-center gap-5 sm:flex-row sm:items-start">
+      <div className="flex justify-center sm:col-start-1 sm:row-span-2 sm:row-start-1">
         <PaymentQrCode text={toDemoQrText(type, order.id, payment)} />
-        <div className="w-full min-w-0 space-y-3 text-sm text-slate-700">
-          <ol className="list-decimal space-y-1 pl-5">
-            <li>Scan the QR code with your e-wallet app.</li>
-            <li>Click &quot;I have paid&quot;.</li>
-          </ol>
-          {payment.expires_at && (
-            <p className="text-xs text-slate-500">
-              Pay before {formatDate(payment.expires_at, { withTime: true })}. Unpaid orders are cancelled
-              automatically.
-            </p>
-          )}
-          <Button fullWidth loading={paying} onClick={handlePay}>
-            I have paid
-          </Button>
-          <div aria-live="polite">
-            <Alert type="error">{error}</Alert>
-          </div>
+      </div>
+
+      <div className="flex min-w-0 flex-col gap-4 sm:col-start-2">
+        <ol className="list-decimal space-y-1 pl-5 text-sm text-ink">
+          <li>Scan the QR code with your e-wallet app.</li>
+          <li>Click &quot;I have paid&quot;.</li>
+        </ol>
+        <Button fullWidth loading={paying} onClick={handlePay}>
+          I have paid
+        </Button>
+        <div aria-live="polite" className="-mt-4 not-empty:mt-0">
+          <Alert type="error">{error}</Alert>
         </div>
+        {payment.expires_at && (
+          <p className="text-xs text-ink-soft">
+            Pay before {formatDate(payment.expires_at, { withTime: true })}. Unpaid orders are cancelled
+            automatically.
+          </p>
+        )}
       </div>
     </section>
   );
@@ -141,29 +138,26 @@ function AwaitingPayment({ type, order, onPaid, onExpired }) {
 function PaidPayment({ payment }) {
   const refunded = payment.status === 'refunded';
   return (
-    <Card>
+    <section>
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="text-lg font-semibold text-slate-900">{refunded ? 'Refunded' : 'Paid'}</h2>
+        <h2 className="text-lg font-semibold text-ink">Payment</h2>
         <StatusBadge status={payment.status} />
       </div>
       {refunded && (
-        <p className="mt-1 text-sm text-slate-600">This order was cancelled, so the payment was refunded.</p>
+        <p className="mt-1 text-sm text-ink-soft">This order was cancelled, so the payment was refunded.</p>
       )}
-      <dl className="mt-2 divide-y divide-slate-100 text-sm">
+      <dl className="mt-2 text-sm">
         <DetailRow label="Amount">{formatCurrency(payment.amount)}</DetailRow>
         <DetailRow label="Paid on">{formatDate(payment.paid_at, { withTime: true }) || '-'}</DetailRow>
         <DetailRow label="Method">{getPaymentMethodLabel(payment.method)}</DetailRow>
         <DetailRow label="Invoice">{payment.invoice_number ?? '-'}</DetailRow>
       </dl>
       {payment.invoice_number && (
-        <Link
-          to={`/payments/${payment.id}/invoice`}
-          className="mt-3 inline-block text-sm font-semibold text-teal-700 hover:text-teal-800"
-        >
-          View invoice →
-        </Link>
+        <MoreLink to={`/payments/${payment.id}/invoice`} className="mt-2">
+          View invoice
+        </MoreLink>
       )}
-    </Card>
+    </section>
   );
 }
 
@@ -192,9 +186,10 @@ export default function PaymentPanel({ type, order, onPaid, onExpired }) {
   }
   if (order.status === 'cancelled') {
     return (
-      <Card>
-        <p className="text-sm text-slate-600">This order was cancelled before it was paid. Nothing was charged.</p>
-      </Card>
+      <section>
+        <h2 className="mb-2 text-lg font-semibold text-ink">Payment</h2>
+        <p className="text-sm text-ink-soft">This order was cancelled before it was paid. Nothing was charged.</p>
+      </section>
     );
   }
   return null;

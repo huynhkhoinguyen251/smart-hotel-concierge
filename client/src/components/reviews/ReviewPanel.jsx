@@ -11,7 +11,6 @@ import useMyReview from '../../hooks/useMyReview.js';
 import formatDate from '../../utils/formatDate.js';
 import Alert from '../ui/Alert.jsx';
 import Button from '../ui/Button.jsx';
-import Card from '../ui/Card.jsx';
 import RatingStars from '../ui/RatingStars.jsx';
 import Spinner from '../ui/Spinner.jsx';
 import Textarea from '../ui/Textarea.jsx';
@@ -23,9 +22,9 @@ function ReadOnlyReview({ review }) {
     <div>
       <RatingStars rating={review.rating} size="md" />
       {review.comment && (
-        <p className="mt-2 whitespace-pre-line text-sm wrap-anywhere text-slate-700">{review.comment}</p>
+        <p className="mt-2 max-w-prose whitespace-pre-line text-sm wrap-anywhere text-ink">{review.comment}</p>
       )}
-      <p className="mt-2 text-xs text-slate-500">Posted on {formatDate(review.created_at)}</p>
+      <p className="mt-2 text-xs text-ink-soft">Posted on {formatDate(review.created_at)}</p>
     </div>
   );
 }
@@ -65,7 +64,7 @@ function ReviewForm({ config, itemId, onPosted, onDuplicate }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-4" aria-label="Rate your experience">
+    <form onSubmit={handleSubmit} noValidate className="max-w-xl space-y-4" aria-label="Rate your experience">
       <StarRatingInput
         value={rating}
         onChange={(value) => {
@@ -88,10 +87,10 @@ function ReviewForm({ config, itemId, onPosted, onDuplicate }) {
       <div aria-live="polite">
         <Alert type="error">{error}</Alert>
       </div>
-      <Button type="submit" fullWidth loading={submitting}>
+      <Button type="submit" loading={submitting}>
         Submit review
       </Button>
-      <p className="text-xs text-slate-500">Reviews cannot be changed after they are posted.</p>
+      <p className="text-xs text-ink-soft">Reviews cannot be changed after they are posted.</p>
     </form>
   );
 }
@@ -107,8 +106,8 @@ function ReviewPanelContent({ type, config, itemId }) {
   const renderBody = () => {
     if (request.loading && !posted) {
       return (
-        <p className="flex items-center gap-2 text-sm text-slate-600">
-          <Spinner size="sm" className="text-teal-700" /> Checking your review...
+        <p className="flex items-center gap-2 text-sm text-ink-soft">
+          <Spinner size="sm" className="text-sea" /> Checking your review...
         </p>
       );
     }
@@ -140,17 +139,15 @@ function ReviewPanelContent({ type, config, itemId }) {
   };
 
   return (
-    <Card>
-      <h2 className="mb-3 text-lg font-semibold text-slate-900">
-        {review ? 'Your review' : 'Rate your experience'}
-      </h2>
+    <section>
+      <h2 className="mb-3 text-lg font-semibold text-ink">{review ? 'Your review' : 'Rate your experience'}</h2>
       <div aria-live="polite">
         <Alert type={notice.type} className="mb-3">
           {notice.text}
         </Alert>
       </div>
       {renderBody()}
-    </Card>
+    </section>
   );
 }
 

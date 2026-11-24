@@ -20,9 +20,9 @@ export default function RoomCard({ room, stay, details }) {
 
       <div className="flex min-w-0 flex-col justify-between gap-4 md:flex-row md:gap-6 lg:flex-col xl:flex-row">
         <div className="min-w-0 flex-1">
-          <h3 className="text-xl font-semibold text-ink transition-colors duration-150 group-hover:text-sea">
+          <h2 className="text-xl font-semibold text-ink transition-colors duration-150 group-hover:text-sea">
             {roomType.name}
-          </h3>
+          </h2>
           <p className="mt-1 text-sm text-ink-soft">
             Room {room.room_number} · Floor {room.floor} · Up to {formatGuests(roomType.capacity)}
           </p>

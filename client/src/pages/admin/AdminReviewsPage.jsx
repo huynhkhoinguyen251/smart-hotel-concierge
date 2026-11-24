@@ -1,7 +1,7 @@
 import { getAdminReviews } from '../../api/adminReviews.api.js';
 import { getFeedbackStats } from '../../api/adminStats.api.js';
 import { CellLink, EmptyCell, GuestCell, TitleCell } from '../../components/admin/AdminCells.jsx';
-import AdminListPanel, { AdminListBody } from '../../components/admin/AdminListPanel.jsx';
+import ListPanel, { ListBody } from '../../components/ui/ListPanel.jsx';
 import AdminPageHeader from '../../components/admin/AdminPageHeader.jsx';
 import AdminRequestTable from '../../components/admin/AdminRequestTable.jsx';
 import FilterTabs from '../../components/ui/FilterTabs.jsx';
@@ -122,7 +122,7 @@ export default function AdminReviewsPage() {
     <>
       <AdminPageHeader title="Reviews" subtitle={`Guest reviews, newest first. ${ADMIN_REVIEWS_NOTE}`} />
       <FeedbackLine />
-      <AdminListPanel
+      <ListPanel
         tabs={
           <FilterTabs
             label="Filter by rating"
@@ -141,7 +141,7 @@ export default function AdminReviewsPage() {
           />
         }
       >
-        <AdminListBody
+        <ListBody
           list={list}
           items={list.data?.items ?? []}
           empty={{
@@ -156,8 +156,8 @@ export default function AdminReviewsPage() {
           }}
         >
           <AdminRequestTable caption="Reviews" items={list.data?.items ?? []} columns={COLUMNS} />
-        </AdminListBody>
-      </AdminListPanel>
+        </ListBody>
+      </ListPanel>
     </>
   );
 }

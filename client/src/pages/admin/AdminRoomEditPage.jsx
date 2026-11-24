@@ -2,14 +2,15 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { deleteAdminRoom, getAdminRoom, updateAdminRoom } from '../../api/adminRooms.api.js';
 import { getRoomTypes } from '../../api/catalog.api.js';
-import DetailLoader from '../../components/ui/DetailLoader.jsx';
-import AdminDetailLayout, { AdminSection } from '../../components/admin/AdminDetailLayout.jsx';
+import AdminDetailLayout from '../../components/admin/AdminDetailLayout.jsx';
 import RoomForm from '../../components/admin/rooms/RoomForm.jsx';
 import RoomImagesManager from '../../components/admin/rooms/RoomImagesManager.jsx';
 import RoomStatusControl from '../../components/admin/rooms/RoomStatusControl.jsx';
+import { DetailSection } from '../../components/detail/DetailParts.jsx';
 import Alert from '../../components/ui/Alert.jsx';
 import Button from '../../components/ui/Button.jsx';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.jsx';
+import DetailLoader from '../../components/ui/DetailLoader.jsx';
 import DetailRow from '../../components/ui/DetailRow.jsx';
 import ErrorState from '../../components/ui/ErrorState.jsx';
 import MoreLink from '../../components/ui/MoreLink.jsx';
@@ -18,6 +19,7 @@ import { ROOM_HAS_BOOKINGS_NOTE } from '../../config/adminCatalog.js';
 import useFetch from '../../hooks/useFetch.js';
 import useFlashMessage from '../../hooks/useFlashMessage.js';
 import formatCurrency from '../../utils/formatCurrency.js';
+import scrollToTop from '../../utils/scrollToTop.js';
 
 // Phần xóa phòng, ở cuối cột bên. Phòng đã có đơn thì backend trả 409; khi đó gợi ý đổi sang inactive.
 function DeleteRoomSection({ room }) {
@@ -39,7 +41,7 @@ function DeleteRoomSection({ room }) {
   };
 
   return (
-    <AdminSection title="Delete this room">
+    <DetailSection title="Delete this room">
       <p className="text-sm text-ink-soft">
         Deleting removes the room and its images. Rooms with bookings cannot be deleted.
       </p>
@@ -60,7 +62,7 @@ function DeleteRoomSection({ room }) {
         onConfirm={handleDelete}
         onClose={() => setOpen(false)}
       />
-    </AdminSection>
+    </DetailSection>
   );
 }
 
@@ -76,7 +78,7 @@ function RoomEditor({ initialRoom, initialMessage }) {
   };
   const show = (type, text) => {
     setMessage({ type, text });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    scrollToTop();
   };
 
   const handleSave = async (changes) => {
@@ -121,19 +123,19 @@ function RoomEditor({ initialRoom, initialMessage }) {
       }
       main={
         <>
-          <AdminSection title="Room details">
+          <DetailSection title="Room details">
             {roomTypes.loading && <Spinner className="text-sea" />}
             {roomTypes.error && <ErrorState message={roomTypes.error.message} onRetry={roomTypes.retry} />}
             {roomTypes.data && (
               <RoomForm room={room} roomTypes={roomTypes.data} onSubmit={handleSave} submitLabel="Save changes" />
             )}
-          </AdminSection>
+          </DetailSection>
           <RoomImagesManager room={room} onChanged={reload} />
         </>
       }
       side={
         <>
-          <AdminSection title="Room type">
+          <DetailSection title="Room type">
             <dl className="text-sm">
               <DetailRow label="Name">{room.room_type.name}</DetailRow>
               <DetailRow label="Price per night">{formatCurrency(room.room_type.price_per_night)}</DetailRow>
@@ -145,7 +147,7 @@ function RoomEditor({ initialRoom, initialMessage }) {
             <MoreLink to={`/admin/rooms/types/${room.room_type.id}`} className="mt-2">
               Edit room type
             </MoreLink>
-          </AdminSection>
+          </DetailSection>
           <DeleteRoomSection room={room} />
         </>
       }

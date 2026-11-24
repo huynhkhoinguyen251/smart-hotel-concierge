@@ -3,7 +3,7 @@ import {
   updateAdminServiceBookingStatus,
 } from '../../api/adminServiceBookings.api.js';
 import AdminRequestListPage from '../../components/admin/AdminRequestListPage.jsx';
-import AdminSubNav from '../../components/admin/AdminSubNav.jsx';
+import SectionNav from '../../components/ui/SectionNav.jsx';
 import AdminStatusActions from '../../components/admin/AdminStatusActions.jsx';
 import { BadgesCell, GuestCell, MoneyCell, StackCell, TitleCell } from '../../components/admin/AdminCells.jsx';
 import { SERVICE_SECTION_NAV } from '../../config/adminCatalog.js';
@@ -35,24 +35,20 @@ const COLUMNS = [
   },
   { key: 'guest', header: 'Guest', wide: true, render: (request) => <GuestCell user={request.user} /> },
   {
+    // Dòng thứ hai: loại dịch vụ. Dòng thứ ba: phòng và đơn đặt phòng (gộp vào đây để bảng vừa khung 1440px).
     key: 'service',
-    header: 'Service',
+    header: 'Service and room',
+    wide: true,
     render: (request) => (
-      <StackCell main={request.service.name} detail={getCategoryLabel(request.service.category)} />
+      <>
+        <StackCell main={request.service.name} detail={getCategoryLabel(request.service.category)} />
+        {request.booking && (
+          <p className="text-xs text-ink-soft">
+            Room {request.booking.room?.room_number} · Booking #{request.booking.id}
+          </p>
+        )}
+      </>
     ),
-  },
-  {
-    key: 'room',
-    header: 'Room',
-    render: (request) =>
-      request.booking ? (
-        <StackCell
-          main={`Room ${request.booking.room?.room_number}`}
-          detail={`Booking #${request.booking.id}`}
-        />
-      ) : (
-        '-'
-      ),
   },
   {
     key: 'schedule',
@@ -79,7 +75,7 @@ export default function AdminServiceRequestsPage() {
     <AdminRequestListPage
       title="Service requests"
       subtitle="Hotel service requests from guests, newest first."
-      subNav={<AdminSubNav {...SERVICE_SECTION_NAV} />}
+      subNav={<SectionNav {...SERVICE_SECTION_NAV} />}
       basePath="/admin/services"
       statusTabs={SERVICE_REQUEST_STATUS_TABS}
       filters={[CATEGORY_FILTER]}

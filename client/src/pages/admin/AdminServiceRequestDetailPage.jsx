@@ -3,14 +3,9 @@ import {
   getAdminServiceBooking,
   updateAdminServiceBookingStatus,
 } from '../../api/adminServiceBookings.api.js';
-import AdminDetailLayout, {
-  AdminFact,
-  AdminFacts,
-  AdminGuestSection,
-  AdminPriceSection,
-  AdminSection,
-} from '../../components/admin/AdminDetailLayout.jsx';
-import AdminSubNav from '../../components/admin/AdminSubNav.jsx';
+import AdminDetailLayout, { AdminGuestSection } from '../../components/admin/AdminDetailLayout.jsx';
+import { DetailFact, DetailFacts, DetailPriceSection, DetailSection } from '../../components/detail/DetailParts.jsx';
+import SectionNav from '../../components/ui/SectionNav.jsx';
 import DetailLoader from '../../components/ui/DetailLoader.jsx';
 import AdminStatusActions from '../../components/admin/AdminStatusActions.jsx';
 import { SERVICE_SECTION_NAV } from '../../config/adminCatalog.js';
@@ -31,7 +26,7 @@ function ServiceRequestDetails({ initialRequest }) {
 
   return (
     <AdminDetailLayout
-      subNav={<AdminSubNav {...SERVICE_SECTION_NAV} />}
+      subNav={<SectionNav {...SERVICE_SECTION_NAV} />}
       backTo="/admin/services"
       backLabel="Back to service requests"
       title={`Service request #${request.id}`}
@@ -55,19 +50,19 @@ function ServiceRequestDetails({ initialRequest }) {
       actionsEmptyText="No more actions for this request."
       main={
         <>
-          <AdminSection title={service.name} subtitle={getCategoryLabel(service.category)}>
-            <AdminFacts>
-              <AdminFact label="Scheduled for">{formatDate(request.scheduled_at, { withTime: true })}</AdminFact>
-              <AdminFact label="Quantity">{formatQuantity(request.quantity, service.category)}</AdminFact>
-              <AdminFact label="Note">
+          <DetailSection title={service.name} subtitle={getCategoryLabel(service.category)}>
+            <DetailFacts>
+              <DetailFact label="Scheduled for">{formatDate(request.scheduled_at, { withTime: true })}</DetailFact>
+              <DetailFact label="Quantity">{formatQuantity(request.quantity, service.category)}</DetailFact>
+              <DetailFact label="Note">
                 <span className="whitespace-pre-line">{request.note || '-'}</span>
-              </AdminFact>
-            </AdminFacts>
-          </AdminSection>
-          <AdminSection title="Room booking">
-            <AdminFacts>
-              <AdminFact label="Room">{booking?.room?.room_number ? `Room ${booking.room.room_number}` : '-'}</AdminFact>
-              <AdminFact label="Booking">
+              </DetailFact>
+            </DetailFacts>
+          </DetailSection>
+          <DetailSection title="Room booking">
+            <DetailFacts>
+              <DetailFact label="Room">{booking?.room?.room_number ? `Room ${booking.room.room_number}` : '-'}</DetailFact>
+              <DetailFact label="Booking">
                 {booking ? (
                   <Link to={`/admin/bookings/${booking.id}`} className="text-sea hover:text-sea-hover hover:underline">
                     Booking #{booking.id}
@@ -75,15 +70,15 @@ function ServiceRequestDetails({ initialRequest }) {
                 ) : (
                   '-'
                 )}
-              </AdminFact>
-            </AdminFacts>
-          </AdminSection>
+              </DetailFact>
+            </DetailFacts>
+          </DetailSection>
         </>
       }
       side={
         <>
           <AdminGuestSection user={request.user} />
-          <AdminPriceSection
+          <DetailPriceSection
             rows={[
               { label: 'Unit price', value: formatCurrency(request.unit_price) },
               { label: 'Quantity', value: formatQuantity(request.quantity, service.category) },

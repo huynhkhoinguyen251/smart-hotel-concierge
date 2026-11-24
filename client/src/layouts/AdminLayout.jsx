@@ -4,6 +4,7 @@ import { Drawer, Layout } from 'antd';
 import { Link, Outlet, useLocation, useNavigationType } from 'react-router-dom';
 import AccountMenu from '../components/admin/shell/AccountMenu.jsx';
 import AdminNav from '../components/admin/shell/AdminNav.jsx';
+import RouteErrorBoundary from '../components/layout/RouteErrorBoundary.jsx';
 import NotificationBell from '../components/notifications/NotificationBell.jsx';
 import { HOTEL_NAME } from '../config/hotel.js';
 import { getAdminPageContext } from '../config/navigation.js';
@@ -185,7 +186,9 @@ export default function AdminLayout() {
           className="px-4 pt-6 pb-16 outline-none sm:px-6 lg:px-8"
         >
           <div className="mx-auto max-w-[84rem]">
-            <Outlet />
+            <RouteErrorBoundary resetKey={pathname}>
+              <Outlet />
+            </RouteErrorBoundary>
           </div>
         </Layout.Content>
       </Layout>

@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { createTicket } from '../api/tickets.api.js';
 import Alert from '../components/ui/Alert.jsx';
+import BackLink from '../components/ui/BackLink.jsx';
 import Button from '../components/ui/Button.jsx';
+import ButtonLink from '../components/ui/ButtonLink.jsx';
 import Card from '../components/ui/Card.jsx';
 import Input from '../components/ui/Input.jsx';
 import PageTitle from '../components/ui/PageTitle.jsx';
@@ -87,12 +89,9 @@ function NewTicketForm() {
         <Alert type="error">{submitError}</Alert>
       </div>
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-        <Link
-          to="/support"
-          className="rounded-lg border border-slate-300 px-4 py-2.5 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50"
-        >
+        <ButtonLink to="/support" variant="secondary">
           Cancel
-        </Link>
+        </ButtonLink>
         <Button type="submit" loading={submitting}>
           Send request
         </Button>
@@ -106,16 +105,16 @@ export default function NewTicketPage() {
   const { isAdmin } = useAuth();
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10">
-      <Link to="/support" className="text-sm font-medium text-teal-700 hover:text-teal-800">
-        ← Back to support
-      </Link>
+    <div className="shell pt-6 pb-12 lg:pb-16">
+      <BackLink to="/support">Back to support</BackLink>
       <PageTitle
-        className="mt-3"
+        className="mt-2"
         title="New support request"
         subtitle="Reception usually replies within a few hours."
       />
-      <Card>{isAdmin ? <p className="text-sm text-slate-500">{ADMIN_TICKET_NOTE}</p> : <NewTicketForm />}</Card>
+      <Card className="max-w-2xl">
+        {isAdmin ? <p className="text-sm text-ink-soft">{ADMIN_TICKET_NOTE}</p> : <NewTicketForm />}
+      </Card>
     </div>
   );
 }

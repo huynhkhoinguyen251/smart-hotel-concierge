@@ -218,6 +218,20 @@ Each page has its own composition, so a photograph of a dish is never framed lik
 | Transport | A compact list: small square photograph, how it is charged, price and button. |
 | Service, tour and transport details | Large photograph, then title, price and description; one panel with the form on the right, and after the description on phones. |
 
+### Account pages
+
+| Part | Composition |
+|---|---|
+| Lists (bookings, requests, orders, trips, payments, reviews, support, notifications) | Title, then one white panel: status tabs, rows divided by lines, pages. A row is the title as a link, the status beside it, one line of reference, the key facts, and the total on the right (below on phones). All of the row can be clicked. An order waiting for payment shows the time left and a white "Pay now" button. Loading, empty and error states stay inside the panel; every empty state has one next action. |
+| Order details | The same white panel as in the admin area (`components/detail`): title, status and date, the progress, then content on the left and price, payment and cancellation on the right. While the order waits for payment, the payment comes first, before the progress, and "I have paid" is the only amber button. |
+| Payment | Amount and time left, the QR code, the steps and the button. The code is black on white, 208px, with a quiet zone. The time left turns red in the last two minutes. |
+| Booking | Two panels: the stay and voucher, and a summary with the photograph, the price and the amber button, which stays in view. On phones the summary follows. |
+| Invoice | One white sheet on the ground colour, thin rules, amounts aligned right, the status in words. In print only the sheet remains, black on white. |
+| Log in and register | The form on the left, lined up with the hotel name, and the beach photograph on the right. Below 1024px only the form. |
+| Not found, no access, page failed to load | Left-aligned: one heading, one sentence, one button. |
+
+**The Unread Rule.** An unread notification has a bold title and a dot with hidden text, never only a colour.
+
 **The Photograph Rule.** Photographs have a fixed ratio or height, so nothing moves when they load. They are lazy, except the home photograph, which is preloaded. A missing photograph is replaced by a drawing of the coast in flat tints of sea blue.
 
 **The Whole Block Rule.** Where a row or block leads to one page, all of it can be clicked, but there is only one link in it for the keyboard.
@@ -252,13 +266,13 @@ Controls have a 6px radius, cards, dialogs and photographs 8px, badges and small
 
 ### Buttons
 
-Primary is amber with ink text and appears once per view, secondary is white with a line, danger is red with white text. Default height is 40px and small is 32px. Hover and active change the fill; secondary turns its text and border sea blue. While loading, a button shows a spinning icon and cannot be pressed again.
+Primary is amber with ink text and appears once per view, secondary is white with a line, danger is red with white text. Default height is 40px and small is 32px; on phones small buttons and page numbers grow to 40px. Hover and active change the fill; secondary turns its text and border sea blue. While loading, a button shows a spinning icon and cannot be pressed again.
 
 In a table row at most one button is visible: the next step, or Edit. Everything else is in a "More" menu, with destructive actions there in red text. On a details page a destructive action is a white button with red text and line; a filled red button appears only in the dialog that asks again. A disabled action says why in text under it.
 
 ### Tables
 
-From 1024px: a quiet header without dividers, rows divided by lines, text at the top of the cell. The first column is the name and the link to the details; the status badges follow it on one line; numbers are right-aligned and never wrap. A table that is too wide scrolls inside its panel with the actions always in view. Below 1024px each row is a compact block: name and amount, badges, labelled values in two columns, then the actions.
+From 1024px: a quiet header without dividers, rows divided by lines, text at the top of the cell. The first column is the name and the link to the details; the status badges follow it; numbers are right-aligned and never wrap. A table that is too wide scrolls inside its panel with the actions always in view. Every admin list fits at 1440px with the side column open. Below 1024px each row is a compact block: name and amount, badges, labelled values in two columns, then the actions.
 
 ### Charts
 
@@ -266,7 +280,7 @@ Revenue by month is a stack of columns at most 24px wide, with a 2px white gap b
 
 ### Fields
 
-The label is above the field, the hint or error below. An error turns the border red and replaces the hint. Focus turns the border sea blue. Dates read as "10 Jul 2027" and times as "10 Jul 2027, 14:30", so a day is never mistaken for a month. On phones the date and time panel opens at the bottom of the screen.
+The label is above the field, the hint or error below. An error turns the border red and replaces the hint. Focus turns the border sea blue. Dates read as "10 Jul 2027" and times as "10 Jul 2027, 14:30", so a day is never mistaken for a month. On phones the date and time panel opens at the bottom of the screen. The calendar is downloaded only where it is needed; until then a field of the same size stands in its place.
 
 ### Tabs
 
@@ -284,7 +298,7 @@ Centred, with the title at the top and the buttons at the bottom. Long content s
 
 ### Loading, empty and error
 
-A loading page shows a grey outline of its content; a small spinner is only for a part of a page. An empty list says what is missing and offers the next step. An error says what went wrong and offers to try again.
+A loading page shows a grey outline of its content; a small spinner is only for a part of a page. An empty list says what is missing and offers the next step. An error says what went wrong and offers to try again. If a page file cannot be downloaded, the header stays and the content says so with a "Reload page" button.
 
 ### Icons
 

@@ -13,15 +13,19 @@ export default function UserMenu() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
+  const buttonRef = useRef(null);
 
-  // Bấm ra ngoài hoặc nhấn Esc thì đóng menu.
+  // Bấm ra ngoài hoặc nhấn Esc thì đóng menu. Esc trả con trỏ về nút đã mở menu.
   useEffect(() => {
     if (!open) return undefined;
     const handleClick = (event) => {
       if (!menuRef.current?.contains(event.target)) setOpen(false);
     };
     const handleKey = (event) => {
-      if (event.key === 'Escape') setOpen(false);
+      if (event.key === 'Escape') {
+        setOpen(false);
+        buttonRef.current?.focus();
+      }
     };
     document.addEventListener('mousedown', handleClick);
     document.addEventListener('keydown', handleKey);
@@ -40,6 +44,7 @@ export default function UserMenu() {
   return (
     <div className="relative" ref={menuRef}>
       <button
+        ref={buttonRef}
         type="button"
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}

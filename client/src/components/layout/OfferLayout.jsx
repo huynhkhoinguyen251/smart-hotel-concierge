@@ -1,3 +1,4 @@
+import usePageTitle from '../../hooks/usePageTitle.js';
 import BackLink from '../ui/BackLink.jsx';
 import Bone, { BoneGroup } from '../ui/Bone.jsx';
 import Card from '../ui/Card.jsx';
@@ -39,6 +40,7 @@ export default function OfferLayout({
   panel,
   reviews,
 }) {
+  usePageTitle(title);
   return (
     <div className="shell pt-6 pb-12 lg:pb-16">
       <BackLink to={backTo}>{backLabel}</BackLink>

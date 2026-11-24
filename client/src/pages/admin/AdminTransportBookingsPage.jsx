@@ -3,7 +3,7 @@ import { getAdminTransportBookings, updateAdminTransportBookingStatus } from '..
 import { BadgesCell, GuestCell, MoneyCell, StackCell, TitleCell } from '../../components/admin/AdminCells.jsx';
 import AdminRequestListPage from '../../components/admin/AdminRequestListPage.jsx';
 import AdminStatusActions from '../../components/admin/AdminStatusActions.jsx';
-import AdminSubNav from '../../components/admin/AdminSubNav.jsx';
+import SectionNav from '../../components/ui/SectionNav.jsx';
 import { TOURISM_SECTION_NAV } from '../../config/adminCatalog.js';
 import { getActions, TRANSPORT_BOOKING_ADMIN_ACTIONS } from '../../config/adminRequests.js';
 import { SERVICE_REQUEST_STATUS_TABS } from '../../config/statuses.js';
@@ -49,29 +49,23 @@ const COLUMNS = [
     ),
   },
   {
-    key: 'time',
-    header: 'Time',
-    render: (booking) => (
-      <StackCell
-        main={formatDate(booking.start_at, { withTime: true })}
-        detail={booking.end_at && `Return ${formatDate(booking.end_at, { withTime: true })}`}
-      />
-    ),
-  },
-  {
-    key: 'route',
+    // Giờ và tuyến đường gộp một cột để bảng vừa khung 1440px; điểm đón và điểm trả mỗi điểm một dòng.
+    key: 'trip',
     wide: true,
-    header: 'Pick-up / drop-off',
+    header: 'Trip',
     render: (booking) => (
-      <StackCell
-        main={
-          <>
-            {booking.pickup_location} <ArrowRightOutlined aria-hidden="true" className="text-xs text-ink-soft" />
-            <span className="sr-only">to</span> {booking.dropoff_location}
-          </>
-        }
-        detail={booking.vehicle_plate && `Plate ${booking.vehicle_plate}`}
-      />
+      <>
+        <StackCell
+          main={formatDate(booking.start_at, { withTime: true })}
+          detail={booking.end_at && `Return ${formatDate(booking.end_at, { withTime: true })}`}
+        />
+        <p className="mt-1 text-xs text-ink">{booking.pickup_location}</p>
+        <p className="text-xs text-ink">
+          <ArrowRightOutlined aria-hidden="true" className="text-ink-soft" />
+          <span className="sr-only">to</span> {booking.dropoff_location}
+        </p>
+        {booking.vehicle_plate && <p className="mt-1 text-xs text-ink-soft">Plate {booking.vehicle_plate}</p>}
+      </>
     ),
   },
   { key: 'total', header: 'Total', align: 'right', render: (booking) => <MoneyCell amount={booking.total_price} /> },
@@ -88,8 +82,9 @@ export default function AdminTransportBookingsPage() {
   return (
     <AdminRequestListPage
       title="Tourism"
+      tabTitle="Transport requests"
       subtitle="Local tour bookings and transport requests from guests."
-      subNav={<AdminSubNav {...TOURISM_SECTION_NAV} />}
+      subNav={<SectionNav {...TOURISM_SECTION_NAV} />}
       basePath="/admin/tourism/transport"
       statusTabs={SERVICE_REQUEST_STATUS_TABS}
       filters={[CATEGORY_FILTER]}

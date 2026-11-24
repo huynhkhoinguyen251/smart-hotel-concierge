@@ -1,12 +1,7 @@
 import { getAdminTourBooking, updateAdminTourBookingStatus } from '../../api/adminTourism.api.js';
-import AdminDetailLayout, {
-  AdminFact,
-  AdminFacts,
-  AdminGuestSection,
-  AdminPriceSection,
-  AdminSection,
-} from '../../components/admin/AdminDetailLayout.jsx';
-import AdminSubNav from '../../components/admin/AdminSubNav.jsx';
+import AdminDetailLayout, { AdminGuestSection } from '../../components/admin/AdminDetailLayout.jsx';
+import { DetailFact, DetailFacts, DetailPriceSection, DetailSection } from '../../components/detail/DetailParts.jsx';
+import SectionNav from '../../components/ui/SectionNav.jsx';
 import MoreLink from '../../components/ui/MoreLink.jsx';
 import DetailLoader from '../../components/ui/DetailLoader.jsx';
 import AdminStatusActions from '../../components/admin/AdminStatusActions.jsx';
@@ -27,7 +22,7 @@ function TourBookingDetails({ initialBooking }) {
 
   return (
     <AdminDetailLayout
-      subNav={<AdminSubNav {...TOURISM_SECTION_NAV} />}
+      subNav={<SectionNav {...TOURISM_SECTION_NAV} />}
       backTo="/admin/tourism"
       backLabel="Back to tour bookings"
       title={`Tour booking #${booking.id}`}
@@ -51,23 +46,23 @@ function TourBookingDetails({ initialBooking }) {
       }
       actionsEmptyText="No more actions for this booking."
       main={
-        <AdminSection title={tour.name} subtitle={`${tour.location} · ${tour.duration}`}>
-          <AdminFacts>
-            <AdminFact label="Tour date">{formatDate(booking.tour_date)}</AdminFact>
-            <AdminFact label="Participants">{formatParticipants(booking.participants)}</AdminFact>
-            <AdminFact label="Note">
+        <DetailSection title={tour.name} subtitle={`${tour.location} · ${tour.duration}`}>
+          <DetailFacts>
+            <DetailFact label="Tour date">{formatDate(booking.tour_date)}</DetailFact>
+            <DetailFact label="Participants">{formatParticipants(booking.participants)}</DetailFact>
+            <DetailFact label="Note">
               <span className="whitespace-pre-line">{booking.note || '-'}</span>
-            </AdminFact>
-          </AdminFacts>
+            </DetailFact>
+          </DetailFacts>
           <MoreLink to={`/tours/${tour.id}`} className="mt-2">
             View public tour page
           </MoreLink>
-        </AdminSection>
+        </DetailSection>
       }
       side={
         <>
           <AdminGuestSection user={booking.user} />
-          <AdminPriceSection
+          <DetailPriceSection
             rows={[
               { label: 'Price per person', value: formatCurrency(booking.unit_price) },
               { label: 'Participants', value: formatParticipants(booking.participants) },

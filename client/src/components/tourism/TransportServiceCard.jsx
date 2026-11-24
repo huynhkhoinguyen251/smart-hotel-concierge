@@ -13,9 +13,9 @@ export default function TransportServiceCard({ service }) {
       <PhotoFrame src={service.image_url} alt={service.name} className="aspect-square w-24 shrink-0 self-start sm:w-36" />
       <div className="flex min-w-0 flex-1 flex-col gap-4 md:flex-row md:items-center md:justify-between md:gap-10">
         <div className="min-w-0">
-          <h3 className="text-lg font-semibold break-words text-ink transition-colors duration-150 group-hover:text-sea">
+          <h2 className="text-lg font-semibold break-words text-ink transition-colors duration-150 group-hover:text-sea">
             {service.name}
-          </h3>
+          </h2>
           <p className="text-sm text-ink-soft">{category.label}</p>
           {service.description && <p className="mt-2 max-w-prose text-ink">{service.description}</p>}
           <p className="mt-1 max-w-prose text-sm text-ink-soft">{category.pricing}</p>

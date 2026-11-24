@@ -14,11 +14,11 @@ export default function TourCard({ tour, wide = false }) {
       />
       <div className={`mt-5 ${wide ? 'grid gap-4 md:grid-cols-[1fr_auto] md:gap-12' : 'flex flex-1 flex-col justify-between gap-4'}`}>
         <div className="min-w-0">
-          <h3
+          <h2
             className={`font-semibold break-words text-ink transition-colors duration-150 group-hover:text-sea ${wide ? 'text-2xl' : 'text-xl'}`}
           >
             {tour.name}
-          </h3>
+          </h2>
           <p className="mt-1 text-sm text-ink-soft">
             {tour.location} · {tour.duration}
           </p>

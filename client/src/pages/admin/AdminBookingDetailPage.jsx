@@ -1,18 +1,14 @@
 import { getAdminBooking } from '../../api/adminBookings.api.js';
 import AdminBookingActions from '../../components/admin/AdminBookingActions.jsx';
-import AdminDetailLayout, {
-  AdminFact,
-  AdminFacts,
-  AdminGuestSection,
-  AdminPriceSection,
-  AdminSection,
-} from '../../components/admin/AdminDetailLayout.jsx';
+import AdminDetailLayout, { AdminGuestSection } from '../../components/admin/AdminDetailLayout.jsx';
+import { DetailFact, DetailFacts, DetailPriceSection, DetailSection } from '../../components/detail/DetailParts.jsx';
 import PaymentInfoCard from '../../components/payments/PaymentInfoCard.jsx';
 import RoomImage from '../../components/rooms/RoomImage.jsx';
 import DetailLoader from '../../components/ui/DetailLoader.jsx';
 import MoreLink from '../../components/ui/MoreLink.jsx';
-import { ADMIN_BOOKING_ACTIONS, BOOKING_STEPS } from '../../config/adminBookings.js';
+import { ADMIN_BOOKING_ACTIONS } from '../../config/adminBookings.js';
 import { getActions } from '../../config/adminRequests.js';
+import { BOOKING_STEPS } from '../../config/statuses.js';
 import { getDiscountLabel } from '../../config/vouchers.js';
 import useAdminItem from '../../hooks/useAdminItem.js';
 import { formatNights } from '../../utils/bookingHelpers.js';
@@ -42,7 +38,7 @@ function BookingDetails({ initialBooking }) {
       actionsEmptyText={`No more actions. This booking is ${booking.status === 'cancelled' ? 'cancelled' : 'checked out'}.`}
       main={
         <>
-          <AdminSection title={`Room ${room.room_number}`} subtitle={room.room_type.name}>
+          <DetailSection title={`Room ${room.room_number}`} subtitle={room.room_type.name}>
             <RoomImage
               src={room.primary_image}
               alt={`${room.room_type.name}, room ${room.room_number}`}
@@ -51,24 +47,24 @@ function BookingDetails({ initialBooking }) {
             <MoreLink to={`/rooms/${room.id}`} className="mt-3">
               View public room page
             </MoreLink>
-          </AdminSection>
+          </DetailSection>
 
-          <AdminSection title="Stay">
-            <AdminFacts>
-              <AdminFact label="Check-in">
+          <DetailSection title="Stay">
+            <DetailFacts>
+              <DetailFact label="Check-in">
                 {formatDate(booking.check_in)}, from {CHECK_IN_TIME}
-              </AdminFact>
-              <AdminFact label="Check-out">{formatDate(booking.check_out)}</AdminFact>
-              <AdminFact label="Nights">{booking.nights}</AdminFact>
-              <AdminFact label="Guests">{booking.guests}</AdminFact>
-            </AdminFacts>
-          </AdminSection>
+              </DetailFact>
+              <DetailFact label="Check-out">{formatDate(booking.check_out)}</DetailFact>
+              <DetailFact label="Nights">{booking.nights}</DetailFact>
+              <DetailFact label="Guests">{booking.guests}</DetailFact>
+            </DetailFacts>
+          </DetailSection>
         </>
       }
       side={
         <>
           <AdminGuestSection user={user} />
-          <AdminPriceSection
+          <DetailPriceSection
             rows={[
               { label: 'Price per night', value: formatCurrency(booking.price_per_night) },
               { label: 'Nights', value: formatNights(booking.nights) },

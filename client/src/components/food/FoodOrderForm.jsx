@@ -57,7 +57,6 @@ function OrderFields({ lines, bookings, initialBookingId, onOrdered }) {
   // Voucher đang áp dụng (kết quả của POST /vouchers/validate) hoặc null.
   const [voucher, setVoucher] = useState(null);
   const subtotal = getCartTotal(lines);
-  const total = voucher ? voucher.total_after_discount : subtotal;
 
   const bookingNotUsable = Boolean(initialBookingId) && !matched;
   const options = [
@@ -129,22 +128,21 @@ function OrderFields({ lines, bookings, initialBookingId, onOrdered }) {
         }}
         disabled={submitting}
       />
-      <dl className="space-y-1 rounded-control bg-ground px-3 py-2 text-sm">
-        <div className="flex justify-between gap-4">
-          <dt className="text-ink-soft">Subtotal</dt>
-          <dd className="font-medium text-ink">{formatCurrency(subtotal)}</dd>
-        </div>
-        {voucher && (
-          <div className="flex justify-between gap-4">
+      {/* Tạm tính đã có ngay dưới danh sách món (CartPanel); ở đây chỉ thêm giảm giá và tổng khi dùng voucher. */}
+      {voucher && (
+        <dl className="space-y-1.5 text-sm">
+          <div className="flex items-baseline justify-between gap-4">
             <dt className="text-ink-soft">Discount ({voucher.code})</dt>
-            <dd className="font-medium text-ink">- {formatCurrency(voucher.discount_amount)}</dd>
+            <dd className="font-medium whitespace-nowrap text-ink">- {formatCurrency(voucher.discount_amount)}</dd>
           </div>
-        )}
-        <div className="flex justify-between gap-4">
-          <dt className="font-semibold text-ink">Total</dt>
-          <dd className="font-bold text-ink">{formatCurrency(total)}</dd>
-        </div>
-      </dl>
+          <div className="flex items-baseline justify-between gap-4">
+            <dt className="font-semibold text-ink">Total</dt>
+            <dd className="text-lg font-bold whitespace-nowrap text-ink">
+              {formatCurrency(voucher.total_after_discount)}
+            </dd>
+          </div>
+        </dl>
+      )}
       <div aria-live="polite">
         <Alert type="error">{submitError}</Alert>
       </div>

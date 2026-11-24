@@ -1,23 +1,29 @@
-import { Link } from 'react-router-dom';
+import { FieldTimeOutlined } from '@ant-design/icons';
+import { COUNTDOWN_WARNING_SECONDS } from '../../config/payments.js';
 import useCountdown from '../../hooks/useCountdown.js';
 import { isAwaitingPayment } from '../../utils/paymentHelpers.js';
+import ButtonLink from '../ui/ButtonLink.jsx';
 
-// Nhãn "Awaiting payment · 12:34 left" và link "Pay now" trên thẻ đơn ở các trang "My ...".
+// "Awaiting payment · 12:34 left" và nút "Pay now" trên dòng đơn ở các trang "My ...".
 // to: trang chi tiết đơn (nơi có mã QR). Đơn không chờ thanh toán thì không hiện gì.
-export default function AwaitingPaymentNote({ order, to }) {
+export default function AwaitingPaymentNote({ order, to, title }) {
   const waiting = isAwaitingPayment(order);
-  const { label, expired } = useCountdown(waiting ? order.payment.seconds_left : null);
+  const { secondsLeft, label, expired } = useCountdown(waiting ? order.payment.seconds_left : null);
   if (!waiting) return null;
+  const urgent = expired || secondsLeft <= COUNTDOWN_WARNING_SECONDS;
 
   return (
-    <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
-      <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-800 ring-1 ring-amber-200 ring-inset">
+    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+      <p
+        className={`flex items-center gap-1.5 font-semibold tabular-nums ${urgent ? 'text-danger' : 'text-warning-deep'}`}
+      >
+        <FieldTimeOutlined aria-hidden="true" />
         {expired ? 'Payment time expired' : `Awaiting payment · ${label} left`}
-      </span>
+      </p>
       {!expired && (
-        <Link to={to} className="font-semibold text-teal-700 hover:text-teal-800">
-          Pay now →
-        </Link>
+        <ButtonLink to={to} variant="secondary" aria-label={`Pay now: ${title}`}>
+          Pay now
+        </ButtonLink>
       )}
     </div>
   );

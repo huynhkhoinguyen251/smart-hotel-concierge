@@ -60,6 +60,9 @@ export const BOOKING_STATUS_TABS = toTabs([
   'cancelled',
 ]);
 
+// Các bước của đơn đặt phòng; cancelled hiện riêng.
+export const BOOKING_STEPS = ['pending', 'confirmed', 'checked_in', 'checked_out'];
+
 // Đơn đặt phòng còn hủy hoặc đổi được ở phía khách.
 export const CANCELLABLE_BOOKING_STATUSES = ['pending', 'confirmed'];
 export const EDITABLE_BOOKING_STATUS = 'pending';

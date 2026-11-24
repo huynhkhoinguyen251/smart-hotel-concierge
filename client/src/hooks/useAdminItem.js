@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import scrollToTop from '../utils/scrollToTop.js';
 
 // State chung của trang chi tiết admin: đơn hiện tại (cập nhật sau mỗi lần đổi trạng thái)
 // và thông báo. actionProps truyền thẳng cho AdminStatusActions.
@@ -8,7 +9,7 @@ export default function useAdminItem(initialItem) {
 
   const show = (type, text) => {
     setMessage({ type, text });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    scrollToTop();
   };
 
   const actionProps = {

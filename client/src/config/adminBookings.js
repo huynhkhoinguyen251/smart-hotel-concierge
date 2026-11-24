@@ -1,8 +1,5 @@
 // Quản lý đơn đặt phòng (admin), theo luồng trạng thái ở Mục 5 của proposal.md.
 
-// Các bước của đơn đặt phòng; cancelled hiện riêng.
-export const BOOKING_STEPS = ['pending', 'confirmed', 'checked_in', 'checked_out'];
-
 const SERVICES_NOTE =
   'Pending and confirmed service requests of this booking will also be cancelled.';
 

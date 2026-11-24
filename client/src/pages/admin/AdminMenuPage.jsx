@@ -1,7 +1,7 @@
 import { adminMenuItemsApi } from '../../api/adminCatalog.api.js';
 import { CatalogItemCell, PriceCell } from '../../components/admin/AdminCells.jsx';
 import CatalogListPage from '../../components/admin/catalog/CatalogListPage.jsx';
-import AdminSubNav from '../../components/admin/AdminSubNav.jsx';
+import SectionNav from '../../components/ui/SectionNav.jsx';
 import { ADMIN_MENU_CATEGORY_OPTIONS, MENU_ITEM_FIELDS } from '../../config/adminCatalogItems.js';
 import { getMenuCategoryLabel } from '../../config/food.js';
 import { FOOD_SECTION_NAV } from '../../config/adminCatalog.js';
@@ -37,7 +37,7 @@ export default function AdminMenuPage() {
     <CatalogListPage
       title="Menu"
       subtitle="Food, coffee and drinks for room delivery, including unavailable items."
-      subNav={<AdminSubNav {...FOOD_SECTION_NAV} />}
+      subNav={<SectionNav {...FOOD_SECTION_NAV} />}
       catalog={CATALOG}
       filters={FILTERS}
       columns={COLUMNS}

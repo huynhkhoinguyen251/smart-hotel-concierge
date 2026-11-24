@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { createAdminAmenity, deleteAdminAmenity, updateAdminAmenity } from '../../api/adminRoomTypes.api.js';
 import { getAmenities } from '../../api/catalog.api.js';
 import { TitleCell } from '../../components/admin/AdminCells.jsx';
-import AdminListPanel, { AdminListBody } from '../../components/admin/AdminListPanel.jsx';
+import ListPanel, { ListBody } from '../../components/ui/ListPanel.jsx';
 import AdminRequestTable from '../../components/admin/AdminRequestTable.jsx';
 import RowActions from '../../components/admin/RowActions.jsx';
 import RoomCatalogHeader from '../../components/admin/rooms/RoomCatalogHeader.jsx';
@@ -178,8 +178,8 @@ export default function AdminAmenitiesPage() {
       <div className="mb-4 empty:hidden" aria-live="polite">
         <Alert type={message.type}>{message.text}</Alert>
       </div>
-      <AdminListPanel toolbar={<AddAmenityForm onAdded={(amenity) => done(`"${amenity.name}" has been added.`)} />}>
-        <AdminListBody
+      <ListPanel toolbar={<AddAmenityForm onAdded={(amenity) => done(`"${amenity.name}" has been added.`)} />}>
+        <ListBody
           list={list}
           items={list.data ?? []}
           empty={{ title: 'No amenities yet', message: 'Add amenities, then choose them for each room type.' }}
@@ -207,8 +207,8 @@ export default function AdminAmenitiesPage() {
               )
             }
           />
-        </AdminListBody>
-      </AdminListPanel>
+        </ListBody>
+      </ListPanel>
       <ConfirmDialog
         open={Boolean(deleting)}
         title={deleting ? `Delete "${deleting.name}"?` : ''}

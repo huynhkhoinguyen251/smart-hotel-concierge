@@ -6,7 +6,7 @@ import { readId, toQueryString } from '../../utils/queryString.js';
 import Alert from '../ui/Alert.jsx';
 import FilterTabs from '../ui/FilterTabs.jsx';
 import Select from '../ui/Select.jsx';
-import AdminListPanel, { AdminListBody } from './AdminListPanel.jsx';
+import ListPanel, { ListBody } from '../ui/ListPanel.jsx';
 import AdminPageHeader from './AdminPageHeader.jsx';
 import AdminRequestTable from './AdminRequestTable.jsx';
 import UserFilterChip from './UserFilterChip.jsx';
@@ -21,6 +21,7 @@ import UserFilterChip from './UserFilterChip.jsx';
 // - subNav: thanh chuyển mục (ví dụ Requests / Catalog).
 export default function AdminRequestListPage({
   title,
+  tabTitle,
   subtitle,
   subNav,
   basePath,
@@ -59,11 +60,11 @@ export default function AdminRequestListPage({
 
   return (
     <>
-      <AdminPageHeader title={title} subtitle={subtitle} subNav={subNav} />
+      <AdminPageHeader title={title} tabTitle={tabTitle} subtitle={subtitle} subNav={subNav} />
       <div className="mb-4 empty:hidden" aria-live="polite">
         <Alert type={message.type}>{message.text}</Alert>
       </div>
-      <AdminListPanel
+      <ListPanel
         tabs={
           <FilterTabs
             label="Filter by status"
@@ -90,7 +91,7 @@ export default function AdminRequestListPage({
           )
         }
       >
-        <AdminListBody
+        <ListBody
           list={list}
           items={list.data?.items ?? []}
           empty={{
@@ -111,8 +112,8 @@ export default function AdminRequestListPage({
             items={list.data?.items ?? []}
             renderActions={table.renderActions && ((item) => table.renderActions(item, actionProps))}
           />
-        </AdminListBody>
-      </AdminListPanel>
+        </ListBody>
+      </ListPanel>
     </>
   );
 }

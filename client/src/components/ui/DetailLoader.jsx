@@ -18,7 +18,12 @@ export default function DetailLoader({ load, notFound, notFoundStatuses = [400, 
   if (request.loading) return <PageSpinner />;
   if (request.error) {
     if (notFoundStatuses.includes(request.error.status)) return <NotFoundView {...notFound} />;
-    const error = <ErrorState message={request.error.message} onRetry={request.retry} />;
+    const error = (
+      <>
+        <h1 className="sr-only">Could not load this page</h1>
+        <ErrorState message={request.error.message} onRetry={request.retry} />
+      </>
+    );
     return errorClassName ? <div className={errorClassName}>{error}</div> : error;
   }
   return children(request.data);

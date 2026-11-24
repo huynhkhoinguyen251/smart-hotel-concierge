@@ -2,12 +2,9 @@ import { useState } from 'react';
 import { RightOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { getAdminUser, updateAdminUserRole, updateAdminUserStatus } from '../../api/adminUsers.api.js';
-import AdminDetailLayout, {
-  AdminFact,
-  AdminFacts,
-  AdminSection,
-} from '../../components/admin/AdminDetailLayout.jsx';
+import AdminDetailLayout from '../../components/admin/AdminDetailLayout.jsx';
 import YouBadge from '../../components/admin/YouBadge.jsx';
+import { DetailFact, DetailFacts, DetailSection } from '../../components/detail/DetailParts.jsx';
 import Button from '../../components/ui/Button.jsx';
 import ConfirmDialog from '../../components/ui/ConfirmDialog.jsx';
 import DetailLoader from '../../components/ui/DetailLoader.jsx';
@@ -145,29 +142,29 @@ function UserDetails({ initialUser }) {
           )
         }
         main={
-          <AdminSection title="Profile">
-            <AdminFacts>
-              <AdminFact label="Name">{user.full_name}</AdminFact>
-              <AdminFact label="Email">
+          <DetailSection title="Profile">
+            <DetailFacts>
+              <DetailFact label="Name">{user.full_name}</DetailFact>
+              <DetailFact label="Email">
                 <a href={`mailto:${user.email}`} className="text-sea hover:text-sea-hover hover:underline">
                   {user.email}
                 </a>
-              </AdminFact>
-              <AdminFact label="Phone">{user.phone || '-'}</AdminFact>
-              <AdminFact label="Role">
+              </DetailFact>
+              <DetailFact label="Phone">{user.phone || '-'}</DetailFact>
+              <DetailFact label="Role">
                 <StatusBadge status={getRoleBadge(user.role)} />
-              </AdminFact>
-              <AdminFact label="Status">
+              </DetailFact>
+              <DetailFact label="Status">
                 <StatusBadge status={user.is_active ? 'active' : 'locked'} />
-              </AdminFact>
-              <AdminFact label="Joined">{formatDate(user.created_at, { withTime: true })}</AdminFact>
-              <AdminFact label="Last updated">{formatDate(user.updated_at, { withTime: true })}</AdminFact>
-            </AdminFacts>
-          </AdminSection>
+              </DetailFact>
+              <DetailFact label="Joined">{formatDate(user.created_at, { withTime: true })}</DetailFact>
+              <DetailFact label="Last updated">{formatDate(user.updated_at, { withTime: true })}</DetailFact>
+            </DetailFacts>
+          </DetailSection>
         }
         side={
           user.role === 'user' && (
-            <AdminSection title="Activity" subtitle="Open the admin lists filtered to this guest.">
+            <DetailSection title="Activity" subtitle="Open the admin lists filtered to this guest.">
               <ul className="divide-y divide-line-soft border-y border-line-soft">
                 {USER_ACTIVITY_LINKS.map((link) => (
                   <li key={link.path}>
@@ -182,7 +179,7 @@ function UserDetails({ initialUser }) {
                   </li>
                 ))}
               </ul>
-            </AdminSection>
+            </DetailSection>
           )
         }
       />

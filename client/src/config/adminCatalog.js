@@ -1,7 +1,7 @@
 // Quản lý danh mục phòng (admin): phòng, loại phòng, tiện nghi và ảnh phòng.
 // Giới hạn giống validator của backend (server/src/validators/admin/*.validator.js và uploadImage.js).
 
-// Thanh điều hướng phụ của các mục admin: { label (aria-label), tabs }, dùng như <AdminSubNav {...X_NAV} />.
+// Thanh điều hướng phụ của các mục admin: { label (aria-label), tabs }, dùng như <SectionNav {...X_NAV} />.
 // match(pathname): tab nào đang được chọn.
 export const ROOM_CATALOG_NAV = {
   label: 'Room catalog',

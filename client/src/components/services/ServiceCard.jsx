@@ -17,9 +17,9 @@ export default function ServiceCard({ service, to, wide = false }) {
         className={`aspect-[4/3] sm:aspect-auto sm:h-72 ${wide ? 'lg:h-96' : 'lg:h-80'}`}
       />
       <div className={wide ? '' : 'mt-5'}>
-        <h3 className="text-xl font-semibold break-words text-ink transition-colors duration-150 group-hover:text-sea">
+        <h2 className="text-xl font-semibold break-words text-ink transition-colors duration-150 group-hover:text-sea">
           {service.name}
-        </h3>
+        </h2>
         <p className="mt-1 text-sm text-ink-soft">{getCategoryLabel(service.category)}</p>
         {service.description && <p className="mt-3 max-w-prose text-ink">{service.description}</p>}
         <div className={`mt-5 flex flex-wrap items-center gap-x-6 gap-y-3 ${wide ? '' : 'justify-between'}`}>

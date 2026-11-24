@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { deleteAdminRoomType } from '../../api/adminRoomTypes.api.js';
 import { getRoomTypes } from '../../api/catalog.api.js';
-import AdminListPanel, { AdminListBody } from '../../components/admin/AdminListPanel.jsx';
+import ListPanel, { ListBody } from '../../components/ui/ListPanel.jsx';
 import AdminRequestTable from '../../components/admin/AdminRequestTable.jsx';
 import { MoneyCell, TitleCell } from '../../components/admin/AdminCells.jsx';
 import RowActions from '../../components/admin/RowActions.jsx';
@@ -76,8 +76,8 @@ export default function AdminRoomTypesPage() {
       <div className="mb-4 empty:hidden" aria-live="polite">
         <Alert type={message.type}>{message.text}</Alert>
       </div>
-      <AdminListPanel>
-        <AdminListBody
+      <ListPanel>
+        <ListBody
           list={list}
           items={list.data ?? []}
           empty={{
@@ -109,8 +109,8 @@ export default function AdminRoomTypesPage() {
               />
             )}
           />
-        </AdminListBody>
-      </AdminListPanel>
+        </ListBody>
+      </ListPanel>
       <ConfirmDialog
         open={Boolean(deleting)}
         title={deleting ? `Delete room type "${deleting.name}"?` : ''}

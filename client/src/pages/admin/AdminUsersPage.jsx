@@ -1,6 +1,6 @@
 import { getAdminUsers } from '../../api/adminUsers.api.js';
 import { CellLink, EmptyCell } from '../../components/admin/AdminCells.jsx';
-import AdminListPanel, { AdminListBody } from '../../components/admin/AdminListPanel.jsx';
+import ListPanel, { ListBody } from '../../components/ui/ListPanel.jsx';
 import AdminPageHeader from '../../components/admin/AdminPageHeader.jsx';
 import AdminRequestTable from '../../components/admin/AdminRequestTable.jsx';
 import SearchBox from '../../components/admin/SearchBox.jsx';
@@ -79,7 +79,7 @@ export default function AdminUsersPage() {
   return (
     <>
       <AdminPageHeader title="Users" subtitle="Guest and admin accounts, newest first." />
-      <AdminListPanel
+      <ListPanel
         tabs={
           <FilterTabs
             label="Filter by role"
@@ -114,7 +114,7 @@ export default function AdminUsersPage() {
           </>
         }
       >
-        <AdminListBody
+        <ListBody
           list={list}
           items={list.data?.items ?? []}
           empty={{
@@ -137,8 +137,8 @@ export default function AdminUsersPage() {
             getViewPath={(user) => `/admin/users/${user.id}`}
             getItemLabel={(user) => user.full_name}
           />
-        </AdminListBody>
-      </AdminListPanel>
+        </ListBody>
+      </ListPanel>
     </>
   );
 }

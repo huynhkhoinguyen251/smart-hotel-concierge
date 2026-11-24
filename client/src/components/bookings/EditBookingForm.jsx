@@ -10,7 +10,8 @@ import Spinner from '../ui/Spinner.jsx';
 import StayFields from './StayFields.jsx';
 
 // Form đổi ngày hoặc số khách của đơn còn pending. onSaved(booking mới), onCancel() đóng form.
-export default function EditBookingForm({ booking, onSaved, onCancel }) {
+// saveVariant: kiểu của nút lưu (secondary khi trang đã có một nút vàng khác).
+export default function EditBookingForm({ booking, saveVariant = 'primary', onSaved, onCancel }) {
   // Sức chứa lấy từ GET /rooms/:id. Không tải được thì chỉ cho giảm số khách.
   const roomRequest = useFetch(() => getRoom(booking.room.id), [booking.room.id]);
   const capacity = roomRequest.data?.room_type.capacity ?? booking.guests;
@@ -76,7 +77,7 @@ export default function EditBookingForm({ booking, onSaved, onCancel }) {
 
   if (roomRequest.loading) {
     return (
-      <div className="flex justify-center py-6 text-teal-700">
+      <div className="flex justify-center py-6 text-sea">
         <Spinner />
       </div>
     );
@@ -86,17 +87,17 @@ export default function EditBookingForm({ booking, onSaved, onCancel }) {
     <form onSubmit={handleSubmit} noValidate aria-label="Change dates or guests" className="space-y-4">
       <StayFields values={form} capacity={capacity} onChange={handleChange} disabled={saving} />
       {roomRequest.error && (
-        <p className="text-xs text-amber-700">
+        <p className="text-xs text-warning-deep">
           Could not load the room capacity, so you can only keep or reduce the number of guests.
         </p>
       )}
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-ink-soft">
         We check that the room is free for your new dates before saving. The price per night stays
         the same as when you booked.
       </p>
       <Alert type="error">{error}</Alert>
       <div className="flex flex-col gap-3 sm:flex-row">
-        <Button type="submit" loading={saving}>
+        <Button type="submit" variant={saveVariant} loading={saving}>
           Save changes
         </Button>
         <Button variant="secondary" disabled={saving} onClick={onCancel}>

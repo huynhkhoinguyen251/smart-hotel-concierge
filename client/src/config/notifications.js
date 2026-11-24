@@ -6,19 +6,18 @@ export const UNREAD_POLL_MS = 60 * 1000;
 export const BELL_PREVIEW_LIMIT = 5;
 export const NOTIFICATIONS_PAGE_SIZE = 10;
 
-// Nhãn và màu theo type (backend: booking, service, food_order, tour, transport, payment, support).
-export const NOTIFICATION_TYPES = {
-  booking: { label: 'Booking', className: 'bg-teal-50 text-teal-800' },
-  service: { label: 'Service', className: 'bg-sky-50 text-sky-800' },
-  food_order: { label: 'Food', className: 'bg-amber-50 text-amber-800' },
-  tour: { label: 'Tour', className: 'bg-emerald-50 text-emerald-800' },
-  transport: { label: 'Transport', className: 'bg-violet-50 text-violet-800' },
-  payment: { label: 'Payment', className: 'bg-emerald-50 text-emerald-800' },
-  support: { label: 'Support', className: 'bg-slate-100 text-slate-700' },
+// Nhãn theo type (backend: booking, service, food_order, tour, transport, payment, support).
+const NOTIFICATION_LABELS = {
+  booking: 'Booking',
+  service: 'Service',
+  food_order: 'Food',
+  tour: 'Tour',
+  transport: 'Transport',
+  payment: 'Payment',
+  support: 'Support',
 };
 
-export const getNotificationType = (type) =>
-  NOTIFICATION_TYPES[type] ?? { label: 'Notice', className: 'bg-slate-100 text-slate-700' };
+export const getNotificationLabel = (type) => NOTIFICATION_LABELS[type] ?? 'Notice';
 
 export const NOTIFICATION_TABS = [
   { value: '', label: 'All' },

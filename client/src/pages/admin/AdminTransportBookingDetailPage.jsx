@@ -1,12 +1,7 @@
 import { getAdminTransportBooking, updateAdminTransportBookingStatus } from '../../api/adminTourism.api.js';
-import AdminDetailLayout, {
-  AdminFact,
-  AdminFacts,
-  AdminGuestSection,
-  AdminPriceSection,
-  AdminSection,
-} from '../../components/admin/AdminDetailLayout.jsx';
-import AdminSubNav from '../../components/admin/AdminSubNav.jsx';
+import AdminDetailLayout, { AdminGuestSection } from '../../components/admin/AdminDetailLayout.jsx';
+import { DetailFact, DetailFacts, DetailPriceSection, DetailSection } from '../../components/detail/DetailParts.jsx';
+import SectionNav from '../../components/ui/SectionNav.jsx';
 import DetailLoader from '../../components/ui/DetailLoader.jsx';
 import AdminStatusActions from '../../components/admin/AdminStatusActions.jsx';
 import { TOURISM_SECTION_NAV } from '../../config/adminCatalog.js';
@@ -41,7 +36,7 @@ function TransportDetails({ initialBooking }) {
 
   return (
     <AdminDetailLayout
-      subNav={<AdminSubNav {...TOURISM_SECTION_NAV} />}
+      subNav={<SectionNav {...TOURISM_SECTION_NAV} />}
       backTo="/admin/tourism/transport"
       backLabel="Back to transport requests"
       title={`Transport request #${booking.id}`}
@@ -66,31 +61,31 @@ function TransportDetails({ initialBooking }) {
       }
       actionsEmptyText="No more actions for this request."
       main={
-        <AdminSection title={service.name} subtitle={getTransportLabel(service.category)}>
-          <AdminFacts>
-            {booking.flight_number && <AdminFact label="Flight number">{booking.flight_number}</AdminFact>}
-            <AdminFact label={fields.start}>{formatDate(booking.start_at, { withTime: true })}</AdminFact>
+        <DetailSection title={service.name} subtitle={getTransportLabel(service.category)}>
+          <DetailFacts>
+            {booking.flight_number && <DetailFact label="Flight number">{booking.flight_number}</DetailFact>}
+            <DetailFact label={fields.start}>{formatDate(booking.start_at, { withTime: true })}</DetailFact>
             {booking.end_at && (
-              <AdminFact label={fields.end ?? 'End time'}>{formatDate(booking.end_at, { withTime: true })}</AdminFact>
+              <DetailFact label={fields.end ?? 'End time'}>{formatDate(booking.end_at, { withTime: true })}</DetailFact>
             )}
-            {isMotorbike && <AdminFact label="Rental days">{rentalDays ? formatDays(rentalDays) : '-'}</AdminFact>}
-            {quantityText && <AdminFact label={category.quantity.label}>{quantityText}</AdminFact>}
-            <AdminFact label={fields.pickup}>{booking.pickup_location}</AdminFact>
-            <AdminFact label={fields.dropoff}>{booking.dropoff_location}</AdminFact>
-            <AdminFact label="Licence plate">
+            {isMotorbike && <DetailFact label="Rental days">{rentalDays ? formatDays(rentalDays) : '-'}</DetailFact>}
+            {quantityText && <DetailFact label={category.quantity.label}>{quantityText}</DetailFact>}
+            <DetailFact label={fields.pickup}>{booking.pickup_location}</DetailFact>
+            <DetailFact label={fields.dropoff}>{booking.dropoff_location}</DetailFact>
+            <DetailFact label="Licence plate">
               {booking.vehicle_plate ||
                 (plateRequired && booking.status === 'pending' ? 'Entered when you confirm' : '-')}
-            </AdminFact>
-            <AdminFact label="Note">
+            </DetailFact>
+            <DetailFact label="Note">
               <span className="whitespace-pre-line">{booking.note || '-'}</span>
-            </AdminFact>
-          </AdminFacts>
-        </AdminSection>
+            </DetailFact>
+          </DetailFacts>
+        </DetailSection>
       }
       side={
         <>
           <AdminGuestSection user={booking.user} />
-          <AdminPriceSection
+          <DetailPriceSection
             rows={[
               {
                 label: 'Unit price',

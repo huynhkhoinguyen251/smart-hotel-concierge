@@ -78,7 +78,7 @@ export default function CartPanel({
                 <button
                   type="button"
                   onClick={() => onRemove(line.menu_item_id)}
-                  className="rounded-control px-2 py-1 text-sm font-medium text-danger hover:bg-danger-tint"
+                  className="-mr-2 min-h-10 rounded-control px-2 text-sm font-medium text-danger hover:bg-danger-tint sm:min-h-8"
                   aria-label={`Remove ${line.menuItem.name}`}
                 >
                   Remove

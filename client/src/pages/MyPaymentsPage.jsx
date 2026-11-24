@@ -1,10 +1,7 @@
 import { Link } from 'react-router-dom';
 import { getMyPayments } from '../api/payments.api.js';
-import EmptyState from '../components/ui/EmptyState.jsx';
-import LoadError from '../components/ui/LoadError.jsx';
-import PageTitle from '../components/ui/PageTitle.jsx';
-import Pagination from '../components/ui/Pagination.jsx';
-import { PageSpinner } from '../components/ui/Spinner.jsx';
+import AccountListPage from '../components/layout/AccountListPage.jsx';
+import ButtonLink from '../components/ui/ButtonLink.jsx';
 import StatusBadge from '../components/ui/StatusBadge.jsx';
 import { getPaymentMethodLabel, MY_PAYMENTS_PAGE_SIZE } from '../config/payments.js';
 import { getReviewType } from '../config/reviews.js';
@@ -13,50 +10,49 @@ import useUrlFilters from '../hooks/useUrlFilters.js';
 import formatCurrency from '../utils/formatCurrency.js';
 import formatDate from '../utils/formatDate.js';
 
-// Một thanh toán: loại và tên đơn (link đến chi tiết đơn), số tiền, trạng thái, ngày trả, hóa đơn.
-function PaymentCard({ payment }) {
+// Một thanh toán: tên đơn (link đến chi tiết đơn) và loại, trạng thái, ngày trả, số tiền, hóa đơn.
+function PaymentRow({ payment }) {
   const type = getReviewType(payment.target?.type);
   const hasInvoice = Boolean(payment.invoice_number);
 
   return (
-    <article className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:flex-row md:items-center md:justify-between">
+    <li className="grid gap-x-8 gap-y-3 p-4 sm:grid-cols-[minmax(0,1fr)_auto] lg:px-5 lg:py-5">
       <div className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-wide text-teal-700">
-          {type?.label ?? payment.target?.type}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          <h2 className="min-w-0 text-lg font-semibold wrap-anywhere text-ink">
+            {type ? (
+              <Link to={type.detailPath(payment.target.id)} className="text-sea hover:text-sea-hover hover:underline">
+                {payment.target.name}
+              </Link>
+            ) : (
+              payment.target?.name
+            )}
+          </h2>
+          <StatusBadge status={payment.status} />
+        </div>
+        <p className="mt-0.5 text-sm text-ink-soft">
+          {type?.label ?? payment.target?.type} · Payment #{payment.id}
         </p>
-        {type ? (
-          <Link
-            to={type.detailPath(payment.target.id)}
-            className="mt-0.5 block font-semibold wrap-anywhere text-slate-900 hover:text-teal-700"
-          >
-            {payment.target.name}
-          </Link>
-        ) : (
-          <p className="mt-0.5 font-semibold wrap-anywhere text-slate-900">{payment.target?.name}</p>
-        )}
-        <p className="mt-1 text-sm text-slate-500">
-          Payment #{payment.id} · {getPaymentMethodLabel(payment.method)}
+        <p className="mt-2 text-sm text-ink">
+          {getPaymentMethodLabel(payment.method)}
           {payment.paid_at && <> · Paid {formatDate(payment.paid_at, { withTime: true })}</>}
         </p>
-        {hasInvoice && <p className="text-sm text-slate-500">Invoice {payment.invoice_number}</p>}
+        {hasInvoice && <p className="mt-0.5 text-sm text-ink">Invoice {payment.invoice_number}</p>}
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 md:flex-col md:items-end">
-        <div className="flex items-center gap-2">
-          <StatusBadge status={payment.status} />
-          <p className="text-lg font-bold text-teal-700">{formatCurrency(payment.amount)}</p>
-        </div>
+      <div className="flex flex-wrap items-center justify-between gap-3 sm:flex-col sm:items-end sm:justify-start">
+        <p className="text-lg font-bold whitespace-nowrap text-ink">{formatCurrency(payment.amount)}</p>
         {hasInvoice && (
-          <Link
+          <ButtonLink
             to={`/payments/${payment.id}/invoice`}
+            variant="secondary"
             aria-label={`View invoice ${payment.invoice_number}`}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
           >
             View invoice
-          </Link>
+          </ButtonLink>
         )}
       </div>
-    </article>
+    </li>
   );
 }
 
@@ -65,39 +61,25 @@ export default function MyPaymentsPage() {
   const { page, goToPage } = useUrlFilters({});
   const list = useFetch(() => getMyPayments({ page, limit: MY_PAYMENTS_PAGE_SIZE }), ['my-payments', page]);
 
-  const renderList = () => {
-    if (list.loading) return <PageSpinner />;
-    if (list.error) return <LoadError error={list.error} onRetry={list.retry} />;
-    if (list.data.items.length === 0) {
-      return (
-        <EmptyState
-          title="No payments yet"
-          message="When you book a room or order a service, its QR payment appears here."
-        />
-      );
-    }
-    return (
-      <>
-        <div className="space-y-4">
-          {list.data.items.map((payment) => (
-            <PaymentCard key={payment.id} payment={payment} />
-          ))}
-        </div>
-        <Pagination
-          className="mt-8"
-          page={page}
-          limit={MY_PAYMENTS_PAGE_SIZE}
-          total={list.data.pagination?.total ?? 0}
-          onPageChange={goToPage}
-        />
-      </>
-    );
-  };
-
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
-      <PageTitle title="My payments" subtitle="Your QR payments and invoices, newest first." />
-      {renderList()}
-    </div>
+    <AccountListPage
+      title="My payments"
+      subtitle="Your QR payments and invoices, newest first."
+      list={list}
+      items={list.data?.items}
+      empty={{
+        title: 'No payments yet',
+        message: 'When you book a room or order a service, its QR payment appears here.',
+        action: <ButtonLink to="/rooms">Find a room</ButtonLink>,
+      }}
+      pagination={{
+        page,
+        limit: MY_PAYMENTS_PAGE_SIZE,
+        total: list.data?.pagination?.total ?? 0,
+        onPageChange: goToPage,
+      }}
+      listLabel="Payments"
+      renderItem={(payment) => <PaymentRow key={payment.id} payment={payment} />}
+    />
   );
 }

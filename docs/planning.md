@@ -129,7 +129,7 @@ Hướng thiết kế "Da Nang coast" với Ant Design và Tailwind (xem `PRODUC
 - [x] U1: Nền tảng Ant Design (theme, font, 22 component dùng chung trong `client/src/components/ui`)
 - [x] U2: Ảnh thật, khung trang khách, trang chủ, phòng, đồ ăn, dịch vụ, tour
 - [x] U3: Toàn bộ phần admin (khung, dashboard, bảng, chi tiết, form)
-- [ ] U4: Trang đơn của khách, đăng nhập và đăng ký, giảm dung lượng tải, rà soát cuối
+- [x] U4: Trang đơn của khách, đăng nhập và đăng ký, giảm dung lượng tải, rà soát cuối
 
 ## Giai đoạn 4: Integration
 

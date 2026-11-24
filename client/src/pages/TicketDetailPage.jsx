@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getTicket, sendTicketMessage } from '../api/tickets.api.js';
-import ChatMessage from '../components/support/ChatMessage.jsx';
+import DetailLayout from '../components/detail/DetailLayout.jsx';
+import { DetailSection } from '../components/detail/DetailParts.jsx';
+import TicketMessage from '../components/support/TicketMessage.jsx';
 import Alert from '../components/ui/Alert.jsx';
 import Button from '../components/ui/Button.jsx';
-import Card from '../components/ui/Card.jsx';
 import DetailLoader from '../components/ui/DetailLoader.jsx';
-import StatusBadge from '../components/ui/StatusBadge.jsx';
-import StatusProgress from '../components/ui/StatusProgress.jsx';
 import Textarea from '../components/ui/Textarea.jsx';
 import { TICKET_STEPS } from '../config/statuses.js';
 import {
@@ -17,7 +16,7 @@ import {
 } from '../config/support.js';
 import useAuth from '../hooks/useAuth.js';
 import useFlashMessage from '../hooks/useFlashMessage.js';
-import formatDate from '../utils/formatDate.js';
+import usePageTitle from '../hooks/usePageTitle.js';
 
 // Ô trả lời ở cuối cuộc hội thoại. API gửi tin trả lại cả yêu cầu, nên onSent nhận yêu cầu mới.
 function ReplyBox({ ticketId, onSent }) {
@@ -80,6 +79,7 @@ function TicketConversation({ initialTicket, initialMessage }) {
   const [refreshing, setRefreshing] = useState(false);
   const [refreshError, setRefreshError] = useState('');
   const isClosed = ticket.status === CLOSED_TICKET_STATUS;
+  usePageTitle(ticket.subject);
 
   const refresh = async () => {
     setRefreshing(true);
@@ -94,61 +94,51 @@ function TicketConversation({ initialTicket, initialMessage }) {
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <Link to="/support" className="text-sm font-medium text-teal-700 hover:text-teal-800">
-        ← Back to support
-      </Link>
-
-      <div className="mt-3 mb-2 flex flex-wrap items-center gap-3">
-        <h1 className="min-w-0 text-2xl font-bold tracking-tight wrap-anywhere text-slate-900 sm:text-3xl">
-          {ticket.subject}
-        </h1>
-        <StatusBadge status={ticket.status} />
-      </div>
-      <p className="mb-6 text-sm text-slate-500">
-        Request #{ticket.id} · Created on {formatDate(ticket.created_at, { withTime: true })}
-      </p>
-
-      <div className="mb-6 space-y-3 empty:hidden" aria-live="polite">
-        <Alert type="success">{initialMessage}</Alert>
-        <Alert type="error">{refreshError}</Alert>
-      </div>
-
-      <Card className="mb-6">
-        <StatusProgress
+    <div className="shell pt-6 pb-12 lg:pb-16">
+      <div className="max-w-4xl">
+        <DetailLayout
+          backTo="/support"
+          backLabel="Back to support"
+          title={ticket.subject}
+          titleClassName="text-2xl sm:text-3xl"
           status={ticket.status}
+          createdAt={ticket.created_at}
+          createdLabel={`Request #${ticket.id} · Created on`}
+          message={refreshError ? { type: 'error', text: refreshError } : { type: 'success', text: initialMessage }}
           steps={TICKET_STEPS}
-          label="Request progress"
+          progressLabel="Request progress"
           cancelledMessage=""
+          main={
+            <DetailSection
+              title="Conversation"
+              action={
+                <Button variant="secondary" size="sm" loading={refreshing} onClick={refresh}>
+                  Refresh
+                </Button>
+              }
+            >
+              <ul className="space-y-5" aria-label="Messages">
+                {ticket.messages.map((message) => (
+                  <TicketMessage key={message.id} message={message} currentUserId={user?.id} viewerRole="user" />
+                ))}
+              </ul>
+
+              <div className="mt-6 border-t border-line-soft pt-5">
+                {isClosed ? (
+                  <p className="text-sm text-ink-soft">
+                    {TICKET_RESOLVED_NOTE}{' '}
+                    <Link to="/support/new" className="font-semibold text-sea hover:text-sea-hover hover:underline">
+                      New request
+                    </Link>
+                  </p>
+                ) : (
+                  <ReplyBox ticketId={ticket.id} onSent={setTicket} />
+                )}
+              </div>
+            </DetailSection>
+          }
         />
-      </Card>
-
-      <Card>
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold text-slate-900">Conversation</h2>
-          <Button variant="secondary" className="px-3 py-1.5" loading={refreshing} onClick={refresh}>
-            Refresh
-          </Button>
-        </div>
-        <ul className="space-y-4" aria-label="Messages">
-          {ticket.messages.map((message) => (
-            <ChatMessage key={message.id} message={message} isOwn={message.sender?.id === user?.id} />
-          ))}
-        </ul>
-
-        <div className="mt-6 border-t border-slate-100 pt-4">
-          {isClosed ? (
-            <p className="text-sm text-slate-600">
-              {TICKET_RESOLVED_NOTE}{' '}
-              <Link to="/support/new" className="font-semibold text-teal-700 hover:text-teal-800">
-                New request
-              </Link>
-            </p>
-          ) : (
-            <ReplyBox ticketId={ticket.id} onSent={setTicket} />
-          )}
-        </div>
-      </Card>
+      </div>
     </div>
   );
 }
@@ -168,7 +158,7 @@ export default function TicketDetailPage() {
         to: '/support',
         linkLabel: 'Back to support',
       }}
-      errorClassName="mx-auto max-w-3xl px-4 py-10"
+      errorClassName="shell py-10"
     >
       {(data) => (
         <TicketConversation key={data.id} initialTicket={data} initialMessage={flashMessage} />

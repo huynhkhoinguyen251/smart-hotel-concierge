@@ -8,7 +8,7 @@ import Button from '../../ui/Button.jsx';
 import ConfirmDialog from '../../ui/ConfirmDialog.jsx';
 import Select from '../../ui/Select.jsx';
 import StatusBadge from '../../ui/StatusBadge.jsx';
-import AdminListPanel, { AdminListBody } from '../AdminListPanel.jsx';
+import ListPanel, { ListBody } from '../../ui/ListPanel.jsx';
 import AdminPageHeader from '../AdminPageHeader.jsx';
 import AdminRequestTable from '../AdminRequestTable.jsx';
 import RowActions from '../RowActions.jsx';
@@ -22,7 +22,7 @@ import CatalogItemFormModal from './CatalogItemFormModal.jsx';
 // - filters: [{ name, label, options: [{ value, label }] }], value '' = tất cả.
 // - search: { name, label, placeholder, maxLength } tùy chọn (ô chữ + nút Search).
 // - columns: cột của AdminRequestTable; cột đầu là tiêu đề của thẻ.
-export default function CatalogListPage({ title, subtitle, subNav, note, catalog, filters = [], search, columns }) {
+export default function CatalogListPage({ title, tabTitle, subtitle, subNav, note, catalog, filters = [], search, columns }) {
   const { flag, flagLabels, flagStatuses } = catalog;
   // Cột trạng thái bật/tắt luôn nằm sau các cột riêng của từng danh mục.
   const allColumns = [
@@ -141,6 +141,7 @@ export default function CatalogListPage({ title, subtitle, subNav, note, catalog
     <>
       <AdminPageHeader
         title={title}
+        tabTitle={tabTitle}
         subtitle={subtitle}
         action={<Button onClick={() => setEditing({ open: true, item: null })}>Add {catalog.noun}</Button>}
         subNav={subNav}
@@ -149,7 +150,7 @@ export default function CatalogListPage({ title, subtitle, subNav, note, catalog
       <div className="mb-4 empty:hidden" aria-live="polite">
         <Alert type={message.type}>{message.text}</Alert>
       </div>
-      <AdminListPanel
+      <ListPanel
         toolbar={
           <>
             {allFilters.map((filter) => (
@@ -181,7 +182,7 @@ export default function CatalogListPage({ title, subtitle, subNav, note, catalog
           </>
         }
       >
-        <AdminListBody
+        <ListBody
           list={list}
           items={list.data?.items ?? []}
           empty={{
@@ -202,8 +203,8 @@ export default function CatalogListPage({ title, subtitle, subNav, note, catalog
             getItemLabel={(item) => item.name}
             renderActions={renderActions}
           />
-        </AdminListBody>
-      </AdminListPanel>
+        </ListBody>
+      </ListPanel>
 
       <CatalogItemFormModal
         open={editing.open}

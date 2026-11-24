@@ -1,22 +1,27 @@
 import { useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createBooking } from '../api/bookings.api.js';
 import { checkAvailability, getRoom } from '../api/rooms.api.js';
 import StayFields from '../components/bookings/StayFields.jsx';
-import RoomImage from '../components/rooms/RoomImage.jsx';
-import VoucherInput from '../components/vouchers/VoucherInput.jsx';
 import Alert from '../components/ui/Alert.jsx';
+import BackLink from '../components/ui/BackLink.jsx';
 import Button from '../components/ui/Button.jsx';
+import ButtonLink from '../components/ui/ButtonLink.jsx';
 import Card from '../components/ui/Card.jsx';
 import ErrorState from '../components/ui/ErrorState.jsx';
 import PageTitle from '../components/ui/PageTitle.jsx';
+import PhotoFrame from '../components/ui/PhotoFrame.jsx';
+import PlainMessage from '../components/ui/PlainMessage.jsx';
 import Spinner, { PageSpinner } from '../components/ui/Spinner.jsx';
+import VoucherInput from '../components/vouchers/VoucherInput.jsx';
 import useAuth from '../hooks/useAuth.js';
 import useFetch from '../hooks/useFetch.js';
 import {
   ADMIN_BOOKING_NOTE,
   BOOKING_CREATED_MESSAGE,
   clampGuests,
+  formatGuests,
+  formatNights,
 } from '../utils/bookingHelpers.js';
 import { CHECK_IN_TIME, getFreeCancellationDeadline } from '../utils/cancellation.js';
 import { countNights } from '../utils/dateHelpers.js';
@@ -29,27 +34,14 @@ const ROOM_ID_PATTERN = /^[1-9]\d*$/;
 
 // Khung báo lỗi kèm link quay lại (thiếu phòng, phòng không tồn tại...).
 function BookingProblem({ title, message, to, linkLabel }) {
-  return (
-    <div className="mx-auto max-w-xl px-4 py-16 text-center">
-      <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
-      <p className="mt-2 text-slate-600">{message}</p>
-      <Link
-        to={to}
-        className="mt-8 inline-block rounded-lg bg-teal-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal-800"
-      >
-        {linkLabel}
-      </Link>
-    </div>
-  );
+  return <PlainMessage title={title} message={message} action={<ButtonLink to={to}>{linkLabel}</ButtonLink>} />;
 }
 
 function SummaryRow({ label, children, strong = false }) {
   return (
-    <div className="flex items-start justify-between gap-4 py-2">
-      <dt className="text-slate-600">{label}</dt>
-      <dd className={`text-right ${strong ? 'text-lg font-bold text-teal-700' : 'font-medium text-slate-900'}`}>
-        {children}
-      </dd>
+    <div className={`flex items-start justify-between gap-4 ${strong ? 'mt-1 border-t border-line-soft pt-3' : 'py-1.5'}`}>
+      <dt className={strong ? 'font-semibold text-ink' : 'text-ink-soft'}>{label}</dt>
+      <dd className={`text-right text-ink ${strong ? 'text-lg font-bold whitespace-nowrap' : 'font-medium'}`}>{children}</dd>
     </div>
   );
 }
@@ -59,8 +51,8 @@ function AvailabilityStatus({ datesError, availability }) {
   if (datesError) return <Alert type="info">{datesError}</Alert>;
   if (availability.loading) {
     return (
-      <p className="flex items-center gap-2 text-sm text-slate-600">
-        <Spinner size="sm" className="text-teal-700" /> Checking availability...
+      <p className="flex items-center gap-2 text-sm text-ink-soft">
+        <Spinner size="sm" className="text-sea" /> Checking availability...
       </p>
     );
   }
@@ -110,7 +102,8 @@ function BookingForm({ roomId }) {
       );
     }
     return (
-      <div className="mx-auto max-w-3xl px-4 py-10">
+      <div className="shell py-10">
+        <h1 className="sr-only">Could not load this page</h1>
         <ErrorState message={roomRequest.error.message} onRetry={roomRequest.retry} />
       </div>
     );
@@ -163,34 +156,14 @@ function BookingForm({ roomId }) {
   };
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
-      <Link to={roomLink} className="text-sm font-medium text-teal-700 hover:text-teal-800">
-        ← Back to room
-      </Link>
-      <PageTitle title="Book your stay" subtitle="Check the details below, then confirm." className="mt-3" />
+    <div className="shell pt-6 pb-12 lg:pb-16">
+      <BackLink to={roomLink}>Back to room</BackLink>
+      <PageTitle title="Book your stay" subtitle="Check the details below, then confirm." className="mt-2" />
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_360px] lg:items-start">
-        <div className="min-w-0 space-y-6">
-          <Card className="flex flex-col gap-4 sm:flex-row">
-            <RoomImage
-              src={room.primary_image}
-              alt={`${room.room_type.name}, room ${room.room_number}`}
-              className="aspect-[4/3] w-full rounded-xl sm:w-48 sm:shrink-0"
-            />
-            <div className="min-w-0">
-              <h2 className="text-xl font-semibold text-slate-900">{room.room_type.name}</h2>
-              <p className="mt-0.5 text-sm text-slate-500">
-                Room {room.room_number} · Floor {room.floor}
-              </p>
-              <p className="mt-2 text-sm text-slate-600">
-                Up to {capacity} {capacity === 1 ? 'guest' : 'guests'} ·{' '}
-                {formatCurrency(room.room_type.price_per_night)} / night
-              </p>
-            </div>
-          </Card>
-
-          <Card>
-            <h2 className="mb-4 text-lg font-semibold text-slate-900">Your stay</h2>
+      <div className="grid gap-x-8 gap-y-6 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start">
+        <Card className="min-w-0">
+          <section>
+            <h2 className="mb-4 text-lg font-semibold text-ink">Your stay</h2>
             <StayFields
               values={{ ...stay, guests }}
               capacity={capacity}
@@ -198,26 +171,53 @@ function BookingForm({ roomId }) {
               disabled={submitting}
             />
             {guestsReduced && (
-              <p className="mt-3 text-sm text-amber-700">
-                This room allows at most {capacity} {capacity === 1 ? 'guest' : 'guests'}.
+              <p className="mt-3 text-sm text-warning-deep">
+                This room allows at most {formatGuests(capacity)}.
               </p>
             )}
-          </Card>
-        </div>
+          </section>
+
+          <section className="mt-6 border-t border-line-soft pt-6">
+            <h2 className="mb-3 text-lg font-semibold text-ink">Voucher</h2>
+            <div className="max-w-md">
+              <VoucherInput
+                subtotal={datesError ? null : subtotal}
+                applied={voucher}
+                onChange={(value) => {
+                  setVoucher(value);
+                  setSubmitError('');
+                }}
+                disabled={submitting}
+              />
+            </div>
+          </section>
+        </Card>
 
         <Card className="lg:sticky lg:top-24">
-          <h2 className="text-lg font-semibold text-slate-900">Booking summary</h2>
-          <dl className="mt-3 divide-y divide-slate-100 text-sm">
+          <h2 className="text-lg font-semibold text-ink">Booking summary</h2>
+          <PhotoFrame
+            src={room.primary_image}
+            alt={`${room.room_type.name}, room ${room.room_number}`}
+            className="mt-4 aspect-[16/9] lg:aspect-[2/1]"
+          />
+          <p className="mt-3 font-semibold wrap-anywhere text-ink">{room.room_type.name}</p>
+          <p className="text-sm text-ink-soft">
+            Room {room.room_number} · Floor {room.floor} · Up to {formatGuests(capacity)}
+          </p>
+
+          <dl className="mt-4 border-t border-line-soft pt-3 text-sm">
             <SummaryRow label="Check-in">
               {stay.check_in ? `${formatDate(stay.check_in)}, from ${CHECK_IN_TIME}` : '-'}
             </SummaryRow>
             <SummaryRow label="Check-out">{stay.check_out ? formatDate(stay.check_out) : '-'}</SummaryRow>
             <SummaryRow label="Guests">{guests}</SummaryRow>
+            <SummaryRow label="Price">
+              {datesError
+                ? `${formatCurrency(pricePerNight)} / night`
+                : `${formatCurrency(pricePerNight)} × ${formatNights(nights)}`}
+            </SummaryRow>
             {!datesError && (
               <>
-                <SummaryRow label="Price">
-                  {formatCurrency(pricePerNight)} × {nights} {nights === 1 ? 'night' : 'nights'}
-                </SummaryRow>
                 <SummaryRow label="Subtotal">{formatCurrency(subtotal)}</SummaryRow>
                 {discount > 0 && (
                   <SummaryRow label={`Discount (${voucher.code})`}>- {formatCurrency(discount)}</SummaryRow>
@@ -229,18 +229,6 @@ function BookingForm({ roomId }) {
             )}
           </dl>
 
-          <div className="mt-4">
-            <VoucherInput
-              subtotal={datesError ? null : subtotal}
-              applied={voucher}
-              onChange={(value) => {
-                setVoucher(value);
-                setSubmitError('');
-              }}
-              disabled={submitting}
-            />
-          </div>
-
           <div className="mt-4 space-y-3" aria-live="polite">
             <AvailabilityStatus datesError={datesError} availability={availability} />
             <Alert type="error">{submitError}</Alert>
@@ -251,7 +239,7 @@ function BookingForm({ roomId }) {
           </Button>
 
           {!datesError && deadline && (
-            <p className="mt-3 text-xs text-slate-500">
+            <p className="mt-3 text-xs text-ink-soft">
               Free cancellation until {deadline.label}. Pay by QR within 15 minutes after booking to
               confirm it.
             </p>

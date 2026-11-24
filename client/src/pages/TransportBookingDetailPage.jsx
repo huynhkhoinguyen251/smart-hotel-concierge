@@ -1,16 +1,11 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { cancelTransportBooking, getTransportBooking } from '../api/transportBookings.api.js';
-import PaymentPanel from '../components/payments/PaymentPanel.jsx';
+import { DetailFact, DetailFacts, DetailSection } from '../components/detail/DetailParts.jsx';
+import OrderDetailLayout from '../components/orders/OrderDetailLayout.jsx';
 import ReviewPanel from '../components/reviews/ReviewPanel.jsx';
-import Alert from '../components/ui/Alert.jsx';
-import Button from '../components/ui/Button.jsx';
-import Card from '../components/ui/Card.jsx';
 import ConfirmDialog from '../components/ui/ConfirmDialog.jsx';
-import DetailRow from '../components/ui/DetailRow.jsx';
 import DetailLoader from '../components/ui/DetailLoader.jsx';
-import StatusBadge from '../components/ui/StatusBadge.jsx';
-import StatusProgress from '../components/ui/StatusProgress.jsx';
+import MoreLink from '../components/ui/MoreLink.jsx';
 import { SERVICE_REQUEST_STEPS } from '../config/statuses.js';
 import { PLATE_PENDING_NOTE, TRANSPORT_BOOKING_CANCELLED_MESSAGE } from '../config/tourism.js';
 import useCancelAction from '../hooks/useCancelAction.js';
@@ -68,109 +63,63 @@ function TransportBookingDetails({ initialBooking, initialMessage }) {
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
-      <Link to="/my-trips?type=transport" className="text-sm font-medium text-teal-700 hover:text-teal-800">
-        ← Back to my trips
-      </Link>
-
-      <div className="mt-3 mb-6 flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-          Transport request #{booking.id}
-        </h1>
-        <StatusBadge status={booking.status} />
-      </div>
-      <p className="-mt-4 mb-6 text-sm text-slate-500">
-        Requested on {formatDate(booking.created_at, { withTime: true })}
-      </p>
-
-      <div className="mb-6 space-y-3" aria-live="polite">
-        <Alert type="success">{success}</Alert>
-        <Alert type="error">{error}</Alert>
-      </div>
-
-      <div className="mb-6 empty:hidden">
-        <PaymentPanel
-          type="transport"
-          order={booking}
-          onPaid={reloadAfterPayment}
-          onExpired={() => reloadAfterPayment('')}
-        />
-      </div>
-
-      <Card className="mb-6">
-        <h2 className="mb-4 text-lg font-semibold text-slate-900">Request status</h2>
-        <StatusProgress
-          status={booking.status}
-          steps={SERVICE_REQUEST_STEPS}
-          label="Request progress"
-          cancelledMessage="This transport request was cancelled."
-        />
-      </Card>
-
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px] lg:items-start">
-        <Card className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wide text-teal-700">
-            {getTransportLabel(service.category)}
-          </p>
-          <h2 className="mt-1 text-xl font-semibold break-words text-slate-900">{service.name}</h2>
-          <Link
-            to={`/transport/${service.id}`}
-            className="mt-2 inline-block text-sm font-semibold text-teal-700 hover:text-teal-800"
-          >
-            View service →
-          </Link>
-
-          <dl className="mt-4 divide-y divide-slate-100 border-t border-slate-100 text-sm">
-            {isAirport && <DetailRow label="Flight number">{booking.flight_number || '-'}</DetailRow>}
-            <DetailRow label={fields.start}>{formatDate(booking.start_at, { withTime: true })}</DetailRow>
-            {isMotorbike && (
-              <>
-                <DetailRow label={fields.end}>{formatDate(booking.end_at, { withTime: true }) || '-'}</DetailRow>
-                <DetailRow label="Rental days">{rentalDays ? formatDays(rentalDays) : '-'}</DetailRow>
-              </>
-            )}
-            {quantityText && <DetailRow label={category.quantity.label}>{quantityText}</DetailRow>}
-            <DetailRow label={fields.pickup}>{booking.pickup_location}</DetailRow>
-            <DetailRow label={fields.dropoff}>{booking.dropoff_location}</DetailRow>
-            <DetailRow label="Licence plate">{getPlateText(booking)}</DetailRow>
-            <DetailRow label="Note">
-              <span className="whitespace-pre-line">{booking.note || '-'}</span>
-            </DetailRow>
-          </dl>
-        </Card>
-
-        <div className="space-y-6">
-          <Card>
-            <h2 className="text-lg font-semibold text-slate-900">Price</h2>
-            <dl className="mt-2 divide-y divide-slate-100 text-sm">
-              <DetailRow label="Unit price">
-                {formatCurrency(booking.unit_price)} {category?.priceUnit ?? ''}
-              </DetailRow>
-              {multiplier && <DetailRow label={isMotorbike ? 'Rental days' : 'Quantity'}>{multiplier}</DetailRow>}
-              <div className="flex items-start justify-between gap-4 py-2.5">
-                <dt className="font-semibold text-slate-900">Total</dt>
-                <dd className="text-right text-lg font-bold text-teal-700">
-                  {formatCurrency(booking.total_price)}
-                </dd>
-              </div>
-            </dl>
-          </Card>
-
-          <ReviewPanel type={'transport'} itemId={booking.id} status={booking.status} />
-
-          {booking.can_cancel && (
-            <Card>
-              <h2 className="text-lg font-semibold text-slate-900">Cancellation</h2>
-              <p className="mt-2 text-sm text-slate-600">
-                You can cancel this request until the hotel approves it.
-              </p>
-              <Button variant="danger" fullWidth className="mt-4" onClick={openDialog}>
-                Cancel request
-              </Button>
-            </Card>
-          )}
-        </div>
-      </div>
+    <>
+      <OrderDetailLayout
+        order={booking}
+        title={`Transport request #${booking.id}`}
+        backTo="/my-trips?type=transport"
+        backLabel="Back to my trips"
+        createdLabel="Requested on"
+        success={success}
+        error={error}
+        paymentType="transport"
+        onPaid={reloadAfterPayment}
+        onExpired={() => reloadAfterPayment('')}
+        steps={SERVICE_REQUEST_STEPS}
+        progressLabel="Request progress"
+        cancelledMessage="This transport request was cancelled."
+        main={
+          <>
+            <DetailSection title={service.name} subtitle={getTransportLabel(service.category)}>
+              <DetailFacts>
+                {isAirport && <DetailFact label="Flight number">{booking.flight_number || '-'}</DetailFact>}
+                <DetailFact label={fields.start}>{formatDate(booking.start_at, { withTime: true })}</DetailFact>
+                {isMotorbike && (
+                  <>
+                    <DetailFact label={fields.end}>{formatDate(booking.end_at, { withTime: true }) || '-'}</DetailFact>
+                    <DetailFact label="Rental days">{rentalDays ? formatDays(rentalDays) : '-'}</DetailFact>
+                  </>
+                )}
+                {quantityText && <DetailFact label={category.quantity.label}>{quantityText}</DetailFact>}
+                <DetailFact label={fields.pickup}>{booking.pickup_location}</DetailFact>
+                <DetailFact label={fields.dropoff}>{booking.dropoff_location}</DetailFact>
+                <DetailFact label="Licence plate">{getPlateText(booking)}</DetailFact>
+                <DetailFact label="Note">
+                  <span className="whitespace-pre-line">{booking.note || '-'}</span>
+                </DetailFact>
+              </DetailFacts>
+              <MoreLink to={`/transport/${service.id}`} className="mt-3">
+                View service
+              </MoreLink>
+            </DetailSection>
+            <ReviewPanel type="transport" itemId={booking.id} status={booking.status} />
+          </>
+        }
+        price={{
+          rows: [
+            { label: 'Unit price', value: `${formatCurrency(booking.unit_price)} ${category?.priceUnit ?? ''}` },
+            ...(multiplier ? [{ label: isMotorbike ? 'Rental days' : 'Quantity', value: multiplier }] : []),
+          ],
+          total: booking.total_price,
+        }}
+        cancellation={
+          booking.can_cancel && {
+            label: 'Cancel request',
+            onCancel: openDialog,
+            children: <p>You can cancel this request until the hotel approves it.</p>,
+          }
+        }
+      />
 
       <ConfirmDialog
         {...dialogProps}
@@ -180,7 +129,7 @@ function TransportBookingDetails({ initialBooking, initialMessage }) {
         cancelLabel="Keep request"
         variant="danger"
       />
-    </div>
+    </>
   );
 }
 
@@ -199,7 +148,7 @@ export default function TransportBookingDetailPage() {
         to: '/my-trips?type=transport',
         linkLabel: 'Back to my trips',
       }}
-      errorClassName="mx-auto max-w-5xl px-4 py-10"
+      errorClassName="shell py-10"
     >
       {(data) => (
         <TransportBookingDetails

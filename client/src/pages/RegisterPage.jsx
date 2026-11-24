@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import AuthCard from '../components/layout/AuthCard.jsx';
+import AuthLayout from '../components/layout/AuthLayout.jsx';
 import Alert from '../components/ui/Alert.jsx';
 import Button from '../components/ui/Button.jsx';
 import Input from '../components/ui/Input.jsx';
@@ -68,13 +68,13 @@ export default function RegisterPage() {
   };
 
   return (
-    <AuthCard
+    <AuthLayout
       title="Create an account"
       subtitle="Register to book rooms, services and tours."
       footer={
         <>
           Already have an account?{' '}
-          <Link to="/login" className="font-semibold text-teal-700 hover:text-teal-800">
+          <Link to="/login" className="font-semibold text-sea hover:text-sea-hover hover:underline">
             Log in
           </Link>
         </>
@@ -131,6 +131,6 @@ export default function RegisterPage() {
           Create account
         </Button>
       </form>
-    </AuthCard>
+    </AuthLayout>
   );
 }

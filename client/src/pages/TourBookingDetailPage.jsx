@@ -1,16 +1,11 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { cancelTourBooking, getTourBooking } from '../api/tourBookings.api.js';
-import PaymentPanel from '../components/payments/PaymentPanel.jsx';
+import { DetailFact, DetailFacts, DetailSection } from '../components/detail/DetailParts.jsx';
+import OrderDetailLayout from '../components/orders/OrderDetailLayout.jsx';
 import ReviewPanel from '../components/reviews/ReviewPanel.jsx';
-import Alert from '../components/ui/Alert.jsx';
-import Button from '../components/ui/Button.jsx';
-import Card from '../components/ui/Card.jsx';
 import ConfirmDialog from '../components/ui/ConfirmDialog.jsx';
-import DetailRow from '../components/ui/DetailRow.jsx';
 import DetailLoader from '../components/ui/DetailLoader.jsx';
-import StatusBadge from '../components/ui/StatusBadge.jsx';
-import StatusProgress from '../components/ui/StatusProgress.jsx';
+import MoreLink from '../components/ui/MoreLink.jsx';
 import { SERVICE_REQUEST_STEPS } from '../config/statuses.js';
 import { TOUR_BOOKING_CANCELLED_MESSAGE } from '../config/tourism.js';
 import useCancelAction from '../hooks/useCancelAction.js';
@@ -44,98 +39,53 @@ function TourBookingDetails({ initialBooking, initialMessage }) {
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
-      <Link to="/my-trips" className="text-sm font-medium text-teal-700 hover:text-teal-800">
-        ← Back to my trips
-      </Link>
-
-      <div className="mt-3 mb-6 flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-          Tour booking #{booking.id}
-        </h1>
-        <StatusBadge status={booking.status} />
-      </div>
-      <p className="-mt-4 mb-6 text-sm text-slate-500">
-        Booked on {formatDate(booking.created_at, { withTime: true })}
-      </p>
-
-      <div className="mb-6 space-y-3" aria-live="polite">
-        <Alert type="success">{success}</Alert>
-        <Alert type="error">{error}</Alert>
-      </div>
-
-      <div className="mb-6 empty:hidden">
-        <PaymentPanel
-          type="tour"
-          order={booking}
-          onPaid={reloadAfterPayment}
-          onExpired={() => reloadAfterPayment('')}
-        />
-      </div>
-
-      <Card className="mb-6">
-        <h2 className="mb-4 text-lg font-semibold text-slate-900">Booking status</h2>
-        <StatusProgress
-          status={booking.status}
-          steps={SERVICE_REQUEST_STEPS}
-          label="Booking progress"
-          cancelledMessage="This tour booking was cancelled."
-        />
-      </Card>
-
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px] lg:items-start">
-        <Card className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wide text-teal-700">
-            {tour.location} · {tour.duration}
-          </p>
-          <h2 className="mt-1 text-xl font-semibold break-words text-slate-900">{tour.name}</h2>
-          <Link
-            to={`/tours/${tour.id}`}
-            className="mt-2 inline-block text-sm font-semibold text-teal-700 hover:text-teal-800"
-          >
-            View tour →
-          </Link>
-
-          <dl className="mt-4 divide-y divide-slate-100 border-t border-slate-100 text-sm">
-            <DetailRow label="Tour date">{formatDate(booking.tour_date)}</DetailRow>
-            <DetailRow label="Participants">{formatParticipants(booking.participants)}</DetailRow>
-            <DetailRow label="Note">
-              <span className="whitespace-pre-line">{booking.note || '-'}</span>
-            </DetailRow>
-            <DetailRow label="Booked on">{formatDate(booking.created_at, { withTime: true })}</DetailRow>
-          </dl>
-        </Card>
-
-        <div className="space-y-6">
-          <Card>
-            <h2 className="text-lg font-semibold text-slate-900">Price</h2>
-            <dl className="mt-2 divide-y divide-slate-100 text-sm">
-              <DetailRow label="Price per person">{formatCurrency(booking.unit_price)}</DetailRow>
-              <DetailRow label="Participants">{formatParticipants(booking.participants)}</DetailRow>
-              <div className="flex items-start justify-between gap-4 py-2.5">
-                <dt className="font-semibold text-slate-900">Total</dt>
-                <dd className="text-right text-lg font-bold text-teal-700">
-                  {formatCurrency(booking.total_price)}
-                </dd>
-              </div>
-            </dl>
-          </Card>
-
-          <ReviewPanel type={'tour'} itemId={booking.id} status={booking.status} />
-
-          {booking.can_cancel && (
-            <Card>
-              <h2 className="text-lg font-semibold text-slate-900">Cancellation</h2>
-              <p className="mt-2 text-sm text-slate-600">
-                You can cancel this booking until the hotel confirms it.
-              </p>
-              <Button variant="danger" fullWidth className="mt-4" onClick={openDialog}>
-                Cancel booking
-              </Button>
-            </Card>
-          )}
-        </div>
-      </div>
+    <>
+      <OrderDetailLayout
+        order={booking}
+        title={`Tour booking #${booking.id}`}
+        backTo="/my-trips"
+        backLabel="Back to my trips"
+        createdLabel="Booked on"
+        success={success}
+        error={error}
+        paymentType="tour"
+        onPaid={reloadAfterPayment}
+        onExpired={() => reloadAfterPayment('')}
+        steps={SERVICE_REQUEST_STEPS}
+        progressLabel="Booking progress"
+        cancelledMessage="This tour booking was cancelled."
+        main={
+          <>
+            <DetailSection title={tour.name} subtitle={`${tour.location} · ${tour.duration}`}>
+              <DetailFacts>
+                <DetailFact label="Tour date">{formatDate(booking.tour_date)}</DetailFact>
+                <DetailFact label="Participants">{formatParticipants(booking.participants)}</DetailFact>
+                <DetailFact label="Note">
+                  <span className="whitespace-pre-line">{booking.note || '-'}</span>
+                </DetailFact>
+              </DetailFacts>
+              <MoreLink to={`/tours/${tour.id}`} className="mt-3">
+                View tour
+              </MoreLink>
+            </DetailSection>
+            <ReviewPanel type="tour" itemId={booking.id} status={booking.status} />
+          </>
+        }
+        price={{
+          rows: [
+            { label: 'Price per person', value: formatCurrency(booking.unit_price) },
+            { label: 'Participants', value: formatParticipants(booking.participants) },
+          ],
+          total: booking.total_price,
+        }}
+        cancellation={
+          booking.can_cancel && {
+            label: 'Cancel booking',
+            onCancel: openDialog,
+            children: <p>You can cancel this booking until the hotel confirms it.</p>,
+          }
+        }
+      />
 
       <ConfirmDialog
         {...dialogProps}
@@ -145,7 +95,7 @@ function TourBookingDetails({ initialBooking, initialMessage }) {
         cancelLabel="Keep booking"
         variant="danger"
       />
-    </div>
+    </>
   );
 }
 
@@ -164,7 +114,7 @@ export default function TourBookingDetailPage() {
         to: '/my-trips',
         linkLabel: 'Back to my trips',
       }}
-      errorClassName="mx-auto max-w-5xl px-4 py-10"
+      errorClassName="shell py-10"
     >
       {(data) => (
         <TourBookingDetails key={data.id} initialBooking={data} initialMessage={flashMessage} />

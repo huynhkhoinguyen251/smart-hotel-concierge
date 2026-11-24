@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { adminVouchersApi } from '../../api/vouchers.api.js';
 import { EmptyCell } from '../../components/admin/AdminCells.jsx';
-import AdminListPanel, { AdminListBody } from '../../components/admin/AdminListPanel.jsx';
+import ListPanel, { ListBody } from '../../components/ui/ListPanel.jsx';
 import AdminPageHeader from '../../components/admin/AdminPageHeader.jsx';
 import AdminRequestTable from '../../components/admin/AdminRequestTable.jsx';
 import RowActions from '../../components/admin/RowActions.jsx';
@@ -149,7 +149,7 @@ export default function AdminVouchersPage() {
       <div className="mb-4 empty:hidden" aria-live="polite">
         <Alert type={message.type}>{message.text}</Alert>
       </div>
-      <AdminListPanel
+      <ListPanel
         tabs={
           <FilterTabs
             label="Filter by status"
@@ -177,7 +177,7 @@ export default function AdminVouchersPage() {
           </>
         }
       >
-        <AdminListBody
+        <ListBody
           list={list}
           items={list.data?.items ?? []}
           empty={{
@@ -198,8 +198,8 @@ export default function AdminVouchersPage() {
             getItemLabel={(voucher) => voucher.code}
             renderActions={renderActions}
           />
-        </AdminListBody>
-      </AdminListPanel>
+        </ListBody>
+      </ListPanel>
 
       <VoucherFormModal
         open={editing.open}

@@ -1,5 +1,6 @@
 import { useSearchParams } from 'react-router-dom';
 import { cleanParams, readPage } from '../utils/queryString.js';
+import scrollToTop from '../utils/scrollToTop.js';
 
 // Bộ lọc của một trang danh sách, đọc từ địa chỉ trang (?status=...&page=2).
 // schema: { tên: rule } theo đúng thứ tự trên địa chỉ trang. rule là một trong hai:
@@ -28,7 +29,7 @@ export default function useUrlFilters(schema) {
   const updateUrl = (changes) => setSearchParams(cleanParams({ ...values, ...changes }));
   const goToPage = (nextPage) => {
     updateUrl({ page: nextPage > 1 ? nextPage : '' });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    scrollToTop();
   };
 
   return { values, selected, page, searchParams, setSearchParams, updateUrl, goToPage };

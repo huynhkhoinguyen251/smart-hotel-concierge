@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import AuthCard from '../components/layout/AuthCard.jsx';
+import AuthLayout from '../components/layout/AuthLayout.jsx';
 import Alert from '../components/ui/Alert.jsx';
 import Button from '../components/ui/Button.jsx';
 import Input from '../components/ui/Input.jsx';
@@ -58,13 +58,13 @@ export default function LoginPage() {
   };
 
   return (
-    <AuthCard
+    <AuthLayout
       title="Log in"
       subtitle="Welcome back. Log in to manage your bookings and requests."
       footer={
         <>
           Don&apos;t have an account?{' '}
-          <Link to="/register" state={{ from }} className="font-semibold text-teal-700 hover:text-teal-800">
+          <Link to="/register" state={{ from }} className="font-semibold text-sea hover:text-sea-hover hover:underline">
             Register
           </Link>
         </>
@@ -94,6 +94,6 @@ export default function LoginPage() {
           Log in
         </Button>
       </form>
-    </AuthCard>
+    </AuthLayout>
   );
 }

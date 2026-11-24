@@ -1,14 +1,9 @@
-import { Link } from 'react-router-dom';
 import { getMyTourBookings } from '../api/tourBookings.api.js';
 import { getMyTransportBookings } from '../api/transportBookings.api.js';
-import TourBookingCard from '../components/tourism/TourBookingCard.jsx';
-import TransportBookingCard from '../components/tourism/TransportBookingCard.jsx';
-import EmptyState from '../components/ui/EmptyState.jsx';
-import LoadError from '../components/ui/LoadError.jsx';
-import FilterTabs from '../components/ui/FilterTabs.jsx';
-import PageTitle from '../components/ui/PageTitle.jsx';
-import Pagination from '../components/ui/Pagination.jsx';
-import { PageSpinner } from '../components/ui/Spinner.jsx';
+import AccountListPage from '../components/layout/AccountListPage.jsx';
+import { TourBookingRow, TransportBookingRow } from '../components/orders/OrderRows.jsx';
+import ButtonLink from '../components/ui/ButtonLink.jsx';
+import SectionNav from '../components/ui/SectionNav.jsx';
 import { SERVICE_REQUEST_STATUS_TABS } from '../config/statuses.js';
 import { TRIP_TYPE_TABS } from '../config/tourism.js';
 import useFetch from '../hooks/useFetch.js';
@@ -17,12 +12,13 @@ import { toQueryString } from '../utils/queryString.js';
 
 const PAGE_SIZE = 10;
 
-// Mỗi loại đơn: hàm tải, tên mảng trong kết quả, thẻ hiển thị và nội dung khi trống.
+// Mỗi loại đơn: hàm tải, tên mảng trong kết quả, dòng hiển thị và nội dung khi trống.
 const TRIP_TYPES = {
   '': {
     load: getMyTourBookings,
     key: 'tourBookings',
-    Card: TourBookingCard,
+    Row: TourBookingRow,
+    listLabel: 'Tour bookings',
     emptyTitle: 'No tour bookings yet',
     emptyLabel: 'tour bookings',
     browseLink: '/tours',
@@ -31,7 +27,8 @@ const TRIP_TYPES = {
   transport: {
     load: getMyTransportBookings,
     key: 'transportBookings',
-    Card: TransportBookingCard,
+    Row: TransportBookingRow,
+    listLabel: 'Transport requests',
     emptyTitle: 'No transport requests yet',
     emptyLabel: 'transport requests',
     browseLink: '/tours?tab=transport',
@@ -47,70 +44,41 @@ export default function MyTripsPage() {
     status: SERVICE_REQUEST_STATUS_TABS,
   });
   const { type, status } = values;
-  const activeStatus = selected.status;
   const config = TRIP_TYPES[type];
-
+  const { Row } = config;
   const list = useFetch(() => config.load({ status, page, limit: PAGE_SIZE }), [type, status, page]);
 
-  const renderList = () => {
-    if (list.loading) return <PageSpinner />;
-    if (list.error) {
-      return <LoadError error={list.error} onRetry={list.retry} />;
-    }
-    const items = list.data[config.key];
-    if (items.length === 0) {
-      return (
-        <EmptyState
-          title={status ? `No ${activeStatus.label.toLowerCase()} ${config.emptyLabel}` : config.emptyTitle}
-          message="Tours and transport can be booked by any guest. No room booking is needed."
-          action={
-            <Link
-              to={config.browseLink}
-              className="inline-block rounded-lg bg-teal-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal-800"
-            >
-              {config.browseLabel}
-            </Link>
-          }
-        />
-      );
-    }
-    const { Card } = config;
-    return (
-      <>
-        <div className="space-y-4">
-          {items.map((booking) => (
-            <Card key={booking.id} booking={booking} />
-          ))}
-        </div>
-        <Pagination
-          className="mt-8"
-          page={page}
-          limit={PAGE_SIZE}
-          total={list.data.pagination?.total ?? 0}
-          onPageChange={goToPage}
-        />
-      </>
-    );
-  };
-
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
-      <PageTitle title="My trips" subtitle="Your tour bookings and transport requests, newest first." />
-      <FilterTabs
-        label="Trip type"
-        className="mb-3"
-        tabs={TRIP_TYPE_TABS}
-        active={type}
-        getLink={(value) => `/my-trips${toQueryString({ type: value })}`}
-      />
-      <FilterTabs
-        label="Filter by status"
-        className="mb-6"
-        tabs={SERVICE_REQUEST_STATUS_TABS}
-        active={status}
-        getLink={(value) => `/my-trips${toQueryString({ type, status: value })}`}
-      />
-      {renderList()}
-    </div>
+    <AccountListPage
+      title="My trips"
+      subtitle="Your tour bookings and transport requests, newest first."
+      sectionNav={
+        <SectionNav
+          label="Trip type"
+          tabs={TRIP_TYPE_TABS.map((tab) => ({
+            to: `/my-trips${toQueryString({ type: tab.value })}`,
+            label: tab.label,
+            match: () => tab.value === type,
+          }))}
+        />
+      }
+      tabs={{
+        label: 'Filter by status',
+        tabs: SERVICE_REQUEST_STATUS_TABS,
+        active: status,
+        getLink: (value) => `/my-trips${toQueryString({ type, status: value })}`,
+      }}
+      list={list}
+      // Vừa đổi loại: dữ liệu cũ là của loại kia, nên mảng này chưa có và danh sách hiện khung chờ.
+      items={list.data?.[config.key]}
+      empty={{
+        title: status ? `No ${selected.status.label.toLowerCase()} ${config.emptyLabel}` : config.emptyTitle,
+        message: 'Tours and transport can be booked by any guest. No room booking is needed.',
+        action: <ButtonLink to={config.browseLink}>{config.browseLabel}</ButtonLink>,
+      }}
+      pagination={{ page, limit: PAGE_SIZE, total: list.data?.pagination?.total ?? 0, onPageChange: goToPage }}
+      listLabel={config.listLabel}
+      renderItem={(booking) => <Row key={booking.id} order={booking} />}
+    />
   );
 }

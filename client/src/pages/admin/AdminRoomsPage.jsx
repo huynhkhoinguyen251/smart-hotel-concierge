@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { getAdminRooms } from '../../api/adminRooms.api.js';
 import { getRoomTypes } from '../../api/catalog.api.js';
-import AdminListPanel, { AdminListBody } from '../../components/admin/AdminListPanel.jsx';
+import ListPanel, { ListBody } from '../../components/ui/ListPanel.jsx';
 import AdminRequestTable from '../../components/admin/AdminRequestTable.jsx';
 import { EmptyCell, MoneyCell, StackCell, TitleCell } from '../../components/admin/AdminCells.jsx';
 import SearchBox from '../../components/admin/SearchBox.jsx';
@@ -104,7 +104,7 @@ export default function AdminRoomsPage() {
       <div className="mb-4 empty:hidden" aria-live="polite">
         <Alert type={message.type}>{message.text}</Alert>
       </div>
-      <AdminListPanel
+      <ListPanel
         tabs={
           <FilterTabs
             label="Filter by status"
@@ -138,7 +138,7 @@ export default function AdminRoomsPage() {
           </>
         }
       >
-        <AdminListBody
+        <ListBody
           list={list}
           items={list.data?.items ?? []}
           empty={{
@@ -161,8 +161,8 @@ export default function AdminRoomsPage() {
             getItemLabel={(room) => `room ${room.room_number}`}
             renderActions={(room) => <RoomRowActions room={room} {...statusProps} />}
           />
-        </AdminListBody>
-      </AdminListPanel>
+        </ListBody>
+      </ListPanel>
     </>
   );
 }

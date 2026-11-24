@@ -1,58 +1,53 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { getNotifications, markAllNotificationsRead, markNotificationRead } from '../api/notifications.api.js';
+import AdminPageHeader from '../components/admin/AdminPageHeader.jsx';
+import UnreadDot from '../components/notifications/UnreadDot.jsx';
 import Alert from '../components/ui/Alert.jsx';
 import Button from '../components/ui/Button.jsx';
-import EmptyState from '../components/ui/EmptyState.jsx';
+import ButtonLink from '../components/ui/ButtonLink.jsx';
 import FilterTabs from '../components/ui/FilterTabs.jsx';
-import LoadError from '../components/ui/LoadError.jsx';
-import Pagination from '../components/ui/Pagination.jsx';
-import { PageSpinner } from '../components/ui/Spinner.jsx';
-import { getNotificationType, NOTIFICATION_TABS, NOTIFICATIONS_PAGE_SIZE } from '../config/notifications.js';
+import ListPanel, { ListBody } from '../components/ui/ListPanel.jsx';
+import PageTitle from '../components/ui/PageTitle.jsx';
+import { getNotificationLabel, NOTIFICATION_TABS, NOTIFICATIONS_PAGE_SIZE } from '../config/notifications.js';
 import useFetch from '../hooks/useFetch.js';
 import useNotifications from '../hooks/useNotifications.js';
 import useUrlFilters from '../hooks/useUrlFilters.js';
 import { formatShortDateTime } from '../utils/formatDate.js';
 import { toQueryString } from '../utils/queryString.js';
 
-// Một thông báo: nhãn loại, tiêu đề (link tới link_path nếu có), nội dung, ngày, chấm chưa đọc,
-// và nút "Mark as read".
+// Một thông báo: chấm chưa đọc, tiêu đề (link tới link_path nếu có; chưa đọc thì chữ đậm),
+// loại và ngày, nội dung, và nút "Mark as read".
 function NotificationRow({ notification, onRead, busy }) {
-  const type = getNotificationType(notification.type);
   const unread = !notification.is_read;
-  const title = (
-    <span className={`break-words ${unread ? 'font-semibold text-slate-900' : 'text-slate-800'}`}>{notification.title}</span>
-  );
 
   return (
-    <li className={`flex gap-3 rounded-2xl border p-4 ${unread ? 'border-teal-200 bg-teal-50/40' : 'border-slate-200 bg-white'}`}>
-      <span className={`mt-2 h-2 w-2 shrink-0 rounded-full ${unread ? 'bg-teal-600' : 'bg-transparent'}`} aria-hidden="true" />
-      <div className="min-w-0 flex-1">
-        <p className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-          <span className={`rounded px-1.5 py-0.5 font-semibold ${type.className}`}>{type.label}</span>
-          {formatShortDateTime(notification.created_at)}
-          {unread && <span className="sr-only">Unread.</span>}
-        </p>
-        <p className="mt-1">
+    <li className="flex flex-wrap items-start gap-x-3 gap-y-3 p-4 sm:flex-nowrap lg:px-5">
+      <UnreadDot unread={unread} className="mt-2" />
+      <div className="min-w-0 flex-1 basis-60">
+        <h2 className={`wrap-anywhere ${unread ? 'font-semibold' : 'font-normal'}`}>
           {notification.link_path ? (
             <Link
               to={notification.link_path}
               onClick={() => unread && onRead(notification, { silent: true })}
-              className="hover:text-teal-700"
+              className="text-sea hover:text-sea-hover hover:underline"
             >
-              {title}
+              {notification.title}
             </Link>
           ) : (
-            title
+            notification.title
           )}
+        </h2>
+        <p className="mt-0.5 text-sm wrap-anywhere text-ink">{notification.message}</p>
+        <p className="mt-1 text-xs text-ink-soft">
+          {getNotificationLabel(notification.type)} · {formatShortDateTime(notification.created_at)}
         </p>
-        <p className="text-sm break-words text-slate-600">{notification.message}</p>
       </div>
       {unread && (
         <Button
           size="sm"
           variant="secondary"
-          className="self-start"
+          className="ml-5 sm:ml-0"
           disabled={busy}
           aria-label={`Mark as read: ${notification.title}`}
           onClick={() => onRead(notification)}
@@ -78,6 +73,7 @@ export default function NotificationsPage() {
     () => getNotifications({ page, limit: NOTIFICATIONS_PAGE_SIZE, unread_only: unreadOnly }),
     ['notifications', unreadOnly ? 'unread' : 'all', page],
   );
+  const items = list.data?.items;
 
   const handleRead = async (notification, { silent = false } = {}) => {
     setBusy(true);
@@ -105,59 +101,73 @@ export default function NotificationsPage() {
     }
   };
 
-  const renderList = () => {
-    if (list.loading && !list.data) return <PageSpinner />;
-    if (list.error) return <LoadError error={list.error} onRetry={list.retry} />;
-    if (list.data.items.length === 0) {
-      return (
-        <EmptyState
-          title={unreadOnly ? 'No unread notifications' : 'No notifications yet'}
-          message={unreadOnly ? 'You are all caught up.' : 'Updates about your orders and requests appear here.'}
-        />
-      );
+  const getEmpty = () => {
+    if (unreadOnly) {
+      return {
+        title: 'No unread notifications',
+        message: 'You are all caught up.',
+        action: (
+          <ButtonLink to={pathname} variant="secondary">
+            Show all notifications
+          </ButtonLink>
+        ),
+      };
     }
-    return (
-      <>
-        <ul className="space-y-3" aria-label="Notifications">
-          {list.data.items.map((notification) => (
-            <NotificationRow key={notification.id} notification={notification} onRead={handleRead} busy={busy} />
-          ))}
-        </ul>
-        <Pagination
-          className="mt-8"
-          page={page}
-          limit={NOTIFICATIONS_PAGE_SIZE}
-          total={list.data.pagination?.total ?? 0}
-          onPageChange={goToPage}
-        />
-      </>
-    );
+    return {
+      title: 'No notifications yet',
+      message: 'Updates about your orders and requests appear here.',
+      action: inAdmin ? (
+        <ButtonLink to="/admin">Go to dashboard</ButtonLink>
+      ) : (
+        <ButtonLink to="/rooms">Find a room</ButtonLink>
+      ),
+    };
+  };
+
+  const header = {
+    title: 'Notifications',
+    subtitle: unreadCount === 0 ? 'Everything is read.' : `${unreadCount} unread`,
+    action: unreadCount > 0 && (
+      <Button variant="secondary" loading={busy} onClick={handleReadAll}>
+        Mark all as read
+      </Button>
+    ),
   };
 
   return (
-    <div className={inAdmin ? 'mx-auto max-w-4xl' : 'mx-auto max-w-4xl px-4 py-10'}>
-      <div className="flex flex-wrap items-start justify-between gap-x-4">
-        <div className="mb-4 min-w-0">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Notifications</h1>
-          <p className="mt-1.5 text-slate-600">{unreadCount === 0 ? 'Everything is read.' : `${unreadCount} unread`}</p>
-        </div>
-        {unreadCount > 0 && (
-          <Button variant="secondary" className="mb-4" loading={busy} onClick={handleReadAll}>
-            Mark all as read
-          </Button>
-        )}
-      </div>
-      <FilterTabs
-        label="Filter notifications"
-        className="mb-4"
-        tabs={NOTIFICATION_TABS}
-        active={values.unread_only}
-        getLink={(value) => `${pathname}${toQueryString({ unread_only: value })}`}
-      />
-      <div className="mb-4 empty:hidden" aria-live="polite">
+    <div className={inAdmin ? undefined : 'shell py-8 lg:py-12'}>
+      {inAdmin ? <AdminPageHeader {...header} /> : <PageTitle {...header} />}
+      <div className="not-empty:mb-4" aria-live="polite">
         <Alert type={message.type}>{message.text}</Alert>
       </div>
-      {renderList()}
+      <ListPanel
+        tabs={
+          <FilterTabs
+            label="Filter notifications"
+            tabs={NOTIFICATION_TABS}
+            active={values.unread_only}
+            getLink={(value) => `${pathname}${toQueryString({ unread_only: value })}`}
+          />
+        }
+      >
+        <ListBody
+          list={list}
+          items={items}
+          empty={getEmpty()}
+          pagination={{
+            page,
+            limit: NOTIFICATIONS_PAGE_SIZE,
+            total: list.data?.pagination?.total ?? 0,
+            onPageChange: goToPage,
+          }}
+        >
+          <ul className="divide-y divide-line-soft" aria-label="Notifications">
+            {items?.map((notification) => (
+              <NotificationRow key={notification.id} notification={notification} onRead={handleRead} busy={busy} />
+            ))}
+          </ul>
+        </ListBody>
+      </ListPanel>
     </div>
   );
 }

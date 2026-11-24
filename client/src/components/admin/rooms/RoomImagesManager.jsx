@@ -4,7 +4,7 @@ import RoomImage from '../../rooms/RoomImage.jsx';
 import Alert from '../../ui/Alert.jsx';
 import Button from '../../ui/Button.jsx';
 import ConfirmDialog from '../../ui/ConfirmDialog.jsx';
-import { AdminSection } from '../AdminDetailLayout.jsx';
+import { DetailSection } from '../../detail/DetailParts.jsx';
 import RoomImageUploader from './RoomImageUploader.jsx';
 
 // Ảnh của một phòng: lưới ảnh (ảnh chính đứng đầu, có nhãn "Primary"), đặt ảnh chính, xóa ảnh,
@@ -55,7 +55,7 @@ export default function RoomImagesManager({ room, onChanged }) {
   const position = (image) => images.findIndex((item) => item.id === image.id) + 1;
 
   return (
-    <AdminSection title="Images" subtitle="The primary image is shown first on the room list and the room page.">
+    <DetailSection title="Images" subtitle="The primary image is shown first on the room list and the room page.">
       <div className="mb-3 empty:hidden" aria-live="polite">
         <Alert type={message.type}>{message.text}</Alert>
       </div>
@@ -126,6 +126,6 @@ export default function RoomImagesManager({ room, onChanged }) {
         onConfirm={handleDelete}
         onClose={() => setDeleting(null)}
       />
-    </AdminSection>
+    </DetailSection>
   );
 }

@@ -1,12 +1,22 @@
 import { useState } from 'react';
 import * as usersApi from '../api/users.api.js';
+import { DetailFact, DetailFacts } from '../components/detail/DetailParts.jsx';
 import Alert from '../components/ui/Alert.jsx';
 import Button from '../components/ui/Button.jsx';
-import Card from '../components/ui/Card.jsx';
 import Input from '../components/ui/Input.jsx';
 import PageTitle from '../components/ui/PageTitle.jsx';
 import useAuth from '../hooks/useAuth.js';
 import formatDate from '../utils/formatDate.js';
+
+// Một phần của trang: tiêu đề bên trái, nội dung bên phải (điện thoại: xếp dọc).
+function ProfileSection({ title, children }) {
+  return (
+    <section className="grid gap-x-10 gap-y-4 p-4 sm:p-6 lg:grid-cols-[14rem_minmax(0,32rem)] lg:p-8">
+      <h2 className="text-lg font-semibold text-ink">{title}</h2>
+      <div className="min-w-0">{children}</div>
+    </section>
+  );
+}
 
 const ROLE_LABELS = { user: 'Guest', admin: 'Administrator' };
 
@@ -20,17 +30,15 @@ function ProfileDetails({ user }) {
   ];
 
   return (
-    <Card>
-      <h2 className="text-lg font-semibold text-slate-900">Account details</h2>
-      <dl className="mt-4 divide-y divide-slate-100">
+    <ProfileSection title="Account details">
+      <DetailFacts>
         {rows.map(([label, value]) => (
-          <div key={label} className="flex flex-col gap-0.5 py-3 sm:flex-row sm:justify-between">
-            <dt className="text-sm text-slate-500">{label}</dt>
-            <dd className="break-all text-sm font-medium text-slate-900 sm:text-right">{value}</dd>
-          </div>
+          <DetailFact key={label} label={label}>
+            {value}
+          </DetailFact>
         ))}
-      </dl>
-    </Card>
+      </DetailFacts>
+    </ProfileSection>
   );
 }
 
@@ -75,9 +83,8 @@ function EditProfileForm({ user, onUpdated }) {
   };
 
   return (
-    <Card>
-      <h2 className="text-lg font-semibold text-slate-900">Edit profile</h2>
-      <form onSubmit={handleSubmit} noValidate className="mt-4 space-y-4">
+    <ProfileSection title="Edit profile">
+      <form onSubmit={handleSubmit} noValidate className="space-y-4">
         <Alert type="success">{success}</Alert>
         <Alert type="error">{error}</Alert>
         <Input
@@ -102,7 +109,7 @@ function EditProfileForm({ user, onUpdated }) {
           Save changes
         </Button>
       </form>
-    </Card>
+    </ProfileSection>
   );
 }
 
@@ -152,9 +159,8 @@ function ChangePasswordForm() {
   };
 
   return (
-    <Card>
-      <h2 className="text-lg font-semibold text-slate-900">Change password</h2>
-      <form onSubmit={handleSubmit} noValidate className="mt-4 space-y-4">
+    <ProfileSection title="Change password">
+      <form onSubmit={handleSubmit} noValidate className="space-y-4">
         <Alert type="success">{success}</Alert>
         <Alert type="error">{error}</Alert>
         <Input
@@ -185,11 +191,12 @@ function ChangePasswordForm() {
           onChange={handleChange}
           error={errors.confirm_password}
         />
-        <Button type="submit" loading={submitting}>
+        {/* Nút vàng của trang là "Save changes". */}
+        <Button type="submit" variant="secondary" loading={submitting}>
           Change password
         </Button>
       </form>
-    </Card>
+    </ProfileSection>
   );
 }
 
@@ -197,14 +204,12 @@ export default function ProfilePage() {
   const { user, updateUser } = useAuth();
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
+    <div className="shell py-8 lg:py-12">
       <PageTitle title="My profile" subtitle="View and update your account information." />
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="space-y-6">
-          <ProfileDetails user={user} />
-          <ChangePasswordForm />
-        </div>
+      <div className="divide-y divide-line-soft rounded-panel border border-line-soft bg-white">
+        <ProfileDetails user={user} />
         <EditProfileForm user={user} onUpdated={updateUser} />
+        <ChangePasswordForm />
       </div>
     </div>
   );

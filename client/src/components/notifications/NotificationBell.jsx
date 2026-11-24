@@ -2,10 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { BellOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
 import { getNotifications, markAllNotificationsRead, markNotificationRead } from '../../api/notifications.api.js';
-import { BELL_PREVIEW_LIMIT, formatUnreadBadge, getNotificationType } from '../../config/notifications.js';
+import { BELL_PREVIEW_LIMIT, formatUnreadBadge, getNotificationLabel } from '../../config/notifications.js';
 import useNotifications from '../../hooks/useNotifications.js';
 import { formatShortDateTime } from '../../utils/formatDate.js';
 import Spinner from '../ui/Spinner.jsx';
+import UnreadDot from './UnreadDot.jsx';
 
 // Chuông thông báo ở header (khách) và thanh trên cùng (admin).
 // Bấm mở khung 5 thông báo mới nhất; Esc hoặc bấm ra ngoài thì đóng và trả con trỏ về chuông.
@@ -142,24 +143,17 @@ export default function NotificationBell({ viewAllPath = '/notifications' }) {
                   <button
                     type="button"
                     onClick={() => openNotification(notification)}
-                    className={`flex w-full gap-3 px-4 py-3 text-left hover:bg-ground ${notification.is_read ? '' : 'bg-sea-tint/60'}`}
+                    className="flex w-full gap-3 px-4 py-3 text-left hover:bg-ground focus-visible:-outline-offset-2"
                   >
-                    <span
-                      className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${notification.is_read ? 'bg-transparent' : 'bg-sea'}`}
-                      aria-hidden="true"
-                    />
+                    <UnreadDot unread={!notification.is_read} className="mt-1.5" />
                     <span className="min-w-0 flex-1">
-                      <span className="flex flex-wrap items-center gap-x-2 text-xs text-ink-soft">
-                        <span className={`rounded px-1.5 py-0.5 font-semibold ${getNotificationType(notification.type).className}`}>
-                          {getNotificationType(notification.type).label}
-                        </span>
-                        {formatShortDateTime(notification.created_at)}
-                        {!notification.is_read && <span className="sr-only">Unread.</span>}
-                      </span>
-                      <span className={`mt-0.5 block text-sm break-words text-ink ${notification.is_read ? '' : 'font-semibold'}`}>
+                      <span className={`block text-sm break-words text-ink ${notification.is_read ? '' : 'font-semibold'}`}>
                         {notification.title}
                       </span>
                       <span className="block text-sm break-words text-ink-soft">{notification.message}</span>
+                      <span className="mt-0.5 block text-xs text-ink-soft">
+                        {getNotificationLabel(notification.type)} · {formatShortDateTime(notification.created_at)}
+                      </span>
                     </span>
                   </button>
                 </li>

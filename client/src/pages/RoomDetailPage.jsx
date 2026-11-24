@@ -14,6 +14,7 @@ import ErrorState from '../components/ui/ErrorState.jsx';
 import NotFoundView from '../components/ui/NotFoundView.jsx';
 import Price from '../components/ui/Price.jsx';
 import useFetch from '../hooks/useFetch.js';
+import usePageTitle from '../hooks/usePageTitle.js';
 import useReducedMotion from '../hooks/useReducedMotion.js';
 import { formatGuests } from '../utils/bookingHelpers.js';
 
@@ -95,6 +96,7 @@ export default function RoomDetailPage() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const { data: room, error, loading, retry } = useFetch(() => getRoom(id), [id]);
+  usePageTitle(!loading && room ? `${room.room_type.name}, room ${room.room_number}` : '');
 
   if (loading) {
     return <RoomSkeleton />;
@@ -113,6 +115,7 @@ export default function RoomDetailPage() {
     }
     return (
       <div className="shell py-10">
+        <h1 className="sr-only">Could not load this page</h1>
         <ErrorState message={error.message} onRetry={retry} />
       </div>
     );

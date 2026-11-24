@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import scrollToTop from '../utils/scrollToTop.js';
 
 // Hủy một đơn ở trang chi tiết của khách: hộp thoại xác nhận → gọi API → thông báo ở đầu trang.
 // - cancel(): gọi API hủy, trả đơn sau khi hủy; onCancelled(updated): cập nhật đơn trong trang.
@@ -15,7 +16,7 @@ export default function useCancelAction({ cancel, onCancelled, successMessage, i
 
   const showMessage = (type, text) => {
     setMessage(type === 'success' ? { success: text, error: '' } : { success: '', error: text });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    scrollToTop();
   };
 
   const confirm = async () => {

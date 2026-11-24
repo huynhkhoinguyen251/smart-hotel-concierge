@@ -1,14 +1,9 @@
 import { Link } from 'react-router-dom';
 import { getAdminFoodOrder, updateAdminFoodOrderStatus } from '../../api/adminFoodOrders.api.js';
-import AdminDetailLayout, {
-  AdminFact,
-  AdminFacts,
-  AdminGuestSection,
-  AdminPriceSection,
-  AdminSection,
-} from '../../components/admin/AdminDetailLayout.jsx';
-import OrderItemsTable from '../../components/admin/OrderItemsTable.jsx';
-import AdminSubNav from '../../components/admin/AdminSubNav.jsx';
+import AdminDetailLayout, { AdminGuestSection } from '../../components/admin/AdminDetailLayout.jsx';
+import { DetailFact, DetailFacts, DetailPriceSection, DetailSection } from '../../components/detail/DetailParts.jsx';
+import OrderItemsTable from '../../components/food/OrderItemsTable.jsx';
+import SectionNav from '../../components/ui/SectionNav.jsx';
 import DetailLoader from '../../components/ui/DetailLoader.jsx';
 import AdminStatusActions from '../../components/admin/AdminStatusActions.jsx';
 import { FOOD_SECTION_NAV } from '../../config/adminCatalog.js';
@@ -31,7 +26,7 @@ function FoodOrderDetails({ initialOrder }) {
 
   return (
     <AdminDetailLayout
-      subNav={<AdminSubNav {...FOOD_SECTION_NAV} />}
+      subNav={<SectionNav {...FOOD_SECTION_NAV} />}
       backTo="/admin/food-orders"
       backLabel="Back to food orders"
       title={`Food order #${order.id}`}
@@ -56,28 +51,28 @@ function FoodOrderDetails({ initialOrder }) {
       actionsEmptyText="No more actions for this order."
       main={
         <>
-          <AdminSection title="Items" subtitle={formatItemCount(items.length)}>
+          <DetailSection title="Items" subtitle={formatItemCount(items.length)}>
             <OrderItemsTable items={items} />
-          </AdminSection>
-          <AdminSection title="Delivery">
-            <AdminFacts>
-              <AdminFact label="Room">Room {booking?.room?.room_number}</AdminFact>
-              <AdminFact label="Booking">
+          </DetailSection>
+          <DetailSection title="Delivery">
+            <DetailFacts>
+              <DetailFact label="Room">Room {booking?.room?.room_number}</DetailFact>
+              <DetailFact label="Booking">
                 <Link to={`/admin/bookings/${booking?.id}`} className="text-sea hover:text-sea-hover hover:underline">
                   Booking #{booking?.id}
                 </Link>
-              </AdminFact>
-              <AdminFact label="Note">
+              </DetailFact>
+              <DetailFact label="Note">
                 <span className="whitespace-pre-line">{order.note || '-'}</span>
-              </AdminFact>
-            </AdminFacts>
-          </AdminSection>
+              </DetailFact>
+            </DetailFacts>
+          </DetailSection>
         </>
       }
       side={
         <>
           <AdminGuestSection user={order.user} />
-          <AdminPriceSection
+          <DetailPriceSection
             rows={[
               { label: 'Subtotal', value: formatCurrency(subtotal) },
               ...(discount > 0

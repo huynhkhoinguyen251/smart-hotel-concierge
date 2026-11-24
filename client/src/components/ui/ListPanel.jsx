@@ -1,12 +1,12 @@
-import Bone, { BoneGroup } from '../ui/Bone.jsx';
-import EmptyState from '../ui/EmptyState.jsx';
-import LoadError from '../ui/LoadError.jsx';
-import Pagination from '../ui/Pagination.jsx';
+import Bone, { BoneGroup } from './Bone.jsx';
+import EmptyState from './EmptyState.jsx';
+import LoadError from './LoadError.jsx';
+import Pagination from './Pagination.jsx';
 
 const SKELETON_ROWS = 6;
 
-// Khung trắng của một danh sách: tab trạng thái, thanh công cụ (tìm và lọc), rồi bảng.
-export default function AdminListPanel({ tabs, toolbar, children }) {
+// Khung trắng của một danh sách (khách và admin): tab trạng thái, thanh công cụ (tìm và lọc), rồi các dòng.
+export default function ListPanel({ tabs, toolbar, children }) {
   return (
     <div className="min-w-0 rounded-panel border border-line-soft bg-white">
       {tabs && <div className="px-4 pt-1 lg:px-5">{tabs}</div>}
@@ -20,7 +20,7 @@ export default function AdminListPanel({ tabs, toolbar, children }) {
   );
 }
 
-function TableSkeleton() {
+function ListSkeleton() {
   return (
     <BoneGroup className="divide-y divide-line-soft">
       {Array.from({ length: SKELETON_ROWS }, (_, row) => (
@@ -34,11 +34,12 @@ function TableSkeleton() {
   );
 }
 
-// Phần bảng: đang tải, lỗi, trống, hoặc nội dung kèm phân trang. Tất cả nằm trong khung danh sách.
-// list: kết quả useFetch; items: các dòng; empty: { title, message }; pagination: { page, limit, total, onPageChange }.
-// Đang tải lại thì bảng cũ mờ đi và tạm không bấm được, thay vì biến mất.
-export function AdminListBody({ list, items, empty, pagination, children }) {
-  if (list.loading && !list.data) return <TableSkeleton />;
+// Phần nội dung: đang tải, lỗi, trống, hoặc các dòng kèm phân trang. Tất cả nằm trong khung danh sách.
+// list: kết quả useFetch; items: các dòng; empty: { title, message, action };
+// pagination: { page, limit, total, onPageChange }.
+// Đang tải lại thì các dòng cũ mờ đi và tạm không bấm được, thay vì biến mất.
+export function ListBody({ list, items, empty, pagination, children }) {
+  if (list.loading && !items?.length) return <ListSkeleton />;
   if (list.error) {
     return (
       <div className="p-4 lg:p-5">
@@ -46,7 +47,7 @@ export function AdminListBody({ list, items, empty, pagination, children }) {
       </div>
     );
   }
-  if (items.length === 0) return <EmptyState title={empty.title} message={empty.message} />;
+  if (items.length === 0) return <EmptyState {...empty} />;
   return (
     <>
       <div

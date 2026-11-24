@@ -1,7 +1,7 @@
 import { adminServicesApi } from '../../api/adminCatalog.api.js';
 import { CatalogItemCell, PriceCell } from '../../components/admin/AdminCells.jsx';
 import CatalogListPage from '../../components/admin/catalog/CatalogListPage.jsx';
-import AdminSubNav from '../../components/admin/AdminSubNav.jsx';
+import SectionNav from '../../components/ui/SectionNav.jsx';
 import { SERVICE_SECTION_NAV, TRANSPORT_SERVICES_NOTE } from '../../config/adminCatalog.js';
 import {
   ADMIN_SERVICE_CATEGORY_OPTIONS,
@@ -46,7 +46,7 @@ export default function AdminServiceCatalogPage() {
     <CatalogListPage
       title="Service catalog"
       subtitle="Hotel services and transport services, including inactive ones."
-      subNav={<AdminSubNav {...SERVICE_SECTION_NAV} />}
+      subNav={<SectionNav {...SERVICE_SECTION_NAV} />}
       note={TRANSPORT_SERVICES_NOTE}
       catalog={CATALOG}
       filters={FILTERS}

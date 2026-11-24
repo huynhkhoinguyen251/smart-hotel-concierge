@@ -1,55 +1,31 @@
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
 import { cancelBooking, getBooking } from '../api/bookings.api.js';
 import EditBookingForm from '../components/bookings/EditBookingForm.jsx';
-import PaymentPanel from '../components/payments/PaymentPanel.jsx';
+import { DetailFact, DetailFacts, DetailSection } from '../components/detail/DetailParts.jsx';
+import OrderDetailLayout from '../components/orders/OrderDetailLayout.jsx';
 import ReviewPanel from '../components/reviews/ReviewPanel.jsx';
-import RoomImage from '../components/rooms/RoomImage.jsx';
-import Alert from '../components/ui/Alert.jsx';
 import Button from '../components/ui/Button.jsx';
-import Card from '../components/ui/Card.jsx';
+import ButtonLink from '../components/ui/ButtonLink.jsx';
 import ConfirmDialog from '../components/ui/ConfirmDialog.jsx';
-import ErrorState from '../components/ui/ErrorState.jsx';
-import NotFoundView from '../components/ui/NotFoundView.jsx';
-import { PageSpinner } from '../components/ui/Spinner.jsx';
-import StatusBadge from '../components/ui/StatusBadge.jsx';
+import DetailLoader from '../components/ui/DetailLoader.jsx';
+import MoreLink from '../components/ui/MoreLink.jsx';
+import PhotoFrame from '../components/ui/PhotoFrame.jsx';
 import { FOOD_ORDER_BOOKING_STATUS } from '../config/food.js';
 import { SERVICE_ELIGIBLE_BOOKING_STATUSES } from '../config/services.js';
-import { CANCELLABLE_BOOKING_STATUSES, EDITABLE_BOOKING_STATUS } from '../config/statuses.js';
-import useFetch from '../hooks/useFetch.js';
+import { BOOKING_STEPS, CANCELLABLE_BOOKING_STATUSES, EDITABLE_BOOKING_STATUS } from '../config/statuses.js';
 import useCancelAction from '../hooks/useCancelAction.js';
 import useFlashMessage from '../hooks/useFlashMessage.js';
 import { formatNights } from '../utils/bookingHelpers.js';
 import { CHECK_IN_TIME, getFreeCancellationDeadline } from '../utils/cancellation.js';
 import formatCurrency from '../utils/formatCurrency.js';
 import formatDate from '../utils/formatDate.js';
+import { isAwaitingPayment } from '../utils/paymentHelpers.js';
 import { getDiscountLabel } from '../config/vouchers.js';
 
 const SERVICES_NOTE =
   'Your pending or confirmed service requests for this stay will also be cancelled.';
 const LATE_CANCEL_NOTE =
   'The free cancellation deadline has passed, so online cancellation may be refused. If it is, please contact the reception desk.';
-
-// 404 (không có) hoặc 403 (đơn của người khác): cùng một thông báo, không lộ đơn có tồn tại hay không.
-function BookingNotFound() {
-  return (
-    <NotFoundView
-      title="Booking not found"
-      message="This booking does not exist or does not belong to you."
-      to="/my-bookings"
-      linkLabel="Back to my bookings"
-    />
-  );
-}
-
-function DetailRow({ label, children }) {
-  return (
-    <div className="flex items-start justify-between gap-4 py-2.5">
-      <dt className="text-slate-600">{label}</dt>
-      <dd className="text-right font-medium text-slate-900">{children}</dd>
-    </div>
-  );
-}
 
 // Nội dung đơn. Giữ đơn trong state để cập nhật ngay sau khi đổi ngày hoặc hủy.
 function BookingDetails({ initialBooking, initialMessage }) {
@@ -63,7 +39,6 @@ function BookingDetails({ initialBooking, initialMessage }) {
   // Đồ ăn chỉ giao khi đang ở (checked_in); trạng thái này cũng nằm trong canRequestService.
   const canOrderFood = booking.status === FOOD_ORDER_BOOKING_STATUS;
   const deadline = canTryCancel ? getFreeCancellationDeadline(booking.check_in) : null;
-  const nightsLabel = formatNights(booking.nights);
 
   // Lỗi khi hủy, ví dụ 400: quá hạn hủy online, cần liên hệ lễ tân.
   const { success, error, showMessage, dialogProps, openDialog } = useCancelAction({
@@ -92,157 +67,118 @@ function BookingDetails({ initialBooking, initialMessage }) {
     showMessage('success', 'Your booking has been updated.');
   };
 
+  const roomName = `${room.room_type.name}, room ${room.room_number}`;
+
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
-      <Link to="/my-bookings" className="text-sm font-medium text-teal-700 hover:text-teal-800">
-        ← Back to my bookings
-      </Link>
-
-      <div className="mt-3 mb-6 flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-          Booking #{booking.id}
-        </h1>
-        <StatusBadge status={booking.status} />
-      </div>
-      <p className="-mt-4 mb-6 text-sm text-slate-500">
-        Booked on {formatDate(booking.created_at, { withTime: true })}
-        {' · '}
-        <Link to="/support/new" className="font-medium text-teal-700 hover:text-teal-800">
-          Need help? Contact reception
-        </Link>
-      </p>
-
-      <div className="mb-6 space-y-3" aria-live="polite">
-        <Alert type="success">{success}</Alert>
-        <Alert type="error">{error}</Alert>
-      </div>
-
-      <div className="mb-6 empty:hidden">
-        <PaymentPanel
-          type="room"
-          order={booking}
-          onPaid={reloadAfterPayment}
-          onExpired={() => reloadAfterPayment('')}
-        />
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px] lg:items-start">
-        <div className="min-w-0 space-y-6">
-          <Card className="flex flex-col gap-4 sm:flex-row">
-            <RoomImage
-              src={room.primary_image}
-              alt={`${room.room_type.name}, room ${room.room_number}`}
-              className="aspect-[4/3] w-full rounded-xl sm:w-48 sm:shrink-0"
-            />
-            <div className="min-w-0">
-              <h2 className="text-xl font-semibold text-slate-900">{room.room_type.name}</h2>
-              <p className="mt-0.5 text-sm text-slate-500">Room {room.room_number}</p>
-              <Link
-                to={`/rooms/${room.id}`}
-                className="mt-3 inline-block text-sm font-semibold text-teal-700 hover:text-teal-800"
-              >
-                View room →
-              </Link>
-            </div>
-          </Card>
-
-          <Card>
-            <h2 className="text-lg font-semibold text-slate-900">Stay details</h2>
-            <dl className="mt-2 divide-y divide-slate-100 text-sm">
-              <DetailRow label="Check-in">
-                {formatDate(booking.check_in)}, from {CHECK_IN_TIME}
-              </DetailRow>
-              <DetailRow label="Check-out">{formatDate(booking.check_out)}</DetailRow>
-              <DetailRow label="Nights">{booking.nights}</DetailRow>
-              <DetailRow label="Guests">{booking.guests}</DetailRow>
-            </dl>
-
-            {canEdit && !editing && (
-              <Button variant="secondary" className="mt-4" onClick={() => setEditing(true)}>
-                Change dates or guests
-              </Button>
-            )}
-            {canEdit && editing && (
-              <div className="mt-4 border-t border-slate-100 pt-4">
-                <h3 className="mb-3 font-semibold text-slate-900">Change dates or guests</h3>
-                <EditBookingForm
-                  booking={booking}
-                  onSaved={handleSaved}
-                  onCancel={() => setEditing(false)}
-                />
+    <>
+      <OrderDetailLayout
+        order={booking}
+        title={`Booking #${booking.id}`}
+        backTo="/my-bookings"
+        backLabel="Back to my bookings"
+        createdLabel="Booked on"
+        success={success}
+        error={error}
+        paymentType="room"
+        onPaid={reloadAfterPayment}
+        onExpired={() => reloadAfterPayment('')}
+        steps={BOOKING_STEPS}
+        progressLabel="Booking progress"
+        cancelledMessage="This booking was cancelled."
+        main={
+          <>
+            <section className="grid gap-x-6 gap-y-4 sm:grid-cols-[15rem_minmax(0,1fr)]">
+              <PhotoFrame src={room.primary_image} alt={roomName} className="aspect-[4/3]" />
+              <div className="min-w-0">
+                <h2 className="text-xl font-semibold wrap-anywhere text-ink">{room.room_type.name}</h2>
+                <p className="mt-0.5 text-sm text-ink-soft">Room {room.room_number}</p>
+                <MoreLink to={`/rooms/${room.id}`} className="mt-3">
+                  View room
+                </MoreLink>
               </div>
-            )}
-          </Card>
-        </div>
+            </section>
 
-        <div className="space-y-6">
-          <Card>
-            <h2 className="text-lg font-semibold text-slate-900">Price</h2>
-            <dl className="mt-2 divide-y divide-slate-100 text-sm">
-              <DetailRow label="Price per night">{formatCurrency(booking.price_per_night)}</DetailRow>
-              <DetailRow label="Nights">{nightsLabel}</DetailRow>
-              {booking.discount_amount > 0 && (
-                <DetailRow label={getDiscountLabel(booking.voucher?.code)}>- {formatCurrency(booking.discount_amount)}</DetailRow>
+            <DetailSection title="Stay details">
+              <DetailFacts>
+                <DetailFact label="Check-in">
+                  {formatDate(booking.check_in)}, from {CHECK_IN_TIME}
+                </DetailFact>
+                <DetailFact label="Check-out">{formatDate(booking.check_out)}</DetailFact>
+                <DetailFact label="Nights">{booking.nights}</DetailFact>
+                <DetailFact label="Guests">{booking.guests}</DetailFact>
+              </DetailFacts>
+
+              {canEdit && !editing && (
+                <Button variant="secondary" className="mt-4" onClick={() => setEditing(true)}>
+                  Change dates or guests
+                </Button>
               )}
-              <div className="flex items-start justify-between gap-4 py-2.5">
-                <dt className="font-semibold text-slate-900">Total</dt>
-                <dd className="text-right text-lg font-bold text-teal-700">
-                  {formatCurrency(booking.total_price)}
-                </dd>
-              </div>
-            </dl>
-          </Card>
+              {canEdit && editing && (
+                <div className="mt-5 max-w-xl">
+                  <h3 className="mb-3 font-semibold text-ink">Change dates or guests</h3>
+                  <EditBookingForm
+                    booking={booking}
+                    // Đơn chờ thanh toán: nút vàng duy nhất của trang là "I have paid".
+                    saveVariant={isAwaitingPayment(booking) ? 'secondary' : 'primary'}
+                    onSaved={handleSaved}
+                    onCancel={() => setEditing(false)}
+                  />
+                </div>
+              )}
+            </DetailSection>
 
-          <ReviewPanel type={'room'} itemId={booking.id} status={booking.status} />
+            <ReviewPanel type="room" itemId={booking.id} status={booking.status} />
 
-          {canRequestService && (
-            <Card>
-              <h2 className="text-lg font-semibold text-slate-900">Hotel services</h2>
-              <p className="mt-2 text-sm text-slate-600">
-                {canOrderFood
-                  ? 'Book breakfast, massage, laundry and more, or order food to your room.'
-                  : 'Book breakfast, massage, laundry and more for this stay.'}
-              </p>
-              <div className="mt-4 flex flex-col gap-2">
-                <Link
-                  to={`/services?booking_id=${booking.id}`}
-                  className="flex w-full items-center justify-center rounded-lg bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800"
-                >
-                  Request a service
-                </Link>
-                {canOrderFood && (
-                  <Link
-                    to={`/food?booking_id=${booking.id}`}
-                    className="flex w-full items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                  >
-                    Order food
-                  </Link>
+            {canRequestService && (
+              <DetailSection title="Hotel services">
+                <p className="max-w-prose text-sm text-ink-soft">
+                  {canOrderFood
+                    ? 'Book breakfast, massage, laundry and more, or order food to your room.'
+                    : 'Book breakfast, massage, laundry and more for this stay.'}
+                </p>
+                <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                  <ButtonLink to={`/services?booking_id=${booking.id}`}>Request a service</ButtonLink>
+                  {canOrderFood && (
+                    <ButtonLink to={`/food?booking_id=${booking.id}`} variant="secondary">
+                      Order food
+                    </ButtonLink>
+                  )}
+                </div>
+              </DetailSection>
+            )}
+          </>
+        }
+        price={{
+          rows: [
+            { label: 'Price per night', value: formatCurrency(booking.price_per_night) },
+            { label: 'Nights', value: formatNights(booking.nights) },
+            ...(booking.discount_amount > 0
+              ? [{ label: getDiscountLabel(booking.voucher?.code), value: `- ${formatCurrency(booking.discount_amount)}` }]
+              : []),
+          ],
+          total: booking.total_price,
+        }}
+        cancellation={
+          canTryCancel && {
+            label: 'Cancel booking',
+            onCancel: openDialog,
+            children: deadline && (
+              <p className={deadline.passed ? 'text-warning-deep' : undefined}>
+                {deadline.passed ? (
+                  <>
+                    The free cancellation deadline was {deadline.label}. Online cancellation may be refused; please
+                    contact the reception desk if it is.
+                  </>
+                ) : (
+                  <>
+                    Free cancellation until <span className="font-semibold text-ink">{deadline.label}</span>.
+                  </>
                 )}
-              </div>
-            </Card>
-          )}
-
-          {canTryCancel && (
-            <Card>
-              <h2 className="text-lg font-semibold text-slate-900">Cancellation</h2>
-              {deadline && !deadline.passed && (
-                <p className="mt-2 text-sm text-slate-600">
-                  Free cancellation until <span className="font-semibold">{deadline.label}</span>.
-                </p>
-              )}
-              {deadline?.passed && (
-                <p className="mt-2 text-sm text-amber-700">
-                  The free cancellation deadline was {deadline.label}. Online cancellation may be
-                  refused; please contact the reception desk if it is.
-                </p>
-              )}
-              <Button variant="danger" fullWidth className="mt-4" onClick={openDialog}>
-                Cancel booking
-              </Button>
-            </Card>
-          )}
-        </div>
-      </div>
+              </p>
+            ),
+          }
+        }
+      />
 
       <ConfirmDialog
         {...dialogProps}
@@ -252,31 +188,30 @@ function BookingDetails({ initialBooking, initialMessage }) {
         cancelLabel="Keep booking"
         variant="danger"
       >
-        {deadline?.passed && <p className="text-amber-700">{LATE_CANCEL_NOTE}</p>}
+        {deadline?.passed && <p className="text-warning-deep">{LATE_CANCEL_NOTE}</p>}
       </ConfirmDialog>
-    </div>
+    </>
   );
 }
 
 // /my-bookings/:id (chỉ cho người đã đăng nhập).
 export default function BookingDetailPage() {
-  const { id } = useParams();
   // Thông báo từ trang đặt phòng, chỉ hiện một lần.
   const flashMessage = useFlashMessage();
-
-  const request = useFetch(() => getBooking(id), [id]);
-
-  if (request.loading) return <PageSpinner />;
-  if (request.error) {
-    if ([400, 403, 404].includes(request.error.status)) return <BookingNotFound />;
-    return (
-      <div className="mx-auto max-w-5xl px-4 py-10">
-        <ErrorState message={request.error.message} onRetry={request.retry} />
-      </div>
-    );
-  }
-
+  // 403 (đơn của người khác) hiện giống 404, không lộ đơn có tồn tại hay không.
   return (
-    <BookingDetails key={request.data.id} initialBooking={request.data} initialMessage={flashMessage} />
+    <DetailLoader
+      load={getBooking}
+      notFoundStatuses={[400, 403, 404]}
+      notFound={{
+        title: 'Booking not found',
+        message: 'This booking does not exist or does not belong to you.',
+        to: '/my-bookings',
+        linkLabel: 'Back to my bookings',
+      }}
+      errorClassName="shell py-10"
+    >
+      {(data) => <BookingDetails key={data.id} initialBooking={data} initialMessage={flashMessage} />}
+    </DetailLoader>
   );
 }
